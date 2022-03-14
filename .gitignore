@@ -20,3 +20,13 @@ node_modules/
 npm-debug.log
 yarn-debug.log
 yarn-error.log
+sm2
+build/
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+.\#*
+result
