@@ -1,15 +1,20 @@
 package cli
 
 import (
+	"encoding/json"
 	"flag"
+	"fmt"
+	"strings"
 )
 
 type UserOption struct {
+	appendArgs    string // not exported, content decoded into ExtraArgs
 	Clean         bool
 	Config        string
 	Debug         string
 	Diagnostic    bool
-	ExtraServices []string // other services to start/stop beyond the first one set in --start/--stop
+	ExtraArgs     map[string][]string // parsed from content of AppendArgs
+	ExtraServices []string            // other services to start/stop beyond the first one set in --start/--stop
 	FromSource    bool
 	List          string
 	Logs          string
@@ -31,12 +36,12 @@ type UserOption struct {
 	Workers       int
 }
 
-func Parse(args []string) *UserOption {
+func Parse(args []string) (*UserOption, error) {
 
 	opts := new(UserOption)
 
-	flagset := flag.NewFlagSet("servicemanager", flag.ContinueOnError)
-
+	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
+	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
 	flagset.BoolVar(&opts.Clean, "clean", false, "force redownloading of service")
 	flagset.StringVar(&opts.Config, "config", "", "use a different config directory")
 	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given service may not have started.")
@@ -63,7 +68,7 @@ func Parse(args []string) *UserOption {
 	flagset.Parse(args)
 
 	if opts.Workers <= 0 {
-		panic("invalid number of workers set must be > 0")
+		return nil, fmt.Errorf("invalid number of workers set must be > 0")
 	}
 
 	// @hack, i didnt want to use a 3rd party arg parser, so we do a sort of hack here of taking the left over args,
@@ -81,8 +86,29 @@ func Parse(args []string) *UserOption {
 			flagset.Parse(flagset.Args()[i:])
 			break
 		}
-		// todo: return a error if a flag is after the service list
 	}
 
-	return opts
+	// Decode user supplied args
+	if opts.appendArgs != "" {
+		args, err := parseAppendArgs(opts.appendArgs)
+		if err != nil {
+			return nil, fmt.Errorf("problem decoding --appendArgs: %s, check --help for format", err)
+		}
+		opts.ExtraArgs = args
+	}
+	return opts, nil
+}
+
+/*
+   Parses extra args for all the services. Expected format is:
+   {"SERVICE_NAME":["-DFoo=Bar","SOMETHING"],"SERVICE_TWO":["APPEND_THIS"]}
+*/
+func parseAppendArgs(jsonArgs string) (map[string][]string, error) {
+
+	args := map[string][]string{}
+
+	decoder := json.NewDecoder(strings.NewReader(jsonArgs))
+	err := decoder.Decode(&args)
+
+	return args, err
 }

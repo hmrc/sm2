@@ -134,14 +134,20 @@ func (sm ServiceManager) run(service Service, installFile ledger.InstallFile) (l
 		portNumber = sm.Commands.Port
 	}
 
-	extraArgs := []string{
+	// add service-manager generated args
+	smArgs := []string{
 		fmt.Sprintf("-Dservice.manager.serviceName=%s", service.Id),
 		fmt.Sprintf("-Dservice.manager.runFrom=%s", version),
 		fmt.Sprintf("-Duser.home=%s", path.Join(serviceDir, "..")),
 		fmt.Sprintf("-Dhttp.port=%d", portNumber),
 	}
 
-	args := append(service.Binary.Cmd[1:], extraArgs...)
+	args := append(service.Binary.Cmd[1:], smArgs...)
+
+	// add user supplied args
+	if userArgs, ok := sm.Commands.ExtraArgs[service.Id]; ok {
+		args = append(args, userArgs...)
+	}
 
 	logFile, err := os.Create(path.Join(serviceDir, "logs", "stdout.log"))
 	if err != nil {
