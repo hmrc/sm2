@@ -37,12 +37,19 @@ func (sm ServiceManager) Run() {
 	} else if sm.Commands.StopAll {
 		sm.StopAll()
 	} else if sm.Commands.Restart {
-
 		services := sm.requestedServicesAndProfiles()
+		failed := []ServiceAndVersion{}
+
 		for _, s := range services {
-			err = sm.StopService(s.service)
+			if sm.Restart(s) != nil {
+				failed = append(failed, s)
+			}
 		}
-		sm.asyncStart(services)
+
+		// try and start the failed services (which are probably just not running)
+		if len(failed) > 0 {
+			sm.asyncStart(failed)
+		}
 
 	} else if sm.Commands.Ports {
 		sm.ListPorts()

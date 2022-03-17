@@ -67,3 +67,59 @@ func TestRemoveRunningPid(t *testing.T) {
 	AssertFileNotExists(t, pidPath)
 	AssertDirExists(t, baseDir)
 }
+
+func TestGenerateArgs(t *testing.T) {
+	sm := ServiceManager{}
+	sm.Commands.Port = 6666
+	sm.Commands.ExtraArgs = map[string][]string{
+		"FOO": []string{"-user1", "-user2"},
+	}
+
+	foo := Service{
+		Id:          "FOO",
+		DefaultPort: 9999,
+		Binary: ServiceBinary{
+			Cmd: []string{"./bin/foo", "-cmd1", "-cmd2"},
+		},
+	}
+
+	expectedArgs := []string{
+		"-cmd1",
+		"-cmd2",
+		"-Dservice.manager.serviceName=FOO",
+		"-Dservice.manager.runFrom=1.0.1",
+		"-Duser.home=/tmp/foo",
+		"-user1",
+		"-user2",
+	}
+	args := sm.generateArgs(foo, "1.0.1", "/tmp/foo/foo-1.0.1")
+
+	for i, arg := range args {
+		if expectedArgs[i] != arg {
+			t.Errorf("arg %s != %s", arg, expectedArgs[i])
+			return
+		}
+	}
+}
+
+func TestFindPort(t *testing.T) {
+	sm := ServiceManager{}
+	foo := Service{
+		Id:          "FOO",
+		DefaultPort: 9999,
+		Binary: ServiceBinary{
+			Cmd: []string{"./bin/foo", "-cmd1", "-cmd2"},
+		},
+	}
+
+	// test it uses the default port
+	if p := sm.findPort(foo); p != 9999 {
+		t.Errorf("port %d was not default port %d", p, 9999)
+	}
+
+	// test you can override default via --port
+	sm.Commands.Port = 6666
+	if p := sm.findPort(foo); p != 6666 {
+		t.Errorf("port %d was not override port %d", p, 6666)
+	}
+}

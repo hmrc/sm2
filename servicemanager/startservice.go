@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 	"time"
 
 	"sm2/ledger"
@@ -73,8 +72,10 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 	}
 
 	// start the service
+	port := sm.findPort(service)
+	args := sm.generateArgs(service, versionToInstall, installFile.Path)
 	sm.UiUpdates <- Progress{service: serviceName, percent: 100, state: "Starting..."}
-	state, err := sm.run(service, installFile)
+	state, err := run(service, installFile, args, port)
 	if err != nil {
 		return err
 	}
@@ -121,38 +122,21 @@ func (sm ServiceManager) installService(installDir string, service Service, vers
 	return installFile, err
 }
 
-// Given a service (config) and an installFile (code) run the service.
-func (sm ServiceManager) run(service Service, installFile ledger.InstallFile) (ledger.StateFile, error) {
+// Given a service (config) some args and an installFile (code) run the service.
+func run(service Service, installFile ledger.InstallFile, args []string, port int) (ledger.StateFile, error) {
 
 	serviceDir := installFile.Path
 	version := installFile.Version
 
 	removeRunningPid(serviceDir)
 
-	portNumber := service.DefaultPort
-	if sm.Commands.Port > 0 {
-		portNumber = sm.Commands.Port
-	}
-
-	// add service-manager generated args
-	smArgs := []string{
-		fmt.Sprintf("-Dservice.manager.serviceName=%s", service.Id),
-		fmt.Sprintf("-Dservice.manager.runFrom=%s", version),
-		fmt.Sprintf("-Duser.home=%s", path.Join(serviceDir, "..")),
-		fmt.Sprintf("-Dhttp.port=%d", portNumber),
-	}
-
-	args := append(service.Binary.Cmd[1:], smArgs...)
-
-	// add user supplied args
-	if userArgs, ok := sm.Commands.ExtraArgs[service.Id]; ok {
-		args = append(args, userArgs...)
-	}
-
 	logFile, err := os.Create(path.Join(serviceDir, "logs", "stdout.log"))
 	if err != nil {
 		return ledger.StateFile{}, err
 	}
+
+	// patch the port number onto the arg list
+	args = append(args, fmt.Sprintf("-Dhttp.port=%d", port))
 
 	// this is a bit of a hack to get the old config working with the new installation
 	_, runCmd := path.Split(service.Binary.Cmd[0])
@@ -160,8 +144,6 @@ func (sm ServiceManager) run(service Service, installFile ledger.InstallFile) (l
 	cmd.Dir = serviceDir
 	cmd.Stdout = logFile
 	cmd.Stderr = logFile
-
-	sm.PrintVerbose(fmt.Sprintf("Running: %s%s", cmd.Path, strings.Join(cmd.Args, " ")))
 
 	err = cmd.Start()
 	if err != nil {
@@ -176,7 +158,7 @@ func (sm ServiceManager) run(service Service, installFile ledger.InstallFile) (l
 		Md5Sum:   "TODO",
 		Started:  time.Now(),
 		Pid:      cmd.Process.Pid,
-		Port:     portNumber,
+		Port:     port,
 		Args:     args,
 	}
 
@@ -203,6 +185,34 @@ func verifyInstall(installFile ledger.InstallFile, service string, version strin
 
 	// TODO: verify hashes etc...
 	return true
+}
+
+func (sm ServiceManager) findPort(service Service) int {
+	portNumber := service.DefaultPort
+	if sm.Commands.Port > 0 {
+		portNumber = sm.Commands.Port
+	}
+	return portNumber
+}
+
+func (sm ServiceManager) generateArgs(service Service, version string, serviceDir string) []string {
+
+	args := service.Binary.Cmd[1:]
+
+	// add service-manager generated args
+	smArgs := []string{
+		fmt.Sprintf("-Dservice.manager.serviceName=%s", service.Id),
+		fmt.Sprintf("-Dservice.manager.runFrom=%s", version),
+		fmt.Sprintf("-Duser.home=%s", path.Join(serviceDir, "..")),
+	}
+	args = append(args, smArgs...)
+
+	// add user supplied args
+	if userArgs, ok := sm.Commands.ExtraArgs[service.Id]; ok {
+		args = append(args, userArgs...)
+	}
+
+	return args
 }
 
 // clears exists logs and creates the folder if its missing
