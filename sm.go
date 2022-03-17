@@ -15,7 +15,11 @@ import (
 
 func main() {
 
-	cmds := cli.Parse(os.Args[1:])
+	cmds, err := cli.Parse(os.Args[1:])
+	if err != nil {
+		fmt.Printf("Invalid option: %s\n", err)
+		os.Exit(1)
+	}
 
 	workspacePath, envIsSet := os.LookupEnv("WORKSPACE")
 	if !envIsSet {
