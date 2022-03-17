@@ -3,6 +3,7 @@ package servicemanager
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/md5"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -67,10 +68,13 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 		return "", fmt.Errorf("http GET %s failed with status %s, expected 200", url, resp.Status)
 	}
 
+	md5Hasher := md5.New()
+	expectedHash, hasMd5 := resp.Header["x-checksum-md5"]
 	progressTracker.contentLength = int(resp.ContentLength)
-	tee := io.TeeReader(resp.Body, progressTracker)
+	tee := io.TeeReader(resp.Body, progressTracker) // split off to progress tracker
+	body := io.TeeReader(tee, md5Hasher)            // split off to calculate the checksum
 
-	gz, err := gzip.NewReader(tee)
+	gz, err := gzip.NewReader(body)
 	if err != nil {
 		return "", err
 	}
@@ -120,11 +124,23 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 		}
 	}
 
-	serviceDir := ""
+	// check checksum and fail if it doesnt match
+	if hasMd5 {
+		actualHash := fmt.Sprintf("%x", md5Hasher.Sum(nil))
+		if actualHash != expectedHash[0] {
+			return "", fmt.Errorf("md5 did not match, %s != %s", actualHash, expectedHash[0])
+		}
+		// todo: do we need to return the hash? once validated its not much use tbh!
+	}
+
+	// based on the directories we've had to make, figure out which one the service is in
+	// we're assuming theres only one, this could be better
+	var serviceDir string
 
 	delete(dirsSeen, ".")
 	for k := range dirsSeen {
 		// TODO: regex it or something? maybe inc the count every times its seen and go with the largest?
+		//       if we know what the bin dir is (from services.json) we could use that too
 		serviceDir = path.Join(outdir, k)
 	}
 

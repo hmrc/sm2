@@ -199,20 +199,6 @@ func verifyInstall(installFile ledger.InstallFile, service string, version strin
 	return true
 }
 
-// clears exists logs and creates the folder if its missing
-func initLogDir(serviceDir string) (string, error) {
-	logPath := path.Join(serviceDir, "logs")
-
-	// if logdir exists remove it
-	if _, err := os.Stat(logPath); os.IsExist(err) {
-		rmErr := os.RemoveAll(logPath)
-		if rmErr != nil {
-			return logPath, rmErr
-		}
-	}
-	return logPath, os.MkdirAll(logPath, 0755)
-}
-
 // killing a process doesn't cleanup the RUNNING_PID preventing it being rerun
 func removeRunningPid(serviceDir string) {
 	pidPath := path.Join(serviceDir, "RUNNING_PID")
