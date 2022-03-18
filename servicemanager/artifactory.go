@@ -69,7 +69,8 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 	}
 
 	md5Hasher := md5.New()
-	expectedHash, hasMd5 := resp.Header["x-checksum-md5"]
+	expectedHash, hasMd5 := resp.Header["X-Checksum-Md5"]
+
 	progressTracker.contentLength = int(resp.ContentLength)
 	tee := io.TeeReader(resp.Body, progressTracker) // split off to progress tracker
 	body := io.TeeReader(tee, md5Hasher)            // split off to calculate the checksum
