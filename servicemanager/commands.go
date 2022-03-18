@@ -39,13 +39,11 @@ func (sm ServiceManager) Run() {
 	} else if sm.Commands.Restart {
 		services := sm.requestedServicesAndProfiles()
 		failed := []ServiceAndVersion{}
-
 		for _, s := range services {
-			if sm.Restart(s) != nil {
+			if err := sm.Restart(s); err != nil {
 				failed = append(failed, s)
 			}
 		}
-
 		// try and start the failed services (which are probably just not running)
 		if len(failed) > 0 {
 			sm.asyncStart(failed)

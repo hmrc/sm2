@@ -13,20 +13,22 @@ func (sm *ServiceManager) Restart(sv ServiceAndVersion) error {
 		return fmt.Errorf("%s is not a service", sv.service)
 	}
 
+	installDir, _ := sm.findInstallDirOfService(sv.service)
+
 	// read state file
-	state, err := sm.Ledger.LoadStateFile(sv.service)
+	state, err := sm.Ledger.LoadStateFile(installDir)
 	if err != nil {
 		return err
 	}
 
 	// read install file
-	install, err := sm.Ledger.LoadInstallFile(sv.service)
+	install, err := sm.Ledger.LoadInstallFile(installDir)
 	if err != nil {
 		return err
 	}
 
 	// check its ok
-	if !verifyInstall(install, sv.service, sv.version, false) {
+	if !verifyInstall(install, state.Service, state.Version, false) {
 		return fmt.Errorf("%s %s is not installed", sv.service, sv.version)
 	}
 
@@ -36,9 +38,9 @@ func (sm *ServiceManager) Restart(sv ServiceAndVersion) error {
 	}
 
 	// start a new instance
+	fmt.Printf("Restarting %s...\n", sv.service)
 	newstate, err := run(service, install, state.Args, state.Port)
 
 	// save the new pid
-	installDir, _ := sm.findInstallDirOfService(sv.service)
 	return sm.Ledger.SaveStateFile(installDir, newstate)
 }
