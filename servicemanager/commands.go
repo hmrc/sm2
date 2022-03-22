@@ -83,8 +83,8 @@ func (sm ServiceManager) requestedServicesAndProfiles() []ServiceAndVersion {
 
 	for i, s := range sm.Commands.ExtraServices {
 		if profileServices, ok := sm.Profiles[s]; ok {
-			for _, s := range profileServices {
-				output = append(output, ServiceAndVersion{s, "", sm.Commands.FromSource})
+			for _, ps := range profileServices {
+				output = append(output, ServiceAndVersion{ps, "", sm.Commands.FromSource})
 			}
 		} else {
 			version := ""

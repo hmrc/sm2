@@ -10,13 +10,18 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 )
 
 type MavenMetadata struct {
-	Latest  string `xml:"versioning>latest"`
-	Release string `xml:"versioning>release"`
+	Artifact string `xml:"artifactId"`
+	Group    string `xml:"groupId"`
+	Latest   string `xml:"versioning>latest"`
+	Release  string `xml:"versioning>release"`
 }
+
+var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(".+_2\\.\\d+")
 
 func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	metadata := MavenMetadata{}
@@ -25,11 +30,34 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-// Connects to artifactory and parses maven metadata to get the latest release
 func (sm ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
 
+	if hasScalaSuffix.MatchString(s.Artifact) {
+		// Tries different scala versions in order to find the latest version, it assumes that
+		// the 2.13 builds are always more recent than 2.12 etc...
+		// TODO: what does scala 3 support look like?
+		// TODO: could we scrape artifactory for available versions instead?
+		//       Could use use the last modified date etc?
+		versions := []string{"_2.13", "_2.12", "_2.11"}
+		for _, v := range versions {
+			artifact := s.Artifact[:len(s.Artifact)-5] + v
+			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
+			if err == nil {
+				return metadata, nil
+			}
+		}
+		return MavenMetadata{}, fmt.Errorf("failed to find maven-metadata.xml for %s", s.Artifact)
+	} else {
+		// non scala service
+		return sm.getLatestVersion(s.GroupId, s.Artifact)
+	}
+}
+
+// Connects to artifactory and parses maven metadata to get the latest release
+func (sm ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
+
 	// build url
-	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", s.GroupId, s.Artifact, "maven-metadata.xml")
+	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
 	resp, err := sm.Client.Get(url)

@@ -16,7 +16,7 @@ func (sm ServiceManager) StartProxy() {
 	for _, v := range sm.Services {
 		if v.Location != "" && v.Location != "/" && v.Frontend {
 			routes[v.Location] = fmt.Sprintf("localhost:%d", v.DefaultPort)
-			sm.PrintVerbose("Setup: routing %s to % on port %s\n", v.Location, v.Id, string(v.DefaultPort))
+			sm.PrintVerbose("Setup: routing %s to %s on port %s\n", v.Location, v.Id, fmt.Sprint(v.DefaultPort))
 		}
 	}
 
