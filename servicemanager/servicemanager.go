@@ -27,6 +27,7 @@ type Service struct {
 	Name        string        `json:"name"`
 	DefaultPort int           `json:"defaultPort"`
 	Template    string        `json:"template"`
+	Frontend    bool          `json:"frontend"`
 	Source      Source        `json:"sources"`
 	Binary      ServiceBinary `json:"binary"`
 	Location    string        `json:"location"`

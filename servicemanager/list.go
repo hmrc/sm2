@@ -12,23 +12,32 @@ import (
 )
 
 type portListing struct {
-	port    int
-	service string
+	port     int
+	service  string
+	frontend bool
 }
 
 func (sm ServiceManager) ListPorts() {
 	output := []portListing{}
 
+	maxLen := 20
 	for _, v := range sm.Services {
-		output = append(output, portListing{v.DefaultPort, v.Id})
+		if len(v.Id) > maxLen {
+			maxLen = len(v.Id)
+		}
+		output = append(output, portListing{v.DefaultPort, v.Id, v.Frontend})
 	}
 
 	sort.Slice(output, func(i, j int) bool {
 		return output[i].port < output[j].port
 	})
 
+	frontend := ""
 	for _, o := range output {
-		fmt.Printf("%d\t-> %s\n", o.port, o.service)
+		if o.frontend {
+			frontend = "*"
+		}
+		fmt.Printf("%-5d -> %s  %s\n", o.port, pad(o.service, maxLen), frontend)
 	}
 }
 
