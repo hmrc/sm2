@@ -30,15 +30,19 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 	offline := sm.Commands.Offline
 	installDir, _ := sm.findInstallDirOfService(serviceName)
 	versionToInstall := requestedVersion
+	group := service.Binary.GroupId
+	artifact := service.Binary.Artifact
 
 	// look up the latest version if its not supplied
 	if requestedVersion == "" && !offline {
-		versions, err := sm.GetLatestVersions(service.Binary)
+		metadata, err := sm.GetLatestVersions(service.Binary)
 		if err != nil {
 			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}
 			return fmt.Errorf("No version found")
 		}
-		versionToInstall = versions.Latest
+		group = metadata.Group
+		artifact = metadata.Artifact
+		versionToInstall = metadata.Latest
 	}
 
 	// install requested version of service if required
@@ -59,7 +63,7 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 		sm.UiUpdates <- Progress{service: serviceName, state: "Installing..."}
 
 		var err error
-		installFile, err = sm.installService(installDir, service, versionToInstall)
+		installFile, err = sm.installService(installDir, service.Id, group, artifact, versionToInstall)
 		if err != nil {
 			return err
 		}
@@ -83,7 +87,7 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 	return sm.Ledger.SaveStateFile(installDir, state)
 }
 
-func (sm ServiceManager) installService(installDir string, service Service, version string) (ledger.InstallFile, error) {
+func (sm ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {
 
 	var installFile ledger.InstallFile
 
@@ -92,15 +96,14 @@ func (sm ServiceManager) installService(installDir string, service Service, vers
 		return installFile, err
 	}
 
-	sm.UiUpdates <- Progress{service: service.Id, percent: 0, state: "Init"}
+	sm.UiUpdates <- Progress{service: serviceId, percent: 0, state: "Init"}
 
-	artifact := url.PathEscape(service.Binary.Artifact)
-	group := url.PathEscape(service.Binary.GroupId)
+	groupPath := strings.ReplaceAll(group, ".", "/")
 	filename := fmt.Sprintf("%s-%s.tgz", url.PathEscape(artifact), url.PathEscape(version))
-	downloadUrl := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, url.PathEscape(version), filename)
+	downloadUrl := sm.Config.ArtifactoryRepoUrl + path.Join("/", groupPath, url.PathEscape(artifact), url.PathEscape(version), filename)
 
 	progressTracker := ProgressTracker{
-		service: service.Id,
+		service: serviceId,
 		update:  sm.UiUpdates,
 	}
 
@@ -110,8 +113,8 @@ func (sm ServiceManager) installService(installDir string, service Service, vers
 	}
 
 	installFile = ledger.InstallFile{
-		Service:  service.Id,
-		Artifact: service.Binary.Artifact,
+		Service:  serviceId,
+		Artifact: artifact,
 		Version:  version,
 		Path:     serviceDir,
 		Md5Sum:   "TODO",
@@ -213,20 +216,6 @@ func (sm ServiceManager) generateArgs(service Service, version string, serviceDi
 	}
 
 	return args
-}
-
-// clears exists logs and creates the folder if its missing
-func initLogDir(serviceDir string) (string, error) {
-	logPath := path.Join(serviceDir, "logs")
-
-	// if logdir exists remove it
-	if _, err := os.Stat(logPath); os.IsExist(err) {
-		rmErr := os.RemoveAll(logPath)
-		if rmErr != nil {
-			return logPath, rmErr
-		}
-	}
-	return logPath, os.MkdirAll(logPath, 0755)
 }
 
 // killing a process doesn't cleanup the RUNNING_PID preventing it being rerun

@@ -34,6 +34,12 @@ func (sm ServiceManager) StopService(serviceName string) error {
 		}
 	}
 
+	if serviceName == "*" {
+		fmt.Println("The command --stop ALL is deprecated, use --stop-all instead.")
+		sm.StopAll()
+		return nil
+	}
+
 	fmt.Printf("Unable to find service %s\n", serviceName)
 	return nil
 }

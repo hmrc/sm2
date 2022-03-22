@@ -7,6 +7,20 @@ import (
 	"path"
 )
 
+// clears exists logs and creates the folder if its missing
+func initLogDir(serviceDir string) (string, error) {
+	logPath := path.Join(serviceDir, "logs")
+
+	// if logdir exists remove it
+	if _, err := os.Stat(logPath); os.IsExist(err) {
+		rmErr := os.RemoveAll(logPath)
+		if rmErr != nil {
+			return logPath, rmErr
+		}
+	}
+	return logPath, os.MkdirAll(logPath, 0755)
+}
+
 func (sm *ServiceManager) PrintLogsForService(serviceName string) {
 
 	installDir, err := sm.findInstallDirOfService(serviceName)

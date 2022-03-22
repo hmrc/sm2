@@ -12,16 +12,19 @@ func (sm ServiceManager) StartProxy() {
 
 	routes := map[string]string{}
 
-	// build routing table
+	// build routing table for services tagged as frontend
 	for _, v := range sm.Services {
-		if v.Location != "" && v.Location != "/" {
+		if v.Location != "" && v.Location != "/" && v.Frontend {
 			routes[v.Location] = fmt.Sprintf("localhost:%d", v.DefaultPort)
+			sm.PrintVerbose("Setup: routing %s to %s on port %s\n", v.Location, v.Id, fmt.Sprint(v.DefaultPort))
 		}
 	}
 
 	rootServicePort := 9017
 
-	log.Printf("ReverseProxy: Loaded %d routes\n", len(routes))
+	log.Printf("ReverseProxy: Loaded %d frontend routes\n", len(routes))
+	log.Println("(only services with 'frontend: true' in services.json are addressable)")
+
 	director := func(req *http.Request) {
 
 		pathPrefix := "/" + strings.SplitN(req.URL.Path, "/", 3)[1]
@@ -38,9 +41,7 @@ func (sm ServiceManager) StartProxy() {
 		} else {
 			// handle anything that doesn't match
 			// this would be anything that hangs off '/' like catalogue frontend etc
-			if sm.Commands.Verbose {
-				log.Printf("%s %s\t-> No Proxy!\n", req.Method, req.URL.Path)
-			}
+			sm.PrintVerbose("%s %s\t-> No Proxy!\n", req.Method, req.URL.Path)
 			req.URL.Scheme = "http"
 			req.URL.Host = fmt.Sprintf("localhost:%d", rootServicePort)
 		}
