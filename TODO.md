@@ -11,20 +11,17 @@
 - template generator for service/profiles
 
 ===todo
-- use service.status to restart services
 - server mode
 - assets frontend start hander (how to do?)
 - user level config (i.e. override tmpdir, default worker count, artifactory url etc)
 - validate md5sum on download (artifactory hash)
 - make / configurable for reverse-proxy (i.e swap between catalogue etc)
-- save validate md5 on download
 - integration tests
 - service mappings, consider injecting a new config with all of them?
 - git pull when running from src (use .install)
 
-
-
 === done
+- use service.status to restart services
 - support --appendArgs and its weird json encoded payload
 - mocks for testing artifactory
 - support the -wait parameter
