@@ -114,7 +114,7 @@ func (sm ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *sy
 		}
 
 		if err != nil {
-			sm.UiUpdates <- Progress{service: task.service, percent: 100, state: "Error: " + err.Error()}
+			sm.UiUpdates <- Progress{service: task.service, percent: 100, state: err.Error()}
 		} else {
 			sm.UiUpdates <- Progress{service: task.service, percent: 100, state: "Done"}
 		}
