@@ -142,7 +142,6 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 			if err != nil {
 				log.Fatalf("\nfailed to write to file %s\n%s", path.Join(outdir, header.Name), err)
 			}
-			defer outfile.Close()
 
 			_, err = io.Copy(outfile, tarReader)
 			if err != nil {
@@ -150,6 +149,7 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 			}
 			// fix up the permissions
 			outfile.Chmod(header.FileInfo().Mode())
+			outfile.Close()
 		}
 	}
 
