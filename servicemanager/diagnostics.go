@@ -76,7 +76,7 @@ func checkJava() {
 		return
 	}
 
-	versionRegex := regexp.MustCompile(".+(\\d+\\.\\d+\\.\\d+).+")
+	versionRegex := regexp.MustCompile(`.+(\d+\.\d+\.\d+).+`)
 	version := versionRegex.FindStringSubmatch(string(out))
 	if version != nil {
 		fmt.Printf("JAVA:\t\t OK (%s)\n", version[1])

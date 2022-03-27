@@ -8,32 +8,32 @@ import (
 )
 
 type UserOption struct {
-	appendArgs    string // not exported, content decoded into ExtraArgs
-	Clean         bool
-	Config        string
-	Debug         string
-	Diagnostic    bool
+	appendArgs    string              // not exported, content decoded into ExtraArgs
+	Clean         bool                // used with --start to force redownloading
+	Config        string              // uses a different service-manager-config folder
+	Debug         string              // debug info about a service, used to determin why it failed to start
+	Diagnostic    bool                // runs tests to determin if there are problems with the install
 	ExtraArgs     map[string][]string // parsed from content of AppendArgs
-	ExtraServices []string            // other services to start/stop beyond the first one set in --start/--stop
-	FromSource    bool
-	List          string
-	Logs          string
-	NoProgress    bool
-	Offline       bool
-	Port          int
-	Ports         bool
-	Release       string
-	Restart       bool
-	ReverseProxy  bool
-	Start         bool
-	Status        bool
-	StatusShort   bool
-	StopAll       bool
-	Stop          bool
-	Verbose       bool
-	Version       bool
-	Wait          int
-	Workers       int
+	ExtraServices []string            // ids of services to start
+	FromSource    bool                // used with --start to run from source rather than bin
+	List          string              // todo: rename to search maybe? searches for services by name
+	Logs          string              // prints the logs of a service, running or otherwise
+	NoProgress    bool                // hides the animated download progress meter
+	Offline       bool                // prints downloaded services, used with --start bypasses download and uses local copy
+	Port          int                 // overrides service port, only works with the first service when starting multiple
+	Ports         bool                // prints all the ports
+	Release       string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
+	Restart       bool                // restarts a service or profile
+	ReverseProxy  bool                // starts a reverse-proxy on 3000 (override with --port)
+	Start         bool                // starts a service, multiple services or a profile(s)
+	Status        bool                // shows status of everything thats running
+	StatusShort   bool                // same as --status but is the -s short version of the cmd
+	StopAll       bool                // stops all the services that are running
+	Stop          bool                // stops a service, multiple services or profile(s)
+	Verbose       bool                // shows extra logging
+	Version       bool                // prints sm2 version number
+	Wait          int                 // waits given number of secs after starting services for then to respond to pings
+	Workers       int                 // sets the number of concurrent downloads/service starts
 }
 
 func Parse(args []string) (*UserOption, error) {
@@ -88,7 +88,7 @@ func Parse(args []string) (*UserOption, error) {
 		}
 	}
 
-	// Decode user supplied args
+	// Decode appendArgs (to keep legacy compatibility they're encoded as json for some reason)
 	if opts.appendArgs != "" {
 		args, err := parseAppendArgs(opts.appendArgs)
 		if err != nil {

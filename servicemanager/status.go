@@ -23,13 +23,13 @@ type serviceStatus struct {
 	health  health
 }
 
-func (sm ServiceManager) PrintStatus() {
+func (sm *ServiceManager) PrintStatus() {
 	statues := []serviceStatus{sm.CheckMongo()}
 	statues = append(statues, sm.findStatuses()...)
 	printTable(statues)
 }
 
-func (sm ServiceManager) findStatuses() []serviceStatus {
+func (sm *ServiceManager) findStatuses() []serviceStatus {
 
 	statuses := []serviceStatus{}
 
@@ -53,7 +53,7 @@ func (sm ServiceManager) findStatuses() []serviceStatus {
 			// clean up state file
 			installDir, err := sm.findInstallDirOfService(state.Service)
 			if err != nil {
-				err = sm.Ledger.ClearStateFile(installDir)
+				_ = sm.Ledger.ClearStateFile(installDir)
 			}
 			continue
 		}
@@ -71,7 +71,7 @@ func (sm ServiceManager) findStatuses() []serviceStatus {
 				status.health = PASS
 			} else {
 				// if boot grace period has passed, it fails
-				if time.Now().Sub(state.Started).Seconds() > 30 {
+				if time.Since(state.Started).Seconds() > 30 {
 					status.health = FAIL
 				}
 			}
@@ -94,7 +94,7 @@ func printTable(statuses []serviceStatus) {
 	fmt.Printf("| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
 	fmt.Print(border)
 	for _, status := range statuses {
-		fmt.Printf("| %-35s", status.service)
+		fmt.Printf("| %-35s", crop(status.service, 35))
 		fmt.Printf("| %-10s", status.version)
 		fmt.Printf("| %-8d", status.pid)
 		fmt.Printf("| %-6d", status.port)
@@ -111,7 +111,7 @@ func printTable(statuses []serviceStatus) {
 }
 
 // returns true if the service ping endpoint responds
-func (sm ServiceManager) CheckHealth(port int) bool {
+func (sm *ServiceManager) CheckHealth(port int) bool {
 	resp, err := sm.Client.Get(fmt.Sprintf("http://localhost:%d/ping/ping", port))
 	return err == nil && resp.StatusCode == 200
 }

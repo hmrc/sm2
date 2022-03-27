@@ -10,7 +10,7 @@ import (
 	"sm2/ledger"
 )
 
-func (sm ServiceManager) StartFromSource(serviceName string) error {
+func (sm *ServiceManager) StartFromSource(serviceName string) error {
 
 	service, ok := sm.Services[serviceName]
 	if !ok {
@@ -41,7 +41,7 @@ func (sm ServiceManager) StartFromSource(serviceName string) error {
 	return sm.Ledger.SaveStateFile(installDir, state)
 }
 
-func (sm ServiceManager) installFromGit(installDir string, gitUrl string, service Service) (ledger.InstallFile, error) {
+func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, service Service) (ledger.InstallFile, error) {
 
 	// TODO work out if we should update or clone
 	if sm.Commands.Clean {
@@ -79,7 +79,7 @@ func gitClone(gitUrl string, installDir string) (string, error) {
 	logs, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("Failed to clone %s into %s.\n", gitUrl, installDir)
-		fmt.Printf(string(logs))
+		fmt.Println(string(logs))
 		return "", err
 	}
 	return path.Join(installDir, "src"), nil
@@ -107,7 +107,7 @@ func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.
 
 	logFile, err := os.Create(path.Join(srcDir, "logs", "stdout.log"))
 	if err != nil {
-		return state, fmt.Errorf("Unable to create stdout.log! %s", err)
+		return state, fmt.Errorf("unable to create stdout.log %s", err)
 	}
 
 	cmd.Stdout = logFile

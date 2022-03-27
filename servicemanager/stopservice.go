@@ -8,17 +8,18 @@ import (
 func stopPid(pid int) {
 	osProc, err := os.FindProcess(pid)
 	if err != nil {
-		fmt.Printf("error finding pid %d\n", pid)
+		fmt.Printf("pid %d does not exists\n", pid)
 	}
 
 	err = osProc.Kill()
 	if err != nil {
-		fmt.Printf("error stopping pid %d - %s\n", pid, err)
+		fmt.Printf("unable to stop pid %d, %s\n", pid, err)
 	}
 }
 
-func (sm ServiceManager) StopService(serviceName string) error {
+func (sm *ServiceManager) StopService(serviceName string) error {
 
+	// @improve just load the state file instead and kill the listed pid?
 	statues := sm.findStatuses()
 
 	for _, status := range statues {
@@ -44,7 +45,7 @@ func (sm ServiceManager) StopService(serviceName string) error {
 	return nil
 }
 
-func (sm ServiceManager) StopAll() {
+func (sm *ServiceManager) StopAll() {
 
 	fmt.Printf("Stopping ALL services!\n")
 

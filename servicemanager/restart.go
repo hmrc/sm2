@@ -33,13 +33,17 @@ func (sm *ServiceManager) Restart(sv ServiceAndVersion) error {
 	}
 
 	// stop the current service
-	if err := sm.StopService(sv.service); err != nil {
+	err = sm.StopService(sv.service)
+	if err != nil {
 		return err
 	}
 
 	// start a new instance
 	fmt.Printf("Restarting %s...\n", sv.service)
 	newstate, err := run(service, install, state.Args, state.Port)
+	if err != nil {
+		return err
+	}
 
 	// save the new pid
 	return sm.Ledger.SaveStateFile(installDir, newstate)

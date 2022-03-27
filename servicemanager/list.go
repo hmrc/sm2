@@ -17,7 +17,7 @@ type portListing struct {
 	frontend bool
 }
 
-func (sm ServiceManager) ListPorts() {
+func (sm *ServiceManager) ListPorts() {
 	output := []portListing{}
 
 	maxLen := 20
@@ -41,7 +41,7 @@ func (sm ServiceManager) ListPorts() {
 	}
 }
 
-func (sm ServiceManager) ListServices(filter string) {
+func (sm *ServiceManager) ListServices(filter string) {
 
 	// check if its a profile, list services and exit
 	if profile, ok := sm.Profiles[strings.ToUpper(filter)]; ok {
@@ -88,7 +88,7 @@ func (sm ServiceManager) ListServices(filter string) {
 }
 
 // scrapes the install files and prints out what versions are installed and available
-func (sm ServiceManager) ListServicesAvailableOffline() {
+func (sm *ServiceManager) ListServicesAvailableOffline() {
 
 	files, err := ioutil.ReadDir(sm.Config.TmpDir)
 

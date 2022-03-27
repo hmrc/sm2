@@ -21,7 +21,7 @@ type MavenMetadata struct {
 	Release  string `xml:"versioning>release"`
 }
 
-var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(".+_2\\.\\d+")
+var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(`.+_2\.\d+`)
 
 func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	metadata := MavenMetadata{}
@@ -30,7 +30,7 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func (sm ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
 
 	if hasScalaSuffix.MatchString(s.Artifact) {
 		// Tries different scala versions in order to find the latest version, it assumes that
@@ -54,7 +54,7 @@ func (sm ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, erro
 }
 
 // Connects to artifactory and parses maven metadata to get the latest release
-func (sm ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
+func (sm *ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
 
 	// build url
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
@@ -78,7 +78,7 @@ func (sm ServiceManager) getLatestVersion(group string, artifact string) (MavenM
 // downloads a url and attempt to decompress it to a folder
 // assumes the target is a .tgz file
 // this could return the install(service) dir, would remove need to look it up later
-func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progressTracker *ProgressTracker) (string, error) {
+func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progressTracker *ProgressTracker) (string, error) {
 
 	// ensure base dir and logs dir exist
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -113,7 +113,7 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 	dirsSeen := map[string]uint8{}
 
 	tarReader := tar.NewReader(gz)
-	for true {
+	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
 			break
