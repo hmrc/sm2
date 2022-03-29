@@ -51,8 +51,10 @@ func (sm *ServiceManager) Run() {
 
 	} else if sm.Commands.Ports {
 		sm.ListPorts()
-	} else if sm.Commands.List != "" {
-		sm.ListServices(sm.Commands.List)
+	} else if sm.Commands.Search != "" {
+		sm.ListServices(sm.Commands.Search)
+	} else if sm.Commands.List {
+		sm.ListServices(".")
 	} else if sm.Commands.Logs != "" {
 		sm.PrintLogsForService(sm.Commands.Logs)
 	} else if sm.Commands.ReverseProxy {

@@ -16,7 +16,7 @@ type UserOption struct {
 	ExtraArgs     map[string][]string // parsed from content of AppendArgs
 	ExtraServices []string            // ids of services to start
 	FromSource    bool                // used with --start to run from source rather than bin
-	List          string              // todo: rename to search maybe? searches for services by name
+	List          bool                // lists all the services
 	Logs          string              // prints the logs of a service, running or otherwise
 	NoProgress    bool                // hides the animated download progress meter
 	Offline       bool                // prints downloaded services, used with --start bypasses download and uses local copy
@@ -25,6 +25,7 @@ type UserOption struct {
 	Release       string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
 	Restart       bool                // restarts a service or profile
 	ReverseProxy  bool                // starts a reverse-proxy on 3000 (override with --port)
+	Search        string              // searches for services/profiles
 	Start         bool                // starts a service, multiple services or a profile(s)
 	Status        bool                // shows status of everything thats running
 	StatusShort   bool                // same as --status but is the -s short version of the cmd
@@ -47,7 +48,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given service may not have started.")
 	flagset.BoolVar(&opts.Diagnostic, "diagnostic", false, "a suite of checks to debug issues with service manager")
 	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source")
-	flagset.StringVar(&opts.List, "list", "", "show the content of a profile or searches known services for a match")
+	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
 	flagset.BoolVar(&opts.NoProgress, "no-progress", false, "prevents download progress being shown")
 	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode.")
@@ -56,6 +57,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.StringVar(&opts.Release, "r", "", "sets which version to run")
 	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
 	flagset.BoolVar(&opts.ReverseProxy, "reverse-proxy", false, "starts a reverse proxy to all services on port :3000")
+	flagset.StringVar(&opts.Search, "search", "", "searches for services and profiles that match a given `regex`")
 	flagset.BoolVar(&opts.Start, "start", false, "starts one or more service, for a single service use -r to specify version")
 	flagset.BoolVar(&opts.Status, "status", false, "shows which services are running")
 	flagset.BoolVar(&opts.StatusShort, "s", false, "shows which services are running")
