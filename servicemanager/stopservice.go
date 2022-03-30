@@ -8,12 +8,12 @@ import (
 func stopPid(pid int) {
 	osProc, err := os.FindProcess(pid)
 	if err != nil {
-		fmt.Printf("pid %d does not exists\n", pid)
+		fmt.Printf("PID %d does not exists.\n", pid)
 	}
 
 	err = osProc.Kill()
 	if err != nil {
-		fmt.Printf("unable to stop pid %d, %s\n", pid, err)
+		fmt.Printf("Unable to stop pid %d, %s.\n", pid, err)
 	}
 }
 
@@ -24,7 +24,7 @@ func (sm *ServiceManager) StopService(serviceName string) error {
 
 	for _, status := range statues {
 		if status.service == serviceName {
-			fmt.Printf("Stopping %s\t(pid %d)\n", serviceName, status.pid)
+			fmt.Printf("Stopping %s\t(pid %d).\n", serviceName, status.pid)
 			stopPid(status.pid)
 
 			// clean up service.state

@@ -19,21 +19,15 @@ func (sm *ServiceManager) Run() {
 	var err error
 
 	if sm.Commands.Status || sm.Commands.StatusShort {
-
 		sm.PrintStatus()
-
 	} else if sm.Commands.Start {
-
 		services := sm.requestedServicesAndProfiles()
 		sm.asyncStart(services)
-
 	} else if sm.Commands.Stop {
-
 		services := sm.requestedServicesAndProfiles()
 		for _, s := range services {
 			err = sm.StopService(s.service)
 		}
-
 	} else if sm.Commands.StopAll {
 		sm.StopAll()
 	} else if sm.Commands.Restart {
@@ -70,10 +64,7 @@ func (sm *ServiceManager) Run() {
 		version.PrintVersion()
 	} else {
 		// show help
-		fmt.Printf("Service Manager\n")
-		fmt.Println("\nTODO: print some usage examples here like...")
-		fmt.Println("      sm2 --start AUTH -r 1.0.0")
-		fmt.Println("      sm2 --start CATALOGUE_FRONTEND SERVICE_CONFIGS")
+		fmt.Println(helptext)
 	}
 
 	if err != nil {

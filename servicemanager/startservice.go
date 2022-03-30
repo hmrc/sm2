@@ -39,7 +39,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 		metadata, err := sm.GetLatestVersions(service.Binary)
 		if err != nil {
 			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}
-			return fmt.Errorf("no version found")
+			return err
 		}
 		group = metadata.Group
 		artifact = metadata.Artifact
