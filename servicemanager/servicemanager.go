@@ -12,7 +12,7 @@ import (
 )
 
 type ServiceBinary struct {
-	Artifact          string
+	Artifact          string   `json:"artifact"`
 	GroupId           string   `json:"groupId"`
 	DestinationSubdir string   `json:"destinationSubdir"`
 	Cmd               []string `json:"cmd"`
@@ -64,23 +64,23 @@ func (sm ServiceManager) PrintVerbose(s string, args ...string) {
 	}
 }
 
-func (sm *ServiceManager) whereIsServiceInstalled(serviceName, version string) (string, error) {
+func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (string, error) {
 
 	// lookup service
 	service, ok := sm.Services[serviceName]
 	if !ok {
-		return "", fmt.Errorf("unknown service: %s", serviceName)
+		return "", fmt.Errorf("Unknown service: %s", serviceName)
 	}
 
 	// lookup .install file
 	installDir := path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir)
 	installFile, err := sm.Ledger.LoadInstallFile(installDir)
 	if err != nil {
-		return "", fmt.Errorf("no .install found in %s", installFile)
+		return "", fmt.Errorf("No .install found in %s", installFile)
 	}
 
 	// verify its the right one
-	if installFile.Version != version {
+	if version != "" && installFile.Version != version {
 		return "", fmt.Errorf("wrong version installed")
 	}
 

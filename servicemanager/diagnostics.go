@@ -3,12 +3,14 @@ package servicemanager
 import (
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"sm2/version"
 )
@@ -118,7 +120,16 @@ func checkVpn(config ServiceManagerConfig) {
 	_, err = net.LookupHost(artifactoryUrl.Host)
 	if err != nil {
 		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s isnt reachable you might not be on the VPN\n", artifactoryUrl)
+		fmt.Printf("\t\t %s is not resolvable, check VPN\n", artifactoryUrl)
+		return
+	}
+
+	client := http.Client{Timeout: 2 * time.Second}
+
+	_, err = client.Head(config.ArtifactoryRepoUrl)
+	if err != nil {
+		fmt.Print("VPN:\t\t NOT OK\n")
+		fmt.Printf("\t\t %s resolvable but not reachable: %s\n", artifactoryUrl, err)
 	} else {
 		fmt.Printf("VPN:\t\t OK (%s resolvable)\n", artifactoryUrl)
 	}

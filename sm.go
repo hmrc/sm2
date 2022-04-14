@@ -43,7 +43,7 @@ func main() {
 	}
 
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: 120 * time.Second,
 	}
 
 	config := servicemanager.ServiceManagerConfig{

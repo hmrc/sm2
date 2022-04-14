@@ -36,6 +36,11 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 
 	// look up the latest version if its not supplied
 	if requestedVersion == "" && !offline {
+
+		if !sm.checkVpn() {
+			return fmt.Errorf("failed, check vpn connection")
+		}
+
 		metadata, err := sm.GetLatestVersions(service.Binary)
 		if err != nil {
 			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}

@@ -24,7 +24,7 @@ func (sm *ServiceManager) StopService(serviceName string) error {
 
 	for _, status := range statues {
 		if status.service == serviceName {
-			fmt.Printf("Stopping %s\t(pid %d).\n", serviceName, status.pid)
+			fmt.Printf("Stopping %-40s(pid %-7d).\n", serviceName, status.pid)
 			stopPid(status.pid)
 
 			// clean up service.state
@@ -52,7 +52,7 @@ func (sm *ServiceManager) StopAll() {
 	statues := sm.findStatuses()
 
 	for _, status := range statues {
-		fmt.Printf("Stopping %s\t(pid %d)\n", status.service, status.pid)
+		fmt.Printf("Stopping %-40s(pid %-7d)\n", status.service, status.pid)
 		stopPid(status.pid)
 
 		// clean up service.state
