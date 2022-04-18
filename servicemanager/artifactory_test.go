@@ -156,6 +156,35 @@ func TestGetLatestVersionGetsJavaService(t *testing.T) {
 	}
 }
 
+func TestGetLatestVersionSetsUserAgent(t *testing.T) {
+
+	var userAgent string
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userAgent = r.Header["User-Agent"][0]
+		fmt.Fprint(w, mavenMetadata)
+	}))
+	defer svr.Close()
+
+	sm := ServiceManager{
+		Client: &http.Client{},
+		Config: ServiceManagerConfig{
+			ArtifactoryRepoUrl: svr.URL,
+		},
+	}
+
+	sb := ServiceBinary{
+		GroupId:  "foo/bar/",
+		Artifact: "foo_2.12",
+	}
+
+	_, err := sm.GetLatestVersions(sb)
+	AssertNotErr(t, err)
+
+	if !strings.HasPrefix(userAgent, "service_manager_2/") {
+		t.Errorf("incorrect user agent set: %s", userAgent)
+	}
+}
+
 func TestGetLatestVersion(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, mavenMetadata)

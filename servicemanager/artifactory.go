@@ -8,10 +8,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
+
+	"sm2/version"
 )
 
 type MavenMetadata struct {
@@ -22,6 +26,8 @@ type MavenMetadata struct {
 }
 
 var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(`.+_2\.\d+`)
+
+var userAgent = fmt.Sprintf("sm2/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH)
 
 func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	metadata := MavenMetadata{}
@@ -60,8 +66,13 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
-	resp, err := sm.Client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return MavenMetadata{}, err
+	}
+	req.Header.Set("User-Agent", userAgent)
 
+	resp, err := sm.Client.Do(req)
 	if err != nil {
 		return MavenMetadata{}, err
 	}
@@ -85,7 +96,13 @@ func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progr
 		return "", err
 	}
 
-	resp, err := sm.Client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := sm.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
