@@ -3,7 +3,6 @@ package servicemanager
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 
 	"sm2/cli"
@@ -64,19 +63,20 @@ func (sm ServiceManager) PrintVerbose(s string, args ...string) {
 	}
 }
 
+/*
 func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (string, error) {
 
 	// lookup service
 	service, ok := sm.Services[serviceName]
 	if !ok {
-		return "", fmt.Errorf("Unknown service: %s", serviceName)
+		return "", fmt.Errorf("unknown service: %s", serviceName)
 	}
 
 	// lookup .install file
 	installDir := path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir)
 	installFile, err := sm.Ledger.LoadInstallFile(installDir)
 	if err != nil {
-		return "", fmt.Errorf("No .install found in %s", installFile)
+		return "", fmt.Errorf("no .install found in %s", installFile)
 	}
 
 	// verify its the right one
@@ -92,6 +92,7 @@ func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (s
 	// return the path
 	return installFile.Path, nil
 }
+*/
 
 // based on config, find the directory a service is installed into.
 // TODO: rename this something less confusing. it doesnt really 'find' anything,
@@ -99,7 +100,6 @@ func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (s
 func (sm *ServiceManager) findInstallDirOfService(serviceName string) (string, error) {
 	if service, ok := sm.Services[serviceName]; ok {
 		return path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir), nil
-	} else {
-		return "", fmt.Errorf("unknown service: %s", serviceName)
 	}
+	return "", fmt.Errorf("unknown service: %s", serviceName)
 }

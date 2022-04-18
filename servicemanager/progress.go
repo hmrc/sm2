@@ -9,7 +9,6 @@ type Progress struct {
 	service string
 	percent float32
 	state   string
-	done    bool
 }
 
 // generates progress messages, should be Tee'd from another stream

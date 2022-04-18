@@ -37,7 +37,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 	// look up the latest version if its not supplied
 	if requestedVersion == "" && !offline {
 
-		if !sm.checkVpn() {
+		if !checkVpn(sm.Config) {
 			return fmt.Errorf("failed, check vpn connection")
 		}
 

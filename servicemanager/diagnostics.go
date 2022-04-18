@@ -3,14 +3,12 @@ package servicemanager
 import (
 	"fmt"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 
 	"sm2/version"
 )
@@ -21,7 +19,7 @@ func RunDiagnostics(config ServiceManagerConfig) {
 	version.PrintVersion()
 
 	// check VPN connectivity
-	checkVpn(config)
+	checkNetwork(config)
 
 	// check config dir
 	checkWorkspace(config)
@@ -78,7 +76,7 @@ func checkJava() {
 		return
 	}
 
-	versionRegex := regexp.MustCompile(`.+(\d+\.\d+\.\d+).+`)
+	versionRegex := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
 	version := versionRegex.FindStringSubmatch(string(out))
 	if version != nil {
 		fmt.Printf("JAVA:\t\t OK (%s)\n", version[1])
@@ -110,7 +108,7 @@ func checkOS() {
 	}
 }
 
-func checkVpn(config ServiceManagerConfig) {
+func checkNetwork(config ServiceManagerConfig) {
 	artifactoryUrl, err := url.Parse(config.ArtifactoryRepoUrl)
 	if err != nil {
 		fmt.Print("VPN:\t\t artifactory url not valid!\n")
@@ -124,12 +122,9 @@ func checkVpn(config ServiceManagerConfig) {
 		return
 	}
 
-	client := http.Client{Timeout: 2 * time.Second}
-
-	_, err = client.Head(config.ArtifactoryRepoUrl)
-	if err != nil {
+	if !checkVpn(config) {
 		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s resolvable but not reachable: %s\n", artifactoryUrl, err)
+		fmt.Printf("\t\t %s resolvable but not reachable\n", artifactoryUrl)
 	} else {
 		fmt.Printf("VPN:\t\t OK (%s resolvable)\n", artifactoryUrl)
 	}
