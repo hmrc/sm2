@@ -122,9 +122,9 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 		}
 
 		if err != nil {
-			sm.UiUpdates <- Progress{service: task.service, percent: 100, state: err.Error()}
+			sm.pr.update(task.service, 100, err.Error())
 		} else {
-			sm.UiUpdates <- Progress{service: task.service, percent: 100, state: "Done"}
+			sm.pr.update(task.service, 100, "Done")
 		}
 		wg.Done()
 	}
@@ -138,9 +138,9 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 
 	// fire up the progress bar renderer
-	renderer := ProgressRenderer{updateChan: sm.UiUpdates}
-	go renderer.renderLoop(sm.Commands.NoProgress)
-	renderer.init(services)
+	sm.pr.noProgress = sm.Commands.NoProgress
+	go sm.pr.renderLoop()
+	sm.pr.init(services)
 	taskQueue := make(chan ServiceAndVersion, len(services))
 
 	fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)

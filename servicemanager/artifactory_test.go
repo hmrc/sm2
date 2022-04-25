@@ -240,14 +240,9 @@ func TestDownloadAndDecompress(t *testing.T) {
 	defer os.RemoveAll(outdir)
 
 	// discard progres
-	discarder := make(chan Progress)
-	go func(c chan Progress) {
-		for range c {
-		}
-	}(discarder)
-	defer close(discarder)
+	renderer := ProgressRenderer{noProgress: true}
 
-	progress := ProgressTracker{update: discarder}
+	progress := ProgressTracker{pr: &renderer}
 
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		f, err := os.Open("../testing/testdata/playtest-1.0.0.tgz")
