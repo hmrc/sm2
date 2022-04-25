@@ -36,7 +36,7 @@ func (pt *ProgressTracker) Write(p []byte) (int, error) {
 type ProgressRenderer struct {
 	watchlist  []string
 	state      map[string]Progress
-	updates    chan Progress
+	updateChan chan Progress
 	serviceLen int
 }
 
@@ -62,7 +62,7 @@ func (pr *ProgressRenderer) renderLoop(noProgress bool) {
 	linesDrawn := 0
 
 	for {
-		u := <-pr.updates
+		u := <-pr.updateChan
 		if _, ok := pr.state[u.service]; ok {
 			pr.state[u.service] = u
 		}

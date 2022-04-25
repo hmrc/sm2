@@ -1,6 +1,7 @@
 package servicemanager
 
 import (
+	"io"
 	"net/http"
 	"time"
 )
@@ -11,6 +12,17 @@ func checkVpn(config ServiceManagerConfig) bool {
 	shortTimeoutClient := &http.Client{
 		Timeout: 4 * time.Second,
 	}
-	_, err := shortTimeoutClient.Head(config.ArtifactoryRepoUrl)
-	return err == nil
+	resp, err := shortTimeoutClient.Head(config.ArtifactoryPingUrl)
+	if err != nil {
+		return false
+	}
+
+	defer resp.Body.Close()
+	_, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return false
+	}
+
+	return resp.StatusCode == 200
+
 }

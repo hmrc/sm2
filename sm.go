@@ -48,6 +48,7 @@ func main() {
 
 	config := servicemanager.ServiceManagerConfig{
 		ArtifactoryRepoUrl: "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases",
+		ArtifactoryPingUrl: "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping",
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
 	}

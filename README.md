@@ -1,6 +1,17 @@
 # Service manager V2
 Work-in-progress rewrite of the original service manager but in go.
 
+## Install from Binary
+
+1. Download the latest binary for your os/arch for the github release page:
+https://github.com/hmrc/sm2/releases
+2. Rename the executable to `sm2`
+3. Make the binary executable
+```bash
+chmod +x sm2
+```
+4. Put `sm2` somewhere in your classpath
+
 ## Install with Nix
 To install from source:
 

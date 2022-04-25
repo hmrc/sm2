@@ -9,6 +9,7 @@ import (
 
 type UserOption struct {
 	appendArgs    string              // not exported, content decoded into ExtraArgs
+	CheckPorts    bool                // finds duplicate ports
 	Clean         bool                // used with --start to force redownloading
 	Config        string              // uses a different service-manager-config folder
 	Debug         string              // debug info about a service, used to determin why it failed to start
@@ -43,6 +44,7 @@ func Parse(args []string) (*UserOption, error) {
 
 	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
 	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
+	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
 	flagset.BoolVar(&opts.Clean, "clean", false, "forces reinstall of service (use with --start)")
 	flagset.StringVar(&opts.Config, "config", "", "sets an alternate directory for service-manager-config")
 	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given `service` may not have started")

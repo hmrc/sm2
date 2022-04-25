@@ -36,11 +36,11 @@ func (sm *ServiceManager) Await(services []ServiceAndVersion, timeout int) {
 	// print results
 	if healthy == len(health) {
 		fmt.Println("All services started ok.")
-	} else {
-		for k, isHealthy := range health {
-			if !isHealthy {
-				fmt.Printf("%s failed to start.\n", k)
-			}
+	}
+	for k, isHealthy := range health {
+		if !isHealthy {
+			fmt.Printf("%s failed to start.\n", k)
 		}
 	}
+
 }

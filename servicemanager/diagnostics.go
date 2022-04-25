@@ -15,47 +15,32 @@ import (
 
 func RunDiagnostics(config ServiceManagerConfig) {
 
-	// print version
 	version.PrintVersion()
 
-	// check VPN connectivity
 	checkNetwork(config)
-
-	// check config dir
 	checkWorkspace(config)
-
-	// check config revision
 	checkConfigRevision(config)
-
-	// check java version
 	checkJava()
-
-	// check git
 	checkGit()
-
-	// check tmp dir + space
-
-	// check os
 	checkOS()
 }
 
 func checkWorkspace(config ServiceManagerConfig) {
 	stat, err := os.Stat(config.TmpDir)
 	if err != nil {
-		fmt.Printf("WORKSPACE:\t\t NOT OK (%s)\n", err)
+		fmt.Printf("WORKSPACE:\t NOT OK (%s)\n", err)
 		return
 	}
 
 	if !stat.IsDir() {
-		fmt.Printf("WORKSPACE:\t\t NOT OK (%s is not a directory)\n", config.TmpDir)
+		fmt.Printf("WORKSPACE:\t NOT OK (%s is not a directory)\n", config.TmpDir)
 		return
 	}
 
-	fmt.Printf("WORKSPACE:\t\t OK (%s)\n", config.TmpDir)
+	fmt.Printf("WORKSPACE:\t OK (%s)\n", config.TmpDir)
 }
 
 func checkConfigRevision(config ServiceManagerConfig) {
-
 	cmd := exec.Command("git", "log", "--pretty=format:%h,%ar,%s", "-1")
 	cmd.Dir = config.ConfigDir
 

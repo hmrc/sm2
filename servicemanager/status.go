@@ -77,7 +77,6 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 			}
 		} else {
 			// no pid
-			fmt.Printf("no pid for %s\n", state.Service)
 			status.health = FAIL
 		}
 		statuses = append(statuses, status)

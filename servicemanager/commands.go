@@ -19,18 +19,23 @@ func (sm *ServiceManager) Run() {
 	var err error
 
 	if sm.Commands.Status || sm.Commands.StatusShort {
+		// prints table of running services
 		sm.PrintStatus()
 	} else if sm.Commands.Start {
+		// starts service(s) or profile(s)
 		services := sm.requestedServicesAndProfiles()
 		sm.asyncStart(services)
 	} else if sm.Commands.Stop {
+		// stops a specific service or profile
 		services := sm.requestedServicesAndProfiles()
 		for _, s := range services {
 			err = sm.StopService(s.service)
 		}
 	} else if sm.Commands.StopAll {
+		// stops all managed services
 		sm.StopAll()
 	} else if sm.Commands.Restart {
+		// restarts service(s) or profile(s)
 		services := sm.requestedServicesAndProfiles()
 		failed := []ServiceAndVersion{}
 		for _, s := range services {
@@ -42,25 +47,34 @@ func (sm *ServiceManager) Run() {
 		if len(failed) > 0 {
 			sm.asyncStart(failed)
 		}
-
 	} else if sm.Commands.Ports {
+		// prints all port numbers to stdout
 		sm.ListPorts()
+	} else if sm.Commands.CheckPorts {
+		sm.checkPorts()
 	} else if sm.Commands.Search != "" {
+		// regex search of services and profiles
 		sm.ListServices(sm.Commands.Search)
 	} else if sm.Commands.List {
+		// alias for search everything
 		sm.ListServices(".")
 	} else if sm.Commands.Logs != "" {
+		// dumps stdout.log to stdout
 		sm.PrintLogsForService(sm.Commands.Logs)
 	} else if sm.Commands.ReverseProxy {
+		// starts a reverse proxy for frontend services
 		sm.StartProxy()
 	} else if sm.Commands.Offline {
 		// used by itself, offline will list available services
 		sm.ListServicesAvailableOffline()
 	} else if sm.Commands.Diagnostic {
+		// checks if system can run sm2
 		RunDiagnostics(sm.Config)
 	} else if sm.Commands.Debug != "" {
+		// `--debug SERVICE` dumps as much info as it can find about the service
 		sm.showDebug(sm.Commands.Debug)
 	} else if sm.Commands.Version {
+		// show version and build
 		version.PrintVersion()
 	} else {
 		// show help
@@ -99,6 +113,7 @@ func (sm *ServiceManager) requestedServicesAndProfiles() []ServiceAndVersion {
 func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *sync.WaitGroup) {
 
 	for task := range tasks {
+
 		var err error
 		if task.fromSource {
 			err = sm.StartFromSource(task.service)
@@ -123,7 +138,7 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 
 	// fire up the progress bar renderer
-	renderer := ProgressRenderer{updates: sm.UiUpdates}
+	renderer := ProgressRenderer{updateChan: sm.UiUpdates}
 	go renderer.renderLoop(sm.Commands.NoProgress)
 	renderer.init(services)
 	taskQueue := make(chan ServiceAndVersion, len(services))

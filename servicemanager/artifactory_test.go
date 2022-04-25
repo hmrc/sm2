@@ -180,7 +180,7 @@ func TestGetLatestVersionSetsUserAgent(t *testing.T) {
 	_, err := sm.GetLatestVersions(sb)
 	AssertNotErr(t, err)
 
-	if !strings.HasPrefix(userAgent, "service_manager_2/") {
+	if !strings.HasPrefix(userAgent, "sm2/") {
 		t.Errorf("incorrect user agent set: %s", userAgent)
 	}
 }

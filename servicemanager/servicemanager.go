@@ -10,15 +10,23 @@ import (
 	"sm2/platform"
 )
 
-type ServiceBinary struct {
-	Artifact          string   `json:"artifact"`
-	GroupId           string   `json:"groupId"`
-	DestinationSubdir string   `json:"destinationSubdir"`
-	Cmd               []string `json:"cmd"`
+type ServiceManager struct {
+	Client    *http.Client
+	Services  map[string]Service
+	Profiles  map[string][]string
+	Config    ServiceManagerConfig
+	Commands  cli.UserOption
+	UiUpdates chan Progress
+	Platform  platform.Platform
+	Ledger    ledger.Ledger
 }
 
-type Source struct {
-	Repo string `json:"repo"`
+type ServiceManagerConfig struct {
+	TmpDir             string
+	VpnTestHostname    string
+	ArtifactoryRepoUrl string
+	ArtifactoryPingUrl string
+	ConfigDir          string
 }
 
 type Service struct {
@@ -33,28 +41,20 @@ type Service struct {
 	Healthcheck Healthcheck   `json:"healthcheck"`
 }
 
-type ServiceManagerConfig struct {
-	TmpDir             string
-	VpnTestHostname    string
-	ArtifactoryRepoUrl string
-	ConfigDir          string
+type ServiceBinary struct {
+	Artifact          string   `json:"artifact"`
+	GroupId           string   `json:"groupId"`
+	DestinationSubdir string   `json:"destinationSubdir"`
+	Cmd               []string `json:"cmd"`
+}
+
+type Source struct {
+	Repo string `json:"repo"`
 }
 
 type Healthcheck struct {
 	Url      string `json:"url"`
 	Response string `json:"response"`
-}
-
-// main entrypoint to all the service manager functionality
-type ServiceManager struct {
-	Client    *http.Client
-	Services  map[string]Service
-	Profiles  map[string][]string
-	Config    ServiceManagerConfig
-	Commands  cli.UserOption
-	UiUpdates chan Progress
-	Platform  platform.Platform
-	Ledger    ledger.Ledger
 }
 
 func (sm ServiceManager) PrintVerbose(s string, args ...string) {

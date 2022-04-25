@@ -5,18 +5,6 @@ import (
 	"os"
 )
 
-func stopPid(pid int) {
-	osProc, err := os.FindProcess(pid)
-	if err != nil {
-		fmt.Printf("PID %d does not exists.\n", pid)
-	}
-
-	err = osProc.Kill()
-	if err != nil {
-		fmt.Printf("Unable to stop pid %d, %s.\n", pid, err)
-	}
-}
-
 func (sm *ServiceManager) StopService(serviceName string) error {
 
 	// @improve just load the state file instead and kill the listed pid?
@@ -61,4 +49,16 @@ func (sm *ServiceManager) StopAll() {
 		}
 	}
 
+}
+
+func stopPid(pid int) {
+	osProc, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Printf("PID %d does not exists.\n", pid)
+	}
+
+	err = osProc.Kill()
+	if err != nil {
+		fmt.Printf("Unable to stop pid %d, %s.\n", pid, err)
+	}
 }
