@@ -72,7 +72,7 @@ func TestGenerateArgs(t *testing.T) {
 	sm := ServiceManager{}
 	sm.Commands.Port = 6666
 	sm.Commands.ExtraArgs = map[string][]string{
-		"FOO": []string{"-user1", "-user2"},
+		"FOO": {"-user1", "-user2"},
 	}
 
 	foo := Service{

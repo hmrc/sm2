@@ -55,9 +55,9 @@ const mavenMetadata213 string = `
 func TestGetLatestVersionGetsScala213IfPresent(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/foo/bar/foo_2.13/maven-metadata.xml" {
-			fmt.Fprintf(w, mavenMetadata213)
+			fmt.Fprint(w, mavenMetadata213)
 		} else if r.URL.Path == "/foo/bar/foo_2.12/maven-metadata.xml" {
-			fmt.Fprintf(w, mavenMetadata)
+			fmt.Fprint(w, mavenMetadata)
 		} else {
 			w.WriteHeader(404)
 		}
@@ -91,7 +91,7 @@ func TestGetLatestVersionGetsScala213IfPresent(t *testing.T) {
 func TestGetLatestVersionGetsScala213IfMissing(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/foo/bar/foo_2.12/maven-metadata.xml" {
-			fmt.Fprintf(w, mavenMetadata)
+			fmt.Fprint(w, mavenMetadata)
 		} else {
 			w.WriteHeader(404)
 		}
@@ -125,7 +125,7 @@ func TestGetLatestVersionGetsScala213IfMissing(t *testing.T) {
 func TestGetLatestVersionGetsJavaService(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/foo/bar/foo/maven-metadata.xml" {
-			fmt.Fprintf(w, mavenMetadata)
+			fmt.Fprint(w, mavenMetadata)
 		} else {
 			w.WriteHeader(404)
 		}
@@ -156,9 +156,38 @@ func TestGetLatestVersionGetsJavaService(t *testing.T) {
 	}
 }
 
+func TestGetLatestVersionSetsUserAgent(t *testing.T) {
+
+	var userAgent string
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userAgent = r.Header["User-Agent"][0]
+		fmt.Fprint(w, mavenMetadata)
+	}))
+	defer svr.Close()
+
+	sm := ServiceManager{
+		Client: &http.Client{},
+		Config: ServiceManagerConfig{
+			ArtifactoryRepoUrl: svr.URL,
+		},
+	}
+
+	sb := ServiceBinary{
+		GroupId:  "foo/bar/",
+		Artifact: "foo_2.12",
+	}
+
+	_, err := sm.GetLatestVersions(sb)
+	AssertNotErr(t, err)
+
+	if !strings.HasPrefix(userAgent, "sm2/") {
+		t.Errorf("incorrect user agent set: %s", userAgent)
+	}
+}
+
 func TestGetLatestVersion(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, mavenMetadata)
+		fmt.Fprint(w, mavenMetadata)
 	}))
 	defer svr.Close()
 
@@ -207,6 +236,7 @@ func TestParseValidMetadata(t *testing.T) {
 func TestDownloadAndDecompress(t *testing.T) {
 
 	outdir, err := ioutil.TempDir(os.TempDir(), "test-downloader*")
+	AssertNotErr(t, err)
 	defer os.RemoveAll(outdir)
 
 	// discard progres

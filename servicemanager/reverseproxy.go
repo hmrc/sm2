@@ -8,9 +8,15 @@ import (
 	"strings"
 )
 
-func (sm ServiceManager) StartProxy() {
+func (sm *ServiceManager) StartProxy() {
 
 	routes := map[string]string{}
+	rootServicePort := 9017
+	proxyPort := 3000
+
+	if sm.Commands.Port > 0 {
+		proxyPort = sm.Commands.Port
+	}
 
 	// build routing table for services tagged as frontend
 	for _, v := range sm.Services {
@@ -19,8 +25,6 @@ func (sm ServiceManager) StartProxy() {
 			sm.PrintVerbose("Setup: routing %s to %s on port %s\n", v.Location, v.Id, fmt.Sprint(v.DefaultPort))
 		}
 	}
-
-	rootServicePort := 9017
 
 	log.Printf("ReverseProxy: Loaded %d frontend routes\n", len(routes))
 	log.Println("(only services with 'frontend: true' in services.json are addressable)")
@@ -31,9 +35,8 @@ func (sm ServiceManager) StartProxy() {
 
 		if proxyTo, ok := routes[pathPrefix]; ok {
 			if sm.Commands.Verbose {
-				log.Printf(fmt.Sprintf("%s\t%s  ->  %s\n", req.Method, req.URL.Path, proxyTo))
+				log.Print(fmt.Sprintf("%s\t%s  ->  %s\n", req.Method, req.URL.Path, proxyTo))
 			}
-
 			req.Header.Add("X-Forwarded-Host", req.Host)
 			req.Header.Add("X-Origin-Host", proxyTo)
 			req.URL.Scheme = "http"
@@ -50,19 +53,13 @@ func (sm ServiceManager) StartProxy() {
 	proxy := &httputil.ReverseProxy{Director: director}
 
 	mux := http.NewServeMux()
-
 	mux.Handle("/", proxy)
-	mux.HandleFunc("/502", noproxy)
 
 	server := &http.Server{
-		Addr:    ":3000",
+		Addr:    fmt.Sprintf(":%d", proxyPort),
 		Handler: mux,
 	}
 
-	log.Println("ReverseProxy: listening on port 3000...")
+	log.Printf("ReverseProxy: listening on port %d...", proxyPort)
 	log.Fatal(server.ListenAndServe())
-}
-
-func noproxy(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(502)
 }

@@ -57,7 +57,7 @@ func uptimeLinux() time.Time {
 // OSX doesnt support the -s flag on uptime!
 // so we use sysctl and get the epoc seconds
 func uptimeDarwin() time.Time {
-	rx := regexp.MustCompile("sec = (\\d+)")
+	rx := regexp.MustCompile(`sec = (\d+)`)
 	cmd := exec.Command("sysctl", "-n", "kern.boottime")
 	output, err := cmd.Output()
 	if err != nil {

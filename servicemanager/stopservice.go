@@ -5,25 +5,14 @@ import (
 	"os"
 )
 
-func stopPid(pid int) {
-	osProc, err := os.FindProcess(pid)
-	if err != nil {
-		fmt.Printf("error finding pid %d\n", pid)
-	}
+func (sm *ServiceManager) StopService(serviceName string) error {
 
-	err = osProc.Kill()
-	if err != nil {
-		fmt.Printf("error stopping pid %d - %s\n", pid, err)
-	}
-}
-
-func (sm ServiceManager) StopService(serviceName string) error {
-
+	// @improve just load the state file instead and kill the listed pid?
 	statues := sm.findStatuses()
 
 	for _, status := range statues {
 		if status.service == serviceName {
-			fmt.Printf("Stopping %s\t(pid %d)\n", serviceName, status.pid)
+			fmt.Printf("Stopping %-40s(pid %-7d).\n", serviceName, status.pid)
 			stopPid(status.pid)
 
 			// clean up service.state
@@ -44,14 +33,14 @@ func (sm ServiceManager) StopService(serviceName string) error {
 	return nil
 }
 
-func (sm ServiceManager) StopAll() {
+func (sm *ServiceManager) StopAll() {
 
 	fmt.Printf("Stopping ALL services!\n")
 
 	statues := sm.findStatuses()
 
 	for _, status := range statues {
-		fmt.Printf("Stopping %s\t(pid %d)\n", status.service, status.pid)
+		fmt.Printf("Stopping %-40s(pid %-7d)\n", status.service, status.pid)
 		stopPid(status.pid)
 
 		// clean up service.state
@@ -60,4 +49,16 @@ func (sm ServiceManager) StopAll() {
 		}
 	}
 
+}
+
+func stopPid(pid int) {
+	osProc, err := os.FindProcess(pid)
+	if err != nil {
+		fmt.Printf("PID %d does not exists.\n", pid)
+	}
+
+	err = osProc.Kill()
+	if err != nil {
+		fmt.Printf("Unable to stop pid %d, %s.\n", pid, err)
+	}
 }

@@ -1,8 +1,6 @@
 package cli
 
-import (
-	"testing"
-)
+import "testing"
 
 func TestSimpleOneService(t *testing.T) {
 	args := []string{

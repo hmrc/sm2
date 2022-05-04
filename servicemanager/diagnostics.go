@@ -15,47 +15,32 @@ import (
 
 func RunDiagnostics(config ServiceManagerConfig) {
 
-	// print version
 	version.PrintVersion()
 
-	// check VPN connectivity
-	checkVpn(config)
-
-	// check config dir
+	checkNetwork(config)
 	checkWorkspace(config)
-
-	// check config revision
 	checkConfigRevision(config)
-
-	// check java version
 	checkJava()
-
-	// check git
 	checkGit()
-
-	// check tmp dir + space
-
-	// check os
 	checkOS()
 }
 
 func checkWorkspace(config ServiceManagerConfig) {
 	stat, err := os.Stat(config.TmpDir)
 	if err != nil {
-		fmt.Printf("WORKSPACE:\t\t NOT OK (%s)\n", err)
+		fmt.Printf("WORKSPACE:\t NOT OK (%s)\n", err)
 		return
 	}
 
 	if !stat.IsDir() {
-		fmt.Printf("WORKSPACE:\t\t NOT OK (%s is not a directory)\n", config.TmpDir)
+		fmt.Printf("WORKSPACE:\t NOT OK (%s is not a directory)\n", config.TmpDir)
 		return
 	}
 
-	fmt.Printf("WORKSPACE:\t\t OK (%s)\n", config.TmpDir)
+	fmt.Printf("WORKSPACE:\t OK (%s)\n", config.TmpDir)
 }
 
 func checkConfigRevision(config ServiceManagerConfig) {
-
 	cmd := exec.Command("git", "log", "--pretty=format:%h,%ar,%s", "-1")
 	cmd.Dir = config.ConfigDir
 
@@ -76,7 +61,7 @@ func checkJava() {
 		return
 	}
 
-	versionRegex := regexp.MustCompile(".+(\\d+\\.\\d+\\.\\d+).+")
+	versionRegex := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
 	version := versionRegex.FindStringSubmatch(string(out))
 	if version != nil {
 		fmt.Printf("JAVA:\t\t OK (%s)\n", version[1])
@@ -108,7 +93,7 @@ func checkOS() {
 	}
 }
 
-func checkVpn(config ServiceManagerConfig) {
+func checkNetwork(config ServiceManagerConfig) {
 	artifactoryUrl, err := url.Parse(config.ArtifactoryRepoUrl)
 	if err != nil {
 		fmt.Print("VPN:\t\t artifactory url not valid!\n")
@@ -118,7 +103,13 @@ func checkVpn(config ServiceManagerConfig) {
 	_, err = net.LookupHost(artifactoryUrl.Host)
 	if err != nil {
 		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s isnt reachable you might not be on the VPN\n", artifactoryUrl)
+		fmt.Printf("\t\t %s is not resolvable, check VPN\n", artifactoryUrl)
+		return
+	}
+
+	if !checkVpn(config) {
+		fmt.Print("VPN:\t\t NOT OK\n")
+		fmt.Printf("\t\t %s resolvable but not reachable\n", artifactoryUrl)
 	} else {
 		fmt.Printf("VPN:\t\t OK (%s resolvable)\n", artifactoryUrl)
 	}

@@ -8,10 +8,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"regexp"
+	"runtime"
 	"strings"
+
+	"sm2/version"
 )
 
 type MavenMetadata struct {
@@ -21,7 +25,9 @@ type MavenMetadata struct {
 	Release  string `xml:"versioning>release"`
 }
 
-var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(".+_2\\.\\d+")
+var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(`.+_2\.\d+`)
+
+var userAgent = fmt.Sprintf("sm2/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH)
 
 func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	metadata := MavenMetadata{}
@@ -30,7 +36,7 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func (sm ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
 
 	if hasScalaSuffix.MatchString(s.Artifact) {
 		// Tries different scala versions in order to find the latest version, it assumes that
@@ -54,14 +60,19 @@ func (sm ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, erro
 }
 
 // Connects to artifactory and parses maven metadata to get the latest release
-func (sm ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
+func (sm *ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
 
 	// build url
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
-	resp, err := sm.Client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return MavenMetadata{}, err
+	}
+	req.Header.Set("User-Agent", userAgent)
 
+	resp, err := sm.Client.Do(req)
 	if err != nil {
 		return MavenMetadata{}, err
 	}
@@ -78,14 +89,20 @@ func (sm ServiceManager) getLatestVersion(group string, artifact string) (MavenM
 // downloads a url and attempt to decompress it to a folder
 // assumes the target is a .tgz file
 // this could return the install(service) dir, would remove need to look it up later
-func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progressTracker *ProgressTracker) (string, error) {
+func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progressTracker *ProgressTracker) (string, error) {
 
 	// ensure base dir and logs dir exist
 	if err := os.MkdirAll(outdir, 0755); err != nil {
 		return "", err
 	}
 
-	resp, err := sm.Client.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := sm.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -113,7 +130,7 @@ func (sm ServiceManager) downloadAndDecompress(url string, outdir string, progre
 	dirsSeen := map[string]uint8{}
 
 	tarReader := tar.NewReader(gz)
-	for true {
+	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
 			break

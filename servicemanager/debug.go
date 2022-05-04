@@ -6,7 +6,7 @@ import (
 	"path"
 )
 
-func (sm ServiceManager) showDebug(serviceName string) {
+func (sm *ServiceManager) showDebug(serviceName string) {
 
 	_, ok := sm.Services[serviceName]
 	if !ok {

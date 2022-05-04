@@ -7,7 +7,7 @@ import (
 
 // TODO: have this return the results so we can decide how to format it elsewhere
 //       this way we can repsect --no-progress etc
-func (sm ServiceManager) Await(services []ServiceAndVersion, timeout int) {
+func (sm *ServiceManager) Await(services []ServiceAndVersion, timeout int) {
 
 	// track statuses in a map
 	health := map[string]bool{}
@@ -36,11 +36,11 @@ func (sm ServiceManager) Await(services []ServiceAndVersion, timeout int) {
 	// print results
 	if healthy == len(health) {
 		fmt.Println("All services started ok.")
-	} else {
-		for k, v := range health {
-			if v == false {
-				fmt.Printf("%s failed to start.\n", k)
-			}
+	}
+	for k, isHealthy := range health {
+		if !isHealthy {
+			fmt.Printf("%s failed to start.\n", k)
 		}
 	}
+
 }

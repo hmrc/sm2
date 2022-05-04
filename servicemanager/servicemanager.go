@@ -3,7 +3,6 @@ package servicemanager
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 
 	"sm2/cli"
@@ -11,15 +10,23 @@ import (
 	"sm2/platform"
 )
 
-type ServiceBinary struct {
-	Artifact          string
-	GroupId           string   `json:"groupId"`
-	DestinationSubdir string   `json:"destinationSubdir"`
-	Cmd               []string `json:"cmd"`
+type ServiceManager struct {
+	Client    *http.Client
+	Services  map[string]Service
+	Profiles  map[string][]string
+	Config    ServiceManagerConfig
+	Commands  cli.UserOption
+	UiUpdates chan Progress
+	Platform  platform.Platform
+	Ledger    ledger.Ledger
 }
 
-type Source struct {
-	Repo string `json:"repo"`
+type ServiceManagerConfig struct {
+	TmpDir             string
+	VpnTestHostname    string
+	ArtifactoryRepoUrl string
+	ArtifactoryPingUrl string
+	ConfigDir          string
 }
 
 type Service struct {
@@ -34,28 +41,20 @@ type Service struct {
 	Healthcheck Healthcheck   `json:"healthcheck"`
 }
 
-type ServiceManagerConfig struct {
-	TmpDir             string
-	VpnTestHostname    string
-	ArtifactoryRepoUrl string
-	ConfigDir          string
+type ServiceBinary struct {
+	Artifact          string   `json:"artifact"`
+	GroupId           string   `json:"groupId"`
+	DestinationSubdir string   `json:"destinationSubdir"`
+	Cmd               []string `json:"cmd"`
+}
+
+type Source struct {
+	Repo string `json:"repo"`
 }
 
 type Healthcheck struct {
 	Url      string `json:"url"`
 	Response string `json:"response"`
-}
-
-// main entrypoint to all the service manager functionality
-type ServiceManager struct {
-	Client    *http.Client
-	Services  map[string]Service
-	Profiles  map[string][]string
-	Config    ServiceManagerConfig
-	Commands  cli.UserOption
-	UiUpdates chan Progress
-	Platform  platform.Platform
-	Ledger    ledger.Ledger
 }
 
 func (sm ServiceManager) PrintVerbose(s string, args ...string) {
@@ -64,23 +63,24 @@ func (sm ServiceManager) PrintVerbose(s string, args ...string) {
 	}
 }
 
+/*
 func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (string, error) {
 
 	// lookup service
 	service, ok := sm.Services[serviceName]
 	if !ok {
-		return "", fmt.Errorf("Unknown service: %s", serviceName)
+		return "", fmt.Errorf("unknown service: %s", serviceName)
 	}
 
 	// lookup .install file
 	installDir := path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir)
 	installFile, err := sm.Ledger.LoadInstallFile(installDir)
 	if err != nil {
-		return "", fmt.Errorf("No .install found in %s", installFile)
+		return "", fmt.Errorf("no .install found in %s", installFile)
 	}
 
 	// verify its the right one
-	if installFile.Version != version {
+	if version != "" && installFile.Version != version {
 		return "", fmt.Errorf("wrong version installed")
 	}
 
@@ -91,4 +91,15 @@ func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (s
 
 	// return the path
 	return installFile.Path, nil
+}
+*/
+
+// based on config, find the directory a service is installed into.
+// TODO: rename this something less confusing. it doesnt really 'find' anything,
+//       rather it guesses where it is...
+func (sm *ServiceManager) findInstallDirOfService(serviceName string) (string, error) {
+	if service, ok := sm.Services[serviceName]; ok {
+		return path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir), nil
+	}
+	return "", fmt.Errorf("unknown service: %s", serviceName)
 }

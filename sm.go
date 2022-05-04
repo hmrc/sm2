@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"time"
 
 	"sm2/cli"
 	"sm2/ledger"
@@ -41,10 +42,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 120 * time.Second,
+	}
 
 	config := servicemanager.ServiceManagerConfig{
 		ArtifactoryRepoUrl: "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases",
+		ArtifactoryPingUrl: "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping",
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
 	}

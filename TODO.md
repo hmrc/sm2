@@ -3,24 +3,29 @@
 ===nice to have
 - support start multiple services with versions e.g. --start SERVICE_FOO:1.4.0 FIZZBUZZ:0.555.0
 - command to update config
+- config auto-update
 - windows support (just needs platform impl of uptime and pids)
 - deduped assets frontend || on-demand assets frontend
-- config auto-update
 - better error reporting on service startup failure
 - override JAVA_HOME based on config/known  JRE locations
 - template generator for service/profiles
 
 ===todo
+- check service type on startup, better error for non-play
 - server mode
 - assets frontend start hander (how to do?)
-- user level config (i.e. override tmpdir, default worker count, artifactory url etc)
-- validate md5sum on download (artifactory hash)
+- user level config (i.e. override tmpdir, default worker count, artifactory url, vpn check etc)
 - make / configurable for reverse-proxy (i.e swap between catalogue etc)
 - integration tests
 - service mappings, consider injecting a new config with all of them?
 - git pull when running from src (use .install)
+- seperate output from await and stop actions
+- return error code on --status if any are not working
+- vpn check, use ping endpoint
 
 === done
+- checkports command
+- validate md5sum on download (artifactory hash)
 - use service.status to restart services
 - support --appendArgs and its weird json encoded payload
 - mocks for testing artifactory

@@ -14,7 +14,7 @@ import (
 
 // startService attempts to start a version of a service, if the version is not specified
 // service manager will get the latest vesion from artifactory.
-func (sm ServiceManager) StartService(serviceName string, requestedVersion string) error {
+func (sm *ServiceManager) StartService(serviceName string, requestedVersion string) error {
 
 	// look-up the service
 	service, ok := sm.Services[serviceName]
@@ -25,7 +25,7 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 	// check if its already running and exit if it is
 	if sm.CheckHealth(service.DefaultPort) {
 		sm.UiUpdates <- Progress{service: serviceName, percent: 100, state: "Already running"}
-		return fmt.Errorf("Already Running")
+		return fmt.Errorf("already running")
 	}
 
 	offline := sm.Commands.Offline
@@ -36,10 +36,15 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 
 	// look up the latest version if its not supplied
 	if requestedVersion == "" && !offline {
+
+		if !checkVpn(sm.Config) {
+			return fmt.Errorf("failed, check vpn connection")
+		}
+
 		metadata, err := sm.GetLatestVersions(service.Binary)
 		if err != nil {
 			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}
-			return fmt.Errorf("No version found")
+			return err
 		}
 		group = metadata.Group
 		artifact = metadata.Artifact
@@ -88,7 +93,7 @@ func (sm ServiceManager) StartService(serviceName string, requestedVersion strin
 	return sm.Ledger.SaveStateFile(installDir, state)
 }
 
-func (sm ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {
+func (sm *ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {
 
 	var installFile ledger.InstallFile
 
@@ -191,7 +196,7 @@ func verifyInstall(installFile ledger.InstallFile, service string, version strin
 	return true
 }
 
-func (sm ServiceManager) findPort(service Service) int {
+func (sm *ServiceManager) findPort(service Service) int {
 	portNumber := service.DefaultPort
 	if sm.Commands.Port > 0 {
 		portNumber = sm.Commands.Port
@@ -199,7 +204,7 @@ func (sm ServiceManager) findPort(service Service) int {
 	return portNumber
 }
 
-func (sm ServiceManager) generateArgs(service Service, version string, serviceDir string) []string {
+func (sm *ServiceManager) generateArgs(service Service, version string, serviceDir string) []string {
 
 	args := service.Binary.Cmd[1:]
 
