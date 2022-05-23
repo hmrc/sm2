@@ -6,7 +6,7 @@ import (
 )
 
 // TODO: have this return the results so we can decide how to format it elsewhere
-//       this way we can repsect --no-progress etc
+//       this way we can repsect --noprogress etc
 func (sm *ServiceManager) Await(services []ServiceAndVersion, timeout int) {
 
 	// track statuses in a map

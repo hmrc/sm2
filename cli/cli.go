@@ -52,7 +52,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
-	flagset.BoolVar(&opts.NoProgress, "no-progress", false, "prevents download progress being shown (use with --start)")
+	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
 	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
 	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
 	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
@@ -77,7 +77,7 @@ func Parse(args []string) (*UserOption, error) {
 
 	// @hack, i didnt want to use a 3rd party arg parser, so we do a sort of hack here of taking the left over args,
 	// anything that isnt - prefixed is assumed to be a service, and then if we encounter a - we reparse whats left
-	// this allows for sm --start FOO -r 1.2.3 to still work, or sm --start FOO BAZ BAR -v --no-progress
+	// this allows for sm --start FOO -r 1.2.3 to still work, or sm --start FOO BAZ BAR -v --noprogress
 	serviceSeen := map[string]bool{}
 
 	for i, arg := range flagset.Args() {

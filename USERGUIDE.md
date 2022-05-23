@@ -46,7 +46,7 @@ sm2 --start SERVICE_ONE SERVICE_TWO SERVICE_THREE
 | `-r 1.0.0`      | Starts a specific release of a service. When starting multiple services the flag only applies to the first service.  |
 | `--src`         | Start a service from source. Requires git and sbt to be installed.                                                   |
 | `--port 1234`   | Overrides the default port of the service.                                                                           |
-| `--no-progress` | Surpresses the progress bars when downloading the service. Suitable for scripts etc.                                 |
+| `--noprogress` | Surpresses the progress bars when downloading the service. Suitable for scripts etc.                                 |
 | `--offline`     | Starts services that are already without attempting to download the latest version                                   |
 | `--wait 20`     | Waits a specified number of seconds for all services to reach a healthy state                                        |
 
