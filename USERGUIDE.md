@@ -46,9 +46,12 @@ sm2 --start SERVICE_ONE SERVICE_TWO SERVICE_THREE
 | `-r 1.0.0`      | Starts a specific release of a service. When starting multiple services the flag only applies to the first service.  |
 | `--src`         | Start a service from source. Requires git and sbt to be installed.                                                   |
 | `--port 1234`   | Overrides the default port of the service.                                                                           |
-| `--no-progress` | Surpresses the progress bars when downloading the service. Suitable for scripts etc.                                 |
+| `--noprogress`  | Surpresses the progress bars when downloading the service. Suitable for scripts etc.                                 |
 | `--offline`     | Starts services that are already without attempting to download the latest version                                   |
+| `--clean`       | Removes existing install, forcing a re-download                                                                      |
 | `--wait 20`     | Waits a specified number of seconds for all services to reach a healthy state                                        |
+| `--appendArgs`  | A json map of extra args for services being started: `{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"]}`                    |
+| `--workers 4`   | The number of services to download/start at the same time (default 2)                                                |
 
 ## Stopping a Service
 
@@ -63,14 +66,22 @@ All running services can be stopped at the same time using:
 sm2 --stop-all
 ```
 
-==Seeing the status of running services
+## Seeing the status of running services
 
 The `--status` command (`-s` for short) shows the status of all services that are running or should be running.
 
 ```
-example table
++------------------------------------+-----------+---------+-------+--------+
+| Name                               | Version   | PID     | Port  | Status |
++------------------------------------+-----------+---------+-------+--------+
+| MONGO                              |           | 0       | 27017 |  PASS  |
+| INTERNAL_AUTH                      | 0.95.0    | 589265  | 8470  |  FAIL  |
+| SAVE4LATER                         | 1.39.0    | 589264  | 9272  |  BOOT  |
+| SERVICE_CONFIGS                    | 0.115.0   | 588896  | 8460  |  PASS  |
++------------------------------------+-----------+---------+-------+--------+
 ```
 
+## Debugging a failed service
 A more details breakdown of the state of a given service can be found using:
 ```
 sm2 --debug SERVICE_NAME
@@ -80,10 +91,10 @@ sm2 --logs SERVICE_NAME
 This can be useful in determining why a service failed to start.
 
 ## Listing Services
-To discover which services are available to run you can use the `--list` command.
-You can discover what services will be run as part of a service profile with `--list PROFILE_NAME`.
-If you are unsure of the exact name of a service you can search for likely matches using `--list FOO`, which will show all services containing 'FOO'.
-A full list of services can be found using `--list .`
+To discover which services are available to run you can use the `--search` command.
+You can discover what services will be run as part of a service profile with `--search PROFILE_NAME`.
+If you are unsure of the exact name of a service you can search for likely matches using `--search FOO`, which will show all services containing 'FOO'. Any valid regex can be used as a search parameter.
+If you just need a full list of everything there is `--list` which takes no paramters and lists all the services.
 
 The ports command `--ports` will list all of the services and their default ports.
 If you need to run service manager without internet connectivity, running the `--offline` command by itself will list which services are currently installed and avilable for offline use.
