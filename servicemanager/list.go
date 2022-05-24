@@ -47,7 +47,7 @@ func (sm *ServiceManager) ListServices(filter string) {
 	if profile, ok := sm.Profiles[strings.ToUpper(filter)]; ok {
 		fmt.Printf("Profile %s has these services:\n", strings.ToUpper(filter))
 		for _, p := range profile {
-			fmt.Printf("%s\n", p)
+			fmt.Printf("  - %s\n", p)
 		}
 		return
 	}
@@ -60,28 +60,44 @@ func (sm *ServiceManager) ListServices(filter string) {
 
 	// else search the services for likely matches
 
-	// extract and sort keys
-	keys := make([]string, len(sm.Services))
-	longestKey := 0
-	i := 0
-	for k := range sm.Services {
-		keys[i] = k
-		if len(k) > longestKey {
-			longestKey = len(k)
-		}
-		i++
-	}
-	sort.Strings(keys)
-
 	// build regex
 	search := regexp.MustCompile(fmt.Sprintf(".*%s.*", strings.ToUpper(filter)))
+
+	// extract and sort keys
+	keys := make([]string, len(sm.Services)+len(sm.Profiles))
+	longestKey := 20
+	i := 0
+	for k := range sm.Services {
+		if search.MatchString(k) {
+			keys[i] = k
+			if len(k) > longestKey {
+				longestKey = len(k)
+			}
+			i++
+		}
+	}
+
+	for k := range sm.Profiles {
+		if search.MatchString(k) {
+			keys[i] = k
+			if len(k) > longestKey {
+				longestKey = len(k)
+			}
+			i++
+		}
+	}
+	sort.Strings(keys)
 
 	// run search
 	fmt.Printf("Searching for (%s)...\n", search.String())
 	for _, k := range keys {
-		if search.MatchString(k) {
-			if service, ok := sm.Services[k]; ok {
-				fmt.Printf("%s -> %s\n", pad(service.Id, longestKey), service.Name)
+		if service, ok := sm.Services[k]; ok {
+			fmt.Printf("[SERVICE] %s -> %s\n", pad(service.Id, longestKey), service.Name)
+		}
+		if profile, ok := sm.Profiles[k]; ok {
+			fmt.Printf("[PROFILE] %s -> (%d services)\n", pad(k, longestKey), len(profile))
+			for _, profileService := range profile {
+				fmt.Printf("  - %s\n", profileService)
 			}
 		}
 	}
