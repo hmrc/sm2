@@ -17,7 +17,7 @@ type ProgressTracker struct {
 	contentLength int
 	totalRead     int
 	lastMark      int
-	pr            *ProgressRenderer
+	renderer      *ProgressRenderer
 }
 
 func (pt *ProgressTracker) Write(p []byte) (int, error) {
@@ -28,7 +28,7 @@ func (pt *ProgressTracker) Write(p []byte) (int, error) {
 	if pt.lastMark > (1024 * 1024) {
 		pt.lastMark = 0
 		percent := (float32(pt.totalRead) / float32(pt.contentLength)) * 100.0
-		pt.pr.update(pt.service, percent, "Installing")
+		pt.renderer.update(pt.service, percent, "Installing")
 	}
 	return len(p), nil
 }

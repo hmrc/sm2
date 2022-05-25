@@ -78,7 +78,7 @@ func (sm *ServiceManager) Run() {
 		version.PrintVersion()
 	} else {
 		// show help
-		fmt.Println(helptext)
+		fmt.Print(helptext)
 	}
 
 	if err != nil {
@@ -122,9 +122,9 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 		}
 
 		if err != nil {
-			sm.pr.update(task.service, 100, err.Error())
+			sm.progress.update(task.service, 100, err.Error())
 		} else {
-			sm.pr.update(task.service, 100, "Done")
+			sm.progress.update(task.service, 100, "Done")
 		}
 		wg.Done()
 	}
@@ -138,9 +138,9 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 
 	// fire up the progress bar renderer
-	sm.pr.noProgress = sm.Commands.NoProgress
-	go sm.pr.renderLoop()
-	sm.pr.init(services)
+	sm.progress.noProgress = sm.Commands.NoProgress
+	go sm.progress.renderLoop()
+	sm.progress.init(services)
 	taskQueue := make(chan ServiceAndVersion, len(services))
 
 	fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)

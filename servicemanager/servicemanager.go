@@ -16,7 +16,7 @@ type ServiceManager struct {
 	Profiles map[string][]string
 	Config   ServiceManagerConfig
 	Commands cli.UserOption
-	pr       ProgressRenderer
+	progress ProgressRenderer
 	Platform platform.Platform
 	Ledger   ledger.Ledger
 }
