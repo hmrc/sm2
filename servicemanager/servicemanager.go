@@ -11,14 +11,14 @@ import (
 )
 
 type ServiceManager struct {
-	Client    *http.Client
-	Services  map[string]Service
-	Profiles  map[string][]string
-	Config    ServiceManagerConfig
-	Commands  cli.UserOption
-	UiUpdates chan Progress
-	Platform  platform.Platform
-	Ledger    ledger.Ledger
+	Client   *http.Client
+	Services map[string]Service
+	Profiles map[string][]string
+	Config   ServiceManagerConfig
+	Commands cli.UserOption
+	progress ProgressRenderer
+	Platform platform.Platform
+	Ledger   ledger.Ledger
 }
 
 type ServiceManagerConfig struct {

@@ -24,7 +24,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 
 	// check if its already running and exit if it is
 	if sm.CheckHealth(service.DefaultPort) {
-		sm.UiUpdates <- Progress{service: serviceName, percent: 100, state: "Already running"}
+		sm.progress.update(serviceName, 100, "Already running")
 		return fmt.Errorf("already running")
 	}
 
@@ -43,7 +43,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 
 		metadata, err := sm.GetLatestVersions(service.Binary)
 		if err != nil {
-			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}
+			sm.progress.update(serviceName, 0, "Failed")
 			return err
 		}
 		group = metadata.Group
@@ -62,11 +62,11 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 
 		// if we're offline and its not installed, there's not much we can do!
 		if offline {
-			sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Failed"}
+			sm.progress.update(serviceName, 0, "Failed")
 			return fmt.Errorf("Unavailable")
 		}
 
-		sm.UiUpdates <- Progress{service: serviceName, state: "Installing..."}
+		sm.progress.update(serviceName, 0, "Installing...")
 
 		var err error
 		installFile, err = sm.installService(installDir, service.Id, group, artifact, versionToInstall)
@@ -84,7 +84,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 	// start the service
 	port := sm.findPort(service)
 	args := sm.generateArgs(service, versionToInstall, installFile.Path)
-	sm.UiUpdates <- Progress{service: serviceName, percent: 100, state: "Starting..."}
+	sm.progress.update(serviceName, 100, "Starting...")
 	state, err := run(service, installFile, args, port)
 	if err != nil {
 		return err
@@ -102,15 +102,15 @@ func (sm *ServiceManager) installService(installDir string, serviceId string, gr
 		return installFile, err
 	}
 
-	sm.UiUpdates <- Progress{service: serviceId, percent: 0, state: "Init"}
+	sm.progress.update(serviceId, 0.0, "Init")
 
 	groupPath := strings.ReplaceAll(group, ".", "/")
 	filename := fmt.Sprintf("%s-%s.tgz", url.PathEscape(artifact), url.PathEscape(version))
 	downloadUrl := sm.Config.ArtifactoryRepoUrl + path.Join("/", groupPath, url.PathEscape(artifact), url.PathEscape(version), filename)
 
 	progressTracker := ProgressTracker{
-		service: serviceId,
-		update:  sm.UiUpdates,
+		service:  serviceId,
+		renderer: &sm.progress,
 	}
 
 	serviceDir, err := sm.downloadAndDecompress(downloadUrl, installDir, &progressTracker)

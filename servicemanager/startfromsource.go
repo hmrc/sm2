@@ -19,7 +19,7 @@ func (sm *ServiceManager) StartFromSource(serviceName string) error {
 
 	installDir, _ := sm.findInstallDirOfService(serviceName)
 
-	sm.UiUpdates <- Progress{service: serviceName, percent: 0, state: "Cloning..."}
+	sm.progress.update(serviceName, 0, "Cloning...")
 	installFile, err := sm.installFromGit(installDir, service.Source.Repo, service)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (sm *ServiceManager) StartFromSource(serviceName string) error {
 
 	// sbt run the service, redirect output to logs
 
-	sm.UiUpdates <- Progress{service: serviceName, percent: 100, state: "Starting..."}
+	sm.progress.update(serviceName, 100, "Starting...")
 	state, err := sm.sbtBuildAndRun(installFile.Path, service)
 	if err != nil {
 		return err

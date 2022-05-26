@@ -54,12 +54,12 @@ func main() {
 	}
 
 	serviceManager := servicemanager.ServiceManager{
-		Client:    client,
-		Config:    config,
-		Commands:  *cmds,
-		UiUpdates: make(chan servicemanager.Progress),
-		Platform:  platform.DetectPlatform(),
-		Ledger:    ledger.NewLedger(),
+		Client:   client,
+		Config:   config,
+		Commands: *cmds,
+
+		Platform: platform.DetectPlatform(),
+		Ledger:   ledger.NewLedger(),
 	}
 
 	// @speed consider lazy loading these rather than loading on startup
