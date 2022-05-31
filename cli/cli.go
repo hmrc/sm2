@@ -34,6 +34,7 @@ type UserOption struct {
 	StatusShort   bool                // same as --status but is the -s short version of the cmd
 	StopAll       bool                // stops all the services that are running
 	Stop          bool                // stops a service, multiple services or profile(s)
+	UpdateConfig  bool                // pulls the latest copy of service-manager-config
 	Verbose       bool                // shows extra logging
 	Version       bool                // prints sm2 version number
 	Wait          int                 // waits given number of secs after starting services for then to respond to pings
@@ -67,6 +68,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.StatusShort, "s", false, "shows which services are running")
 	flagset.BoolVar(&opts.StopAll, "stop-all", false, "stops all services")
 	flagset.BoolVar(&opts.Stop, "stop", false, "stops one or more services")
+	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "updates the local copy of service-manager-config")
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")

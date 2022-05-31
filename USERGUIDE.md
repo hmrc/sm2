@@ -86,15 +86,14 @@ This can be useful in determining why a service failed to start.
 ## Listing Services
 To discover which services are available to run you can use the `--search` command.
 You can discover what services will be run as part of a service profile with `--search PROFILE_NAME`.
-If you are unsure of the exact name of a service you can search for likely matches using `--search FOO`, which will show all services containing 'FOO'. Any valid regex can be used as a search parameter.
-If you just need a full list of everything there is `--list` which takes no paramters and lists all the services.
+If you are unsure of the exact name of a service you can search for likely matches using `--search FOO`, which will show all services containing 'FOO'. You can also use regex expressions.
+A full list of services can be found using `--search .` or just `--list`.
 
 The ports command `--ports` will list all of the services and their default ports.
 If you need to run service manager without internet connectivity, running the `--offline` command by itself will list which services are currently installed and avilable for offline use.
 Services can be started in offline mode using `--start SERVICE_NAME --offline`.
 
 ## Reverse Proxy
-
 A new feature in version 2 is the reverse proxy mode. Using the --reverse-proxy option starts an http server running on port 3000.
 Any service that has a valid `location` entry in services.json will be available on port 3000 under that path.
 This can be useful if a frontend service needs to pass cookies etc to another frontend service. Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
@@ -102,4 +101,5 @@ This can be useful if a frontend service needs to pass cookies etc to another fr
 ## Diagnostic Mode
 Running `sm2 --diagnotic` will perform some basic health checks for the sm2 tool. It can help diagnose connectivity and configuration issues.
 
-
+## Keeping service-manager-config up to date
+You can use service manager to get the latest config using the `sm2 --update-config` command. It requires the copy of service-manager-config in your $WORKSPACE be on the HEAD branch, if it is not it will not perform the update (so as not to overwrite any changes you may be working on etc).

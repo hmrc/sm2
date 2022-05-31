@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"sm2/ledger"
@@ -246,4 +247,64 @@ func removeExistingVersions(installDir string) error {
 		return err
 	}
 	return nil
+}
+
+// run as a go routine to start services off a queue
+func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *sync.WaitGroup) {
+
+	for task := range tasks {
+
+		var err error
+		if task.fromSource {
+			err = sm.StartFromSource(task.service)
+		} else {
+			err = sm.StartService(task.service, task.version)
+		}
+
+		if err != nil {
+			sm.progress.update(task.service, 100, err.Error())
+		} else {
+			sm.progress.update(task.service, 100, "Done")
+		}
+		wg.Done()
+	}
+
+}
+
+// Starts a bunch of services at once, but not all at once...
+// the serviceWorkers run in concurrently, starting services as they arrive on the
+// channel. The renderer also runs concurrently, drawing input as it gets it.
+// A wait group is used to keep the app waiting for everything to finish downloading.
+func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
+
+	// fire up the progress bar renderer
+	sm.progress.noProgress = sm.Commands.NoProgress
+	go sm.progress.renderLoop()
+	sm.progress.init(services)
+	taskQueue := make(chan ServiceAndVersion, len(services))
+
+	fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)
+
+	// start up a number of workers (controlled by --workers param)
+	wg := sync.WaitGroup{}
+	for i := 0; i < sm.Commands.Workers; i++ {
+		go sm.startServiceWorker(taskQueue, &wg)
+	}
+
+	for _, sv := range services {
+		wg.Add(1)
+		taskQueue <- sv
+	}
+
+	wg.Wait()
+	// @hack @hack waits a ms in the hope the renderloop finishes.
+	// this could be way better, wait groups, or force a final paint or something??
+	time.Sleep(time.Millisecond)
+
+	if sm.Commands.Wait > 0 {
+		fmt.Printf("Waiting %d secs for all services to start.", sm.Commands.Wait)
+		sm.Await(services, sm.Commands.Wait)
+	} else {
+		fmt.Println("Done")
+	}
 }

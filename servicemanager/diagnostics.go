@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
-	"strings"
 
 	"sm2/version"
 )
@@ -16,13 +15,13 @@ import (
 func RunDiagnostics(config ServiceManagerConfig) {
 
 	version.PrintVersion()
-
+	checkOS()
+	checkJava()
+	checkGit()
 	checkNetwork(config)
 	checkWorkspace(config)
 	checkConfigRevision(config)
-	checkJava()
-	checkGit()
-	checkOS()
+
 }
 
 func checkWorkspace(config ServiceManagerConfig) {
@@ -41,15 +40,12 @@ func checkWorkspace(config ServiceManagerConfig) {
 }
 
 func checkConfigRevision(config ServiceManagerConfig) {
-	cmd := exec.Command("git", "log", "--pretty=format:%h,%ar,%s", "-1")
-	cmd.Dir = config.ConfigDir
-
-	out, err := cmd.CombinedOutput()
+	revision, err := gitLastCommit(config.ConfigDir)
 	if err != nil {
 		fmt.Printf("CONFIG:\t\t NOT OK: %s\n", err)
 	}
 
-	fmt.Printf("CONFIG:\t\t OK (%s)\n", string(out))
+	fmt.Printf("CONFIG:\t\t OK (%s)\n", revision)
 }
 
 func checkJava() {
@@ -80,16 +76,13 @@ func javaPath() string {
 }
 
 func checkGit() {
-	cmd := exec.Command("git", "--version")
-
-	out, err := cmd.CombinedOutput()
+	version, err := gitVersion()
 	if err != nil {
 		fmt.Printf("GIT:\t\t NOT OK: %s\n", err)
 		fmt.Printf("\t\t without git you can't run from source: %s\n", err)
-
 		return
 	}
-	fmt.Printf("GIT:\t\t OK (%s)\n", strings.Trim(string(out), "\n "))
+	fmt.Printf("GIT:\t\t OK (%s)\n", version)
 }
 
 func checkOS() {
