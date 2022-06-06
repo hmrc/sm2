@@ -3,13 +3,6 @@
 Service Manager is a command line tool to start and stop microservices locally.
 It is intended to make local development and testing easier.
 
-## Install
-
-Download the latest version for your operating system and architecture.
-For ease of use, rename the binary to sm (or sm2 if you wish to keep the original service manager) and put it somewhere
-int your systems $PATH.
-Finally `chmod +x` the file to make it runnable.
-
 ## Setup
 
 1. Create the workspace
