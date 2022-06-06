@@ -5,14 +5,23 @@ Work-in-progress rewrite of the original service manager but in go.
 
 1. Download the latest binary for your os/arch for the github release page:
 https://github.com/hmrc/sm2/releases
-2. Rename the executable to `sm2`
-3. Make the binary executable
-```bash
-chmod +x sm2
-```
-4. Put `sm2` somewhere in your classpath
+2. Unpack the sm2 binary and put it somewhere in your systems $PATH
+3. Run `sm2` and follow the instructions to configure your system.
+4. For more information, see [USERGUIDE.md](USERGUIDE.md)
 
-## Install with Nix
+## Build locally
+SM2 has no external dependencies other than go 1.16+. You can build it locally via:
+
+```bash
+go build
+```
+When building a new release, use the included makefile:
+```bash
+make build_all pacakge
+```
+
+## Build with Nix
+
 To install from source:
 
 ```bash
