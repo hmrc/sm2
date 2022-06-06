@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -68,7 +70,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
-	flagset.IntVar(&opts.Workers, "workers", 2, "how many services should be downloaded at the same time (use with --start)")
+	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
 	flagset.Parse(args)
 
 	if opts.Workers <= 0 {
@@ -115,4 +117,14 @@ func parseAppendArgs(jsonArgs string) (map[string][]string, error) {
 	err := decoder.Decode(&args)
 
 	return args, err
+}
+
+func defaultWorkers() int {
+	defaultValue := 2
+	valueStr := os.Getenv("SM_WORKERS")
+	value, err := strconv.ParseInt(valueStr, 10, 64)
+	if err != nil {
+		return defaultValue
+	}
+	return int(value)
 }

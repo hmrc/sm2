@@ -1,6 +1,9 @@
 package cli
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestSimpleOneService(t *testing.T) {
 	args := []string{
@@ -265,4 +268,31 @@ func TestArgParsingFailsOnInvalid(t *testing.T) {
 	if err == nil {
 		t.Error("expected parser to fail, but it didnt")
 	}
+}
+
+func TestWorkersConfigPrecedence(t *testing.T) {
+	args := []string{
+		"--start",
+		"FOO",
+	}
+
+	opts, _ := Parse(args)
+	if opts.Workers != 2 {
+		t.Error("expected Workers to be 2 when not overridden by environment or args")
+	}
+
+	os.Setenv("SM_WORKERS", "5")
+
+	opts, _ = Parse(args)
+	if opts.Workers != 5 {
+		t.Error("expected Workers to be 5 when not overridden by args")
+	}
+
+	args = append(args, "--workers", "10")
+	opts, _ = Parse(args)
+	if opts.Workers != 10 {
+		t.Error("expected Workers to be 10 when supplied in args")
+	}
+
+	os.Unsetenv("SM_WORKERS")
 }
