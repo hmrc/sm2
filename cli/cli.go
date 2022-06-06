@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -42,6 +44,8 @@ func Parse(args []string) (*UserOption, error) {
 
 	opts := new(UserOption)
 
+	defaultWorkers := GetenvAsIntWithDefault("SM_WORKERS", 2)
+
 	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
 	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
 	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
@@ -68,7 +72,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
-	flagset.IntVar(&opts.Workers, "workers", 2, "how many services should be downloaded at the same time (use with --start)")
+	flagset.IntVar(&opts.Workers, "workers", defaultWorkers, "how many services should be downloaded at the same time (use with --start)")
 	flagset.Parse(args)
 
 	if opts.Workers <= 0 {
@@ -115,4 +119,32 @@ func parseAppendArgs(jsonArgs string) (map[string][]string, error) {
 	err := decoder.Decode(&args)
 
 	return args, err
+}
+
+func Getenv(key string) (string, error) {
+	value, exists := os.LookupEnv(key)
+	if !exists {
+		return "", fmt.Errorf("No such environment variable: %s", key)
+	}
+	return value, nil
+}
+
+func GetenvAsInt(key string) (int, error) {
+	valueStr, err := Getenv(key)
+	if err != nil {
+		return 0, err
+	}
+	value, err := strconv.ParseInt(valueStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("Environment variable '%s' value: %s could not be parsed as an int", key, valueStr)
+	}
+	return int(value), nil
+}
+
+func GetenvAsIntWithDefault(key string, defaultValue int) int {
+	value, err := GetenvAsInt(key)
+	if err != nil {
+		return defaultValue
+	}
+	return value
 }
