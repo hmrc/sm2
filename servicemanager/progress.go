@@ -17,7 +17,7 @@ type ProgressTracker struct {
 	contentLength int
 	totalRead     int
 	lastMark      int
-	update        chan Progress
+	renderer      *ProgressRenderer
 }
 
 func (pt *ProgressTracker) Write(p []byte) (int, error) {
@@ -28,7 +28,7 @@ func (pt *ProgressTracker) Write(p []byte) (int, error) {
 	if pt.lastMark > (1024 * 1024) {
 		pt.lastMark = 0
 		percent := (float32(pt.totalRead) / float32(pt.contentLength)) * 100.0
-		pt.update <- Progress{service: pt.service, percent: percent, state: "Installing"}
+		pt.renderer.update(pt.service, percent, "Installing")
 	}
 	return len(p), nil
 }
@@ -38,10 +38,12 @@ type ProgressRenderer struct {
 	state      map[string]Progress
 	updateChan chan Progress
 	serviceLen int
+	noProgress bool
 }
 
 func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
 
+	pr.updateChan = make(chan Progress, 2)
 	pr.state = map[string]Progress{}
 	pr.serviceLen = 14
 
@@ -57,7 +59,7 @@ func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
 	}
 }
 
-func (pr *ProgressRenderer) renderLoop(noProgress bool) {
+func (pr *ProgressRenderer) renderLoop() {
 
 	linesDrawn := 0
 
@@ -67,18 +69,22 @@ func (pr *ProgressRenderer) renderLoop(noProgress bool) {
 			pr.state[u.service] = u
 		}
 
-		if !noProgress {
-			// clear
-			fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
+		// clear
+		fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
 
-			// draw all the stuff
-			linesDrawn = 0
-			for _, service := range pr.watchlist {
-				if p, ok := pr.state[service]; ok {
-					fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", pad(p.service, pr.serviceLen), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 40))
-					linesDrawn++
-				}
+		// draw all the stuff
+		linesDrawn = 0
+		for _, service := range pr.watchlist {
+			if p, ok := pr.state[service]; ok {
+				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", pad(p.service, pr.serviceLen), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 40))
+				linesDrawn++
 			}
 		}
+	}
+}
+
+func (pr *ProgressRenderer) update(service string, percent float32, state string) {
+	if !pr.noProgress {
+		pr.updateChan <- Progress{service: service, percent: percent, state: state}
 	}
 }
