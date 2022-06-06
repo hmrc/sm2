@@ -59,7 +59,7 @@ func TestKitchenSinkOneService(t *testing.T) {
 	args := []string{
 		"-v",
 		"--start",
-		"--no-progress",
+		"--noprogress",
 		"FOO",
 		"-r",
 		"1.4.33",
@@ -80,7 +80,7 @@ func TestKitchenSinkOneService(t *testing.T) {
 	}
 
 	if result.NoProgress != true {
-		t.Error("Expected no-progress to be true")
+		t.Error("Expected noprogress to be true")
 	}
 
 	if result.Clean != true {
@@ -169,7 +169,7 @@ func TestComplexManyService(t *testing.T) {
 		"BOP",
 		"BIN",
 		"--clean",
-		"--no-progress",
+		"--noprogress",
 	}
 
 	result, err := Parse(args)
