@@ -53,7 +53,7 @@ func checkConfigRevision(config ServiceManagerConfig) {
 }
 
 func checkJava() {
-	cmd := exec.Command("java", "-version")
+	cmd := exec.Command(javaPath(), "-version")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -67,6 +67,15 @@ func checkJava() {
 		fmt.Printf("JAVA:\t\t OK (%s)\n", version[1])
 	} else {
 		fmt.Print("JAVA:\t\t NOT OK: unable to find java version\n")
+	}
+}
+
+func javaPath() string {
+	javaHome, javaHomeDefined := os.LookupEnv("JAVA_HOME")
+	if javaHomeDefined {
+		return javaHome + "/bin/java"
+	} else {
+		return "java"
 	}
 }
 
