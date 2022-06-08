@@ -68,7 +68,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.StatusShort, "s", false, "shows which services are running")
 	flagset.BoolVar(&opts.StopAll, "stop-all", false, "stops all services")
 	flagset.BoolVar(&opts.Stop, "stop", false, "stops one or more services")
-	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "updates the local copy of service-manager-config")
+	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "pulls the latest version of service-manager-config")
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
