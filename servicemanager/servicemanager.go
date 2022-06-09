@@ -59,7 +59,7 @@ type Healthcheck struct {
 
 func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	if sm.Commands.Verbose {
-		fmt.Printf(s, args)
+		fmt.Printf(s, args...)
 	}
 }
 
