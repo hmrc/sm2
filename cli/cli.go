@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -73,6 +74,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
+
 	flagset.Parse(args)
 
 	if opts.Workers <= 0 {
@@ -94,6 +96,11 @@ func Parse(args []string) (*UserOption, error) {
 			flagset.Parse(flagset.Args()[i:])
 			break
 		}
+	}
+
+	// Check they've not used -r without a version (as was common in sm1) and its used the following param as the ver
+	if opts.Release != "" && !releaseIsValid(opts.Release) {
+		return nil, fmt.Errorf("-r invalid version: %s", opts.Release)
 	}
 
 	// Decode appendArgs (to keep legacy compatibility they're encoded as json for some reason)
@@ -129,4 +136,10 @@ func defaultWorkers() int {
 		return defaultValue
 	}
 	return int(value)
+}
+
+// check the version number is vaguely like what we'd expect to see
+func releaseIsValid(release string) bool {
+	rx := regexp.MustCompile("^\\d+\\.\\d+.*")
+	return rx.MatchString(release)
 }

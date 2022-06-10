@@ -296,3 +296,47 @@ func TestWorkersConfigPrecedence(t *testing.T) {
 
 	os.Unsetenv("SM_WORKERS")
 }
+
+func TestReleaseIsValid(t *testing.T) {
+
+	validReleases := []string{
+		"0.1.2",
+		"9999.9999.9999",
+		"66.3.0-abcde",
+		"55.33.22",
+	}
+
+	invalidReleases := []string{
+		"",
+		"--appendArgs",
+		"-f",
+		"sometext",
+		"{\"foo\":\"bar\"}",
+		"55",
+	}
+
+	for _, r := range validReleases {
+		if releaseIsValid(r) == false {
+			t.Errorf("expected %s to be valid, it was not", r)
+		}
+	}
+
+	for _, r := range invalidReleases {
+		if releaseIsValid(r) == true {
+			t.Errorf("expected %s to be invalid, it was not", r)
+		}
+	}
+}
+
+func TestErrorOnMisuseOfReleaseFlag(t *testing.T) {
+	args := []string{
+		"--start",
+		"FOO",
+		"-r",
+		"--clean",
+	}
+	_, err := Parse(args)
+	if err == nil {
+		t.Error("expected single -r flag to cause a problem")
+	}
+}
