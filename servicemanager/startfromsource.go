@@ -71,21 +71,6 @@ func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, servi
 	return installFile, nil
 }
 
-// shallow-clones a gitrepo into $installDir/src
-func gitClone(gitUrl string, installDir string) (string, error) {
-	cmd := exec.Command("git", "clone", "--depth", "1", gitUrl, "src")
-	cmd.Dir = installDir
-
-	stdout, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("Failed to clone %s into %s.\n", gitUrl, installDir)
-		fmt.Println(string(stdout))
-		return "", err
-	}
-
-	return path.Join(installDir, "src"), nil
-}
-
 func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.StateFile, error) {
 	state := ledger.StateFile{}
 	port := sm.findPort(service)

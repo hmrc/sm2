@@ -57,42 +57,11 @@ type Healthcheck struct {
 	Response string `json:"response"`
 }
 
-func (sm ServiceManager) PrintVerbose(s string, args ...string) {
+func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	if sm.Commands.Verbose {
-		fmt.Printf(s, args)
+		fmt.Printf(s, args...)
 	}
 }
-
-/*
-func (sm ServiceManager) whereIsServiceInstalled(serviceName, version string) (string, error) {
-
-	// lookup service
-	service, ok := sm.Services[serviceName]
-	if !ok {
-		return "", fmt.Errorf("unknown service: %s", serviceName)
-	}
-
-	// lookup .install file
-	installDir := path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir)
-	installFile, err := sm.Ledger.LoadInstallFile(installDir)
-	if err != nil {
-		return "", fmt.Errorf("no .install found in %s", installFile)
-	}
-
-	// verify its the right one
-	if version != "" && installFile.Version != version {
-		return "", fmt.Errorf("wrong version installed")
-	}
-
-	// and that it actually exists
-	if _, err := os.Stat(installFile.Path); os.IsNotExist(err) {
-		return "", err
-	}
-
-	// return the path
-	return installFile.Path, nil
-}
-*/
 
 // based on config, find the directory a service is installed into.
 // TODO: rename this something less confusing. it doesnt really 'find' anything,

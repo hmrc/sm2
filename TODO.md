@@ -9,6 +9,7 @@
 - better error reporting on service startup failure
 - override JAVA_HOME based on config/known  JRE locations
 - template generator for service/profiles
+- option to load default mongo data
 
 ===todo
 - check service type on startup, better error for non-play
