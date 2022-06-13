@@ -116,7 +116,7 @@ func (sm *ServiceManager) installService(installDir string, serviceId string, gr
 
 	serviceDir, err := sm.downloadAndDecompress(downloadUrl, installDir, &progressTracker)
 	if err != nil {
-		return installFile, fmt.Errorf("failed to find service directory in %s: %s", installDir, err)
+		return installFile, fmt.Errorf("failed %s", err)
 	}
 
 	installFile = ledger.InstallFile{
