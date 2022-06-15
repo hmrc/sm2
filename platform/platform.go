@@ -45,7 +45,7 @@ func uptimeLinux() time.Time {
 		return time.Unix(0, 0)
 	}
 
-	uptime, err := time.Parse("2006-01-02 15:04:05", strings.Trim(string(output), "\n"))
+	uptime, err := time.ParseInLocation("2006-01-02 15:04:05", strings.Trim(string(output), "\n"), time.Local)
 	if err != nil {
 		fmt.Printf("failed to parse time %s\n", err)
 		return time.Unix(0, 0)

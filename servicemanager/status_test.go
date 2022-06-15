@@ -1,6 +1,8 @@
 package servicemanager
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -21,6 +23,24 @@ func mockPidLookup() map[int]int {
 
 func mockUptime() time.Time {
 	return time.Now().Add(time.Duration(-2) * time.Hour)
+}
+
+func TestBSTUptimeBug(t *testing.T) {
+	startedStr := "2022-06-15T10:25:52.113165678+01:00"
+	uptimeStr := "2022-06-15 10:17:10"
+
+	jsonState := fmt.Sprintf(`{"Service":"SERVICE_CONFIGS","Artifact":"service-configs_2.13","Version":"0.117.0","Path":"/tmp","Md5Sum":"","Started":"%s","Pid":1,"Port":8460,"Args":[]}`, startedStr)
+	var state ledger.StateFile
+	json.Unmarshal([]byte(jsonState), &state)
+
+	bootTime, err := time.ParseInLocation("2006-01-02 15:04:05", uptimeStr, time.Local)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if state.Started.Before(bootTime) {
+		t.Errorf("started (%v) is BEFORE bootTime (%v), though this is not actually the case", state.Started, bootTime)
+	}
 }
 
 func TestFindStatuses(t *testing.T) {
