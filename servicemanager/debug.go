@@ -45,6 +45,12 @@ func (sm *ServiceManager) showDebug(serviceName string) {
 
 	// print out the interesting bits of state
 	fmt.Printf("The .state file says %s version %s was started on %s with PID %d\n", stateFile.Service, stateFile.Version, stateFile.Started, stateFile.Pid)
+
+	// check if it was started prior to the last reboot
+	if stateFile.Started.Before(sm.Platform.Uptime()) {
+		fmt.Printf("This service was started prior to the system's last reboot (%v). It will be excluded from the status page.\n", sm.Platform.Uptime())
+	}
+
 	fmt.Printf("It was run with the following args:\n")
 	for _, arg := range stateFile.Args {
 		fmt.Printf("\t- %s\n", arg)
