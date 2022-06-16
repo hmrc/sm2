@@ -8,10 +8,12 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 BINARY := sm2
-VERSION := 0.6.1
+VERSION := 0.6.2
 BUILD := `git rev-parse HEAD`
 
 # Setup linker flags option for build that interoperate with variable names in src code
+# -s / -w omit debug symbols (for intel/arm) same as running strip cli tool
+# -X writes the version/build into the binary so its available in `sm2 --version`
 LDFLAGS=-ldflags "-s -w -X sm2/version.Version=$(VERSION) -X sm2/version.Build=$(BUILD)"
 
 default: build
@@ -35,5 +37,7 @@ package:
 clean:
 	rm -rf ./build
 
+test:
+	go test ./...
 
 .PHONY: check clean install build_all all
