@@ -42,7 +42,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 			return fmt.Errorf("failed, check vpn connection")
 		}
 
-		metadata, err := sm.GetLatestVersions(service.Binary)
+		metadata, err := sm.GetLatestVersions(service.Binary, serviceAndVersion.scalaVersion)
 		if err != nil {
 			sm.progress.update(serviceAndVersion.service, 0, "Failed")
 			return err

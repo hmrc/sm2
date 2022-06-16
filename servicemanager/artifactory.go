@@ -36,12 +36,16 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func (sm *ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, scalaVersion string) (MavenMetadata, error) {
 
 	if scalaSuffix.MatchString(s.Artifact) {
-		// Tries different scala versions in order to find the latest version, it assumes that
-		// the 3 builds are always more recent than 2.13 etc...
+		// Tries all Scala versions in descending order to find the latest version (assuming Scala 3 builds
+		// are always more recent than 2.13 etc.) unless an explicit `scalaVersion` is provided
 		versions := []string{"_3", "_2.13", "_2.12", "_2.11"}
+		if scalaVersion != "" {
+			versions = []string{"_" + scalaVersion}
+		}
+
 		for _, v := range versions {
 			artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, v)
 			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
