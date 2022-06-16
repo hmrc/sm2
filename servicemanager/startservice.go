@@ -255,7 +255,7 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 	for task := range tasks {
 
 		var err error
-		if task.fromSource {
+		if sm.Commands.FromSource {
 			err = sm.StartFromSource(task.service)
 		} else {
 			err = sm.StartService(task.service, task.version)

@@ -7,9 +7,8 @@ import (
 )
 
 type ServiceAndVersion struct {
-	service    string
-	version    string
-	fromSource bool
+	service string
+	version string
 }
 
 func (sm *ServiceManager) Run() {
@@ -96,14 +95,14 @@ func (sm *ServiceManager) requestedServicesAndProfiles() []ServiceAndVersion {
 	for i, s := range sm.Commands.ExtraServices {
 		if profileServices, ok := sm.Profiles[s]; ok {
 			for _, ps := range profileServices {
-				output = append(output, ServiceAndVersion{ps, "", sm.Commands.FromSource})
+				output = append(output, ServiceAndVersion{ps, ""})
 			}
 		} else {
 			version := ""
 			if i == 0 {
 				version = sm.Commands.Release
 			}
-			output = append(output, ServiceAndVersion{s, version, sm.Commands.FromSource})
+			output = append(output, ServiceAndVersion{s, version})
 		}
 	}
 	return output
