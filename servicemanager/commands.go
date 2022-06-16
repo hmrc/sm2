@@ -115,7 +115,7 @@ func (sm *ServiceManager) requestedServicesAndProfiles() []ServiceAndVersion {
 			}
 		} else {
 			serviceAndVersion := parseServiceAndVersion(s)
-			if i == 0 {
+			if i == 0 && sm.Commands.Release != "" {
 				serviceAndVersion.version = sm.Commands.Release
 			}
 			output = append(output, serviceAndVersion)
