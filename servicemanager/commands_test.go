@@ -65,4 +65,10 @@ func TestParseServiceAndVersion(t *testing.T) {
 	if serviceAndVersion != expectedServiceAndVersion {
 		t.Errorf("Parsed: %#v did not match expected: %#v", serviceAndVersion, expectedServiceAndVersion)
 	}
+
+	serviceAndVersion = parseServiceAndVersion("CATALOGUE_FRONTEND_3:10.11")
+	expectedServiceAndVersion = ServiceAndVersion{"CATALOGUE_FRONTEND", "10.11", "3"}
+	if serviceAndVersion != expectedServiceAndVersion {
+		t.Errorf("Parsed: %#v did not match expected: %#v", serviceAndVersion, expectedServiceAndVersion)
+	}
 }

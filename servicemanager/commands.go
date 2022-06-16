@@ -12,7 +12,7 @@ type ServiceAndVersion struct {
 	scalaVersion string
 }
 
-var serviceAndVersionRegex *regexp.Regexp = regexp.MustCompile(`(.*?)(_(2\.\d{2}|3))?(:(\d+\.\d+\.\d+))?$`)
+var serviceAndVersionRegex *regexp.Regexp = regexp.MustCompile(`(.*?)(_(2\.\d{2}|3))?(:(.*))?$`)
 
 func parseServiceAndVersion(serviceDescriptor string) ServiceAndVersion {
 	matches := serviceAndVersionRegex.FindStringSubmatch(serviceDescriptor)
