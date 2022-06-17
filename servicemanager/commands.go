@@ -2,14 +2,29 @@ package servicemanager
 
 import (
 	"fmt"
-
+	"regexp"
 	"sm2/version"
 )
 
 type ServiceAndVersion struct {
-	service    string
-	version    string
-	fromSource bool
+	service      string
+	version      string
+	scalaVersion string
+}
+
+var serviceAndVersionRegex *regexp.Regexp = regexp.MustCompile(`(.*?)(_(2\.\d{2}|3))?(:(.*))?$`)
+
+func parseServiceAndVersion(serviceDescriptor string) ServiceAndVersion {
+	matches := serviceAndVersionRegex.FindStringSubmatch(serviceDescriptor)
+
+	if matches == nil {
+		return ServiceAndVersion{serviceDescriptor, "", ""}
+	} else {
+		service := matches[1]
+		scalaVersion := matches[3]
+		version := matches[5]
+		return ServiceAndVersion{service, version, scalaVersion}
+	}
 }
 
 func (sm *ServiceManager) Run() {
@@ -96,14 +111,14 @@ func (sm *ServiceManager) requestedServicesAndProfiles() []ServiceAndVersion {
 	for i, s := range sm.Commands.ExtraServices {
 		if profileServices, ok := sm.Profiles[s]; ok {
 			for _, ps := range profileServices {
-				output = append(output, ServiceAndVersion{ps, "", sm.Commands.FromSource})
+				output = append(output, ServiceAndVersion{ps, "", ""})
 			}
 		} else {
-			version := ""
-			if i == 0 {
-				version = sm.Commands.Release
+			serviceAndVersion := parseServiceAndVersion(s)
+			if i == 0 && sm.Commands.Release != "" {
+				serviceAndVersion.version = sm.Commands.Release
 			}
-			output = append(output, ServiceAndVersion{s, version, sm.Commands.FromSource})
+			output = append(output, serviceAndVersion)
 		}
 	}
 	return output

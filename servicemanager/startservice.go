@@ -15,36 +15,36 @@ import (
 
 // startService attempts to start a version of a service, if the version is not specified
 // service manager will get the latest vesion from artifactory.
-func (sm *ServiceManager) StartService(serviceName string, requestedVersion string) error {
+func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) error {
 
 	// look-up the service
-	service, ok := sm.Services[serviceName]
+	service, ok := sm.Services[serviceAndVersion.service]
 	if !ok {
-		return fmt.Errorf("%s is not a valid service", serviceName)
+		return fmt.Errorf("%s is not a valid service", serviceAndVersion.service)
 	}
 
 	// check if its already running and exit if it is
 	if sm.CheckHealth(service.DefaultPort) {
-		sm.progress.update(serviceName, 100, "Already running")
+		sm.progress.update(serviceAndVersion.service, 100, "Already running")
 		return fmt.Errorf("already running")
 	}
 
 	offline := sm.Commands.Offline
-	installDir, _ := sm.findInstallDirOfService(serviceName)
-	versionToInstall := requestedVersion
+	installDir, _ := sm.findInstallDirOfService(serviceAndVersion.service)
+	versionToInstall := serviceAndVersion.version
 	group := service.Binary.GroupId
 	artifact := service.Binary.Artifact
 
 	// look up the latest version if its not supplied
-	if requestedVersion == "" && !offline {
+	if versionToInstall == "" && !offline {
 
 		if !checkVpn(sm.Config) {
 			return fmt.Errorf("failed, check vpn connection")
 		}
 
-		metadata, err := sm.GetLatestVersions(service.Binary)
+		metadata, err := sm.GetLatestVersions(service.Binary, serviceAndVersion.scalaVersion)
 		if err != nil {
-			sm.progress.update(serviceName, 0, "Failed")
+			sm.progress.update(serviceAndVersion.service, 0, "Failed")
 			return err
 		}
 		group = metadata.Group
@@ -63,11 +63,11 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 
 		// if we're offline and its not installed, there's not much we can do!
 		if offline {
-			sm.progress.update(serviceName, 0, "Failed")
+			sm.progress.update(serviceAndVersion.service, 0, "Failed")
 			return fmt.Errorf("Unavailable")
 		}
 
-		sm.progress.update(serviceName, 0, "Installing...")
+		sm.progress.update(serviceAndVersion.service, 0, "Installing...")
 
 		var err error
 		installFile, err = sm.installService(installDir, service.Id, group, artifact, versionToInstall)
@@ -85,7 +85,7 @@ func (sm *ServiceManager) StartService(serviceName string, requestedVersion stri
 	// start the service
 	port := sm.findPort(service)
 	args := sm.generateArgs(service, versionToInstall, installFile.Path)
-	sm.progress.update(serviceName, 100, "Starting...")
+	sm.progress.update(serviceAndVersion.service, 100, "Starting...")
 	state, err := run(service, installFile, args, port)
 	if err != nil {
 		return err
@@ -255,10 +255,10 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 	for task := range tasks {
 
 		var err error
-		if task.fromSource {
+		if sm.Commands.FromSource {
 			err = sm.StartFromSource(task.service)
 		} else {
-			err = sm.StartService(task.service, task.version)
+			err = sm.StartService(task)
 		}
 
 		if err != nil {

@@ -25,7 +25,7 @@ type MavenMetadata struct {
 	Release  string `xml:"versioning>release"`
 }
 
-var hasScalaSuffix *regexp.Regexp = regexp.MustCompile(`.+_2\.\d+`)
+var scalaSuffix *regexp.Regexp = regexp.MustCompile(`_(2\.\d{2}|3)$`)
 
 var userAgent = fmt.Sprintf("sm2/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH)
 
@@ -36,17 +36,18 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func (sm *ServiceManager) GetLatestVersions(s ServiceBinary) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, scalaVersion string) (MavenMetadata, error) {
 
-	if hasScalaSuffix.MatchString(s.Artifact) {
-		// Tries different scala versions in order to find the latest version, it assumes that
-		// the 2.13 builds are always more recent than 2.12 etc...
-		// TODO: what does scala 3 support look like?
-		// TODO: could we scrape artifactory for available versions instead?
-		//       Could use use the last modified date etc?
-		versions := []string{"_2.13", "_2.12", "_2.11"}
+	if scalaSuffix.MatchString(s.Artifact) {
+		// Tries all Scala versions in descending order to find the latest version (assuming Scala 3 builds
+		// are always more recent than 2.13 etc.) unless an explicit `scalaVersion` is provided
+		versions := []string{"_3", "_2.13", "_2.12", "_2.11"}
+		if scalaVersion != "" {
+			versions = []string{"_" + scalaVersion}
+		}
+
 		for _, v := range versions {
-			artifact := s.Artifact[:len(s.Artifact)-5] + v
+			artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, v)
 			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
 			if err == nil {
 				return metadata, nil

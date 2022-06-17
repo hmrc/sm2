@@ -12,6 +12,9 @@ Start more than one service
 Start a specific version of a service:
     sm2 --start AUTH -r 4.0.0
 
+(alternatively, or to start specific versions of many services):
+    sm2 --start CATALOGUE_FRONTEND_2.12:0.499.0 INTERNAL_AUTH:0.32.0
+
 Force a service to be redownloaded:
    sm2 --start AUTH --clean
 
