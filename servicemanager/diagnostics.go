@@ -2,7 +2,6 @@ package servicemanager
 
 import (
 	"fmt"
-	"net"
 	"net/url"
 	"os"
 	"os/exec"
@@ -99,13 +98,6 @@ func checkNetwork(config ServiceManagerConfig) {
 	artifactoryUrl, err := url.Parse(config.ArtifactoryRepoUrl)
 	if err != nil {
 		fmt.Print("VPN:\t\t artifactory url not valid!\n")
-		return
-	}
-
-	_, err = net.LookupHost(artifactoryUrl.Host)
-	if err != nil {
-		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s is not resolvable, check VPN\n", artifactoryUrl)
 		return
 	}
 

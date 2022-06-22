@@ -3,41 +3,20 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+
 	"os"
 	"sm2/servicemanager"
 )
 
-// structs for unmarshalling config.json into...
-type SmConfig struct {
-	Artifactory RepoConfig `json:"artifactory"`
+type ArtifactoryUrls struct {
+	PingUrl string
+	RepoUrl string
 }
 
-type RepoConfig struct {
-	Protocol     string            `json:"protocol"`
-	Host         string            `json:"host"`
-	RepoMappings map[string]string `json:"repoMappings"`
-	Ping         string            `json:"ping"`
-}
-
-func (cfg RepoConfig) url() string {
-	if repoPath, ok := cfg.RepoMappings["RELEASE"]; ok {
-		return fmt.Sprintf("%s://%s/%s", cfg.Protocol, cfg.Host, repoPath)
-	}
-	return "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases"
-}
-
-func (cfg RepoConfig) ping() string {
-	if cfg.Ping != "" {
-		return fmt.Sprintf("%s://%s/%s", cfg.Protocol, cfg.Host, cfg.Ping)
-	}
-	return "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping"
-}
-
-var defaultRepoConfig = RepoConfig{
-	Protocol:     "https",
-	Host:         "artefacts.tax.service.gov.uk",
-	RepoMappings: map[string]string{"RELEASE": "artifactory/hmrc-releases"},
-	Ping:         "artifactory/api/system/ping",
+// @todo set the defaults at build time maybe, the same way we do the version?
+var DefaultArtifactoryUrls = ArtifactoryUrls{
+	RepoUrl: "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases",
+	PingUrl: "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping",
 }
 
 type Services map[string]servicemanager.Service
@@ -84,17 +63,44 @@ func loadProfilesFromFile(profileFileName string) (*Profiles, error) {
 }
 
 // loads config.json which contains repo urls etc
-func loadRepoConfig(configFileName string) (*RepoConfig, error) {
-	config := SmConfig{}
+func loadRepoConfig(configFileName string) (ArtifactoryUrls, error) {
+
+	// structs for unmarshalling config.json into...
+	type repoConfig struct {
+		Protocol     string            `json:"protocol"`
+		Host         string            `json:"host"`
+		RepoMappings map[string]string `json:"repoMappings"`
+		Ping         string            `json:"ping"`
+	}
+
+	type smConfig struct {
+		Artifactory repoConfig `json:"artifactory"`
+	}
+
+	urls := DefaultArtifactoryUrls
 
 	file, err := os.Open(configFileName)
 	if err != nil {
-		// ignore the file not being there, use the default instead
-		return &defaultRepoConfig, nil
+		// if the file is missing for some reason, just carry on with the (hopefully ok) defaults
+		return urls, nil
 	}
 
 	defer file.Close()
 
+	config := smConfig{}
 	err = json.NewDecoder(file).Decode(&config)
-	return &config.Artifactory, err
+	if err != nil {
+		return urls, err
+	}
+
+	// otherwise set the urls based on the config.json content
+	if repoPath, ok := config.Artifactory.RepoMappings["RELEASE"]; ok {
+		urls.RepoUrl = fmt.Sprintf("%s://%s/%s", config.Artifactory.Protocol, config.Artifactory.Host, repoPath)
+	}
+
+	if config.Artifactory.Ping != "" {
+		urls.PingUrl = fmt.Sprintf("%s://%s/%s", config.Artifactory.Protocol, config.Artifactory.Host, config.Artifactory.Ping)
+	}
+
+	return urls, nil
 }

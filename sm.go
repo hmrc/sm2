@@ -46,16 +46,16 @@ func main() {
 	}
 
 	// load repo details from config.json
-	repoConfigFilePath := path.Join(configPath, "config.json")
-	repoConfig, err := loadRepoConfig(repoConfigFilePath)
+	// @todo does this need to return an error if loader can return safe default?
+	configJsonFileName := path.Join(configPath, "config.json")
+	repoConfig, err := loadRepoConfig(configJsonFileName)
 	if err != nil {
-		fmt.Printf("Failed to load %s\n  %s\n", repoConfig, err)
-		os.Exit(1)
+		repoConfig = DefaultArtifactoryUrls
 	}
 
 	config := servicemanager.ServiceManagerConfig{
-		ArtifactoryRepoUrl: repoConfig.url(),
-		ArtifactoryPingUrl: repoConfig.ping(),
+		ArtifactoryRepoUrl: repoConfig.RepoUrl,
+		ArtifactoryPingUrl: repoConfig.PingUrl,
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
 	}
