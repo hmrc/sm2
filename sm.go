@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -46,9 +45,17 @@ func main() {
 		Timeout: 120 * time.Second,
 	}
 
+	// load repo details from config.json
+	// @todo does this need to return an error if loader can return safe default?
+	configJsonFileName := path.Join(configPath, "config.json")
+	repoConfig, err := loadRepoConfig(configJsonFileName)
+	if err != nil {
+		repoConfig = DefaultArtifactoryUrls
+	}
+
 	config := servicemanager.ServiceManagerConfig{
-		ArtifactoryRepoUrl: "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases",
-		ArtifactoryPingUrl: "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping",
+		ArtifactoryRepoUrl: repoConfig.RepoUrl,
+		ArtifactoryPingUrl: repoConfig.PingUrl,
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
 	}
@@ -85,67 +92,8 @@ func main() {
 	err = os.MkdirAll(config.TmpDir, 0755)
 	if err != nil {
 		fmt.Printf("Failed to create the installation directory in %s, %s.\n", config.TmpDir, err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 
 	serviceManager.Run()
-}
-
-type Services map[string]servicemanager.Service
-type Profiles map[string][]string
-type ServiceMappings map[string]string
-
-func loadServicesFromFile(serviceFile string) (*Services, error) {
-	services := make(Services, 1600)
-
-	file, err := os.Open(serviceFile)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	err = json.NewDecoder(file).Decode(&services)
-	if err != nil {
-		return nil, err
-	}
-
-	for k, v := range services {
-		// add ID into service
-		v.Id = k
-		services[k] = v
-	}
-
-	return &services, nil
-}
-
-// @speed do we need to cache the whole thing? we only ever look up 1 profile
-//  maybe just load, find the profile and discard the rest?
-func loadProfilesFromFile(profileFileName string) (*Profiles, error) {
-	profiles := make(Profiles, 600)
-
-	file, err := os.Open(profileFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	err = json.NewDecoder(file).Decode(&profiles)
-	return &profiles, err
-}
-
-// not used! find out if anyone still need this etc
-func loadServiceMappingsFromFile(mappingsFileName string) (*ServiceMappings, error) {
-	mappings := ServiceMappings{}
-
-	file, err := os.Open(mappingsFileName)
-	if err != nil {
-		return nil, err
-	}
-
-	defer file.Close()
-
-	err = json.NewDecoder(file).Decode(&mappings)
-	return &mappings, err
 }

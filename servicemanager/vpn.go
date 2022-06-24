@@ -12,6 +12,7 @@ func checkVpn(config ServiceManagerConfig) bool {
 	shortTimeoutClient := &http.Client{
 		Timeout: 4 * time.Second,
 	}
+
 	resp, err := shortTimeoutClient.Head(config.ArtifactoryPingUrl)
 	if err != nil {
 		return false
