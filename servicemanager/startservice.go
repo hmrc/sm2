@@ -17,6 +17,8 @@ import (
 // service manager will get the latest vesion from artifactory.
 func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) error {
 
+	offline := sm.Commands.Offline
+
 	// look-up the service
 	service, ok := sm.Services[serviceAndVersion.service]
 	if !ok {
@@ -29,36 +31,25 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return fmt.Errorf("already running")
 	}
 
-	offline := sm.Commands.Offline
-	installDir, _ := sm.findInstallDirOfService(serviceAndVersion.service)
-	versionToInstall := serviceAndVersion.version
-	group := service.Binary.GroupId
-	artifact := service.Binary.Artifact
-
-	// look up the latest version if its not supplied
-	if versionToInstall == "" && !offline {
-
-		if !checkVpn(sm.Config) {
-			return fmt.Errorf("failed, check vpn connection")
-		}
-
-		metadata, err := sm.GetLatestVersions(service.Binary, serviceAndVersion.scalaVersion)
-		if err != nil {
-			sm.progress.update(serviceAndVersion.service, 0, "Failed")
-			return err
-		}
-		group = metadata.Group
-		artifact = metadata.Artifact
-		versionToInstall = metadata.Latest
+	// check if we need to and can connect...
+	if !offline && !checkVpn(sm.Config) {
+		return fmt.Errorf("check vpn")
 	}
 
-	// install requested version of service if required
+	// work out what we will install, where...
+	installDir, _ := sm.findInstallDirOfService(serviceAndVersion.service)
+	group, artifact, versionToInstall, err := whatVersionToRun(service, serviceAndVersion, offline, sm.GetLatestVersions)
+	if err != nil {
+		sm.progress.update(serviceAndVersion.service, 0, "Failed")
+		return err
+	}
 	isInstalled := false
 	installFile, err := sm.Ledger.LoadInstallFile(installDir)
 	if err == nil {
 		isInstalled = verifyInstall(installFile, service.Id, versionToInstall, offline)
 	}
 
+	// and if required, install it...
 	if !isInstalled || sm.Commands.Clean {
 
 		// if we're offline and its not installed, there's not much we can do!
@@ -76,13 +67,14 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		}
 	}
 
-	// re-init log dirs
+	// clean and recreate log dirs...
 	_, err = initLogDir(installFile.Path)
 	if err != nil {
+		sm.progress.update(serviceAndVersion.service, 0, "Failed")
 		return err
 	}
 
-	// start the service
+	// start the service...
 	port := sm.findPort(service)
 	args := sm.generateArgs(service, versionToInstall, installFile.Path)
 	sm.progress.update(serviceAndVersion.service, 100, "Starting...")
@@ -91,6 +83,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return err
 	}
 
+	// and finally, we record out success
 	return sm.Ledger.SaveStateFile(installDir, state)
 }
 
@@ -205,6 +198,30 @@ func (sm *ServiceManager) findPort(service Service) int {
 	return portNumber
 }
 
+func whatVersionToRun(service Service, serviceAndVersion ServiceAndVersion, offline bool, getLatest func(ServiceBinary, string) (MavenMetadata, error)) (string, string, string, error) {
+	versionToInstall := serviceAndVersion.version
+	group := service.Binary.GroupId
+	artifact := service.Binary.Artifact
+
+	// override scala version if required
+	if serviceAndVersion.scalaVersion != "" {
+		artifact = scalaSuffix.ReplaceAllLiteralString(artifact, "_"+serviceAndVersion.scalaVersion)
+	}
+
+	if versionToInstall == "" && !offline {
+		metadata, err := getLatest(service.Binary, serviceAndVersion.scalaVersion)
+		if err != nil {
+			return "", "", "", err
+		}
+		group = metadata.Group
+		artifact = metadata.Artifact
+		versionToInstall = metadata.Latest
+	}
+
+	return group, artifact, versionToInstall, nil
+}
+
+// builds an array of arguments from service config, user supplied args and some sm defaults
 func (sm *ServiceManager) generateArgs(service Service, version string, serviceDir string) []string {
 
 	args := service.Binary.Cmd[1:]

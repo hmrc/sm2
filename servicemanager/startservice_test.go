@@ -123,3 +123,54 @@ func TestFindPort(t *testing.T) {
 		t.Errorf("port %d was not override port %d", p, 6666)
 	}
 }
+
+func TestWhatVersionToRun(t *testing.T) {
+	foo := Service{
+		Id:          "FOO",
+		DefaultPort: 9999,
+		Binary: ServiceBinary{
+			Artifact: "foo_2.12",
+			GroupId:  "org.foo",
+			Cmd:      []string{"./bin/foo", "-cmd1", "-cmd2"},
+		},
+	}
+
+	latest := MavenMetadata{
+		Artifact: "foo_2.12",
+		Group:    "org.foo",
+		Latest:   "2.0.0",
+		Release:  "2.0.0",
+	}
+	latestFunc := func(b ServiceBinary, s string) (MavenMetadata, error) {
+		return latest, nil
+	}
+	caseServiceOnly := ServiceAndVersion{"FOO", "", ""}
+	caseServiceAndVersion := ServiceAndVersion{"FOO", "1.66.0", ""}
+	caseServiceAndScalaAndVersion := ServiceAndVersion{"FOO", "1.12.0", "2.11"}
+	caseServiceAndScala := ServiceAndVersion{"FOO", "", "2.12"}
+
+	group, artifact, version, err := whatVersionToRun(foo, caseServiceOnly, false, latestFunc)
+	AssertNotErr(t, err)
+	if group != "org.foo" || artifact != "foo_2.12" || version != latest.Latest {
+		t.Errorf("expected org.foo:foo_2.12:2.0.0, got %s %s %s", group, artifact, version)
+	}
+
+	group, artifact, version, err = whatVersionToRun(foo, caseServiceAndVersion, false, latestFunc)
+	AssertNotErr(t, err)
+	if group != "org.foo" || artifact != "foo_2.12" || version != caseServiceAndVersion.version {
+		t.Errorf("expected org.foo:foo_2.12:1.66.0, got %s %s %s", group, artifact, version)
+	}
+
+	group, artifact, version, err = whatVersionToRun(foo, caseServiceAndScalaAndVersion, false, latestFunc)
+	AssertNotErr(t, err)
+	if group != "org.foo" || artifact != "foo_2.11" || version != caseServiceAndScalaAndVersion.version {
+		t.Errorf("expected org.foo:foo_2.11:1.12.0, got %s %s %s", group, artifact, version)
+	}
+
+	group, artifact, version, err = whatVersionToRun(foo, caseServiceAndScala, false, latestFunc)
+	AssertNotErr(t, err)
+	if group != "org.foo" || artifact != "foo_2.12" || version != latest.Latest {
+		t.Errorf("expected org.foo:foo_2.12:2.0.0, got %s %s %s", group, artifact, version)
+	}
+
+}
