@@ -11,15 +11,15 @@ import (
 const stateFileName = ".state"
 
 type StateFile struct {
-	Service  string
-	Artifact string
-	Version  string
-	Path     string
-	Md5Sum   string
-	Started  time.Time
-	Pid      int
-	Port     int
-	Args     []string
+	Service        string
+	Artifact       string
+	Version        string
+	Path           string
+	Started        time.Time
+	Pid            int
+	Port           int
+	Args           []string
+	HealthcheckUrl string
 }
 
 func saveStateFile(installDir string, ledger StateFile) error {

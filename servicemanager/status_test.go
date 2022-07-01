@@ -29,7 +29,7 @@ func TestBSTUptimeBug(t *testing.T) {
 	startedStr := "2022-06-15T10:25:52.113165678+01:00"
 	uptimeStr := "2022-06-15 10:17:10"
 
-	jsonState := fmt.Sprintf(`{"Service":"SERVICE_CONFIGS","Artifact":"service-configs_2.13","Version":"0.117.0","Path":"/tmp","Md5Sum":"","Started":"%s","Pid":1,"Port":8460,"Args":[]}`, startedStr)
+	jsonState := fmt.Sprintf(`{"Service":"SERVICE_CONFIGS","Artifact":"service-configs_2.13","Version":"0.117.0","Path":"/tmp","Started":"%s","Pid":1,"Port":8460,"Args":[]}`, startedStr)
 	var state ledger.StateFile
 	json.Unmarshal([]byte(jsonState), &state)
 
@@ -99,6 +99,50 @@ func TestFindStatuses(t *testing.T) {
 	}
 	if result[2].health != FAIL {
 		t.Errorf("%s health was not FAIL, it was %s", result[2].service, result[2].health)
+	}
+}
+
+func TestCustomPingUrls(t *testing.T) {
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.EscapedPath() == "/pong" {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(404)
+		}
+	}))
+	defer svr.Close()
+
+	port := getPort(svr.URL)
+
+	states := []ledger.StateFile{
+		// healthy service (pid & ping)
+		{
+			Service:        "FOO",
+			Started:        time.Now().Add(time.Duration(-1) * time.Hour),
+			Port:           port,
+			Pid:            9999,
+			HealthcheckUrl: fmt.Sprintf("http://localhost:%d/pong", port),
+		},
+	}
+
+	sm := ServiceManager{
+		Client:   &http.Client{},
+		Platform: platform.Platform{Uptime: mockUptime, PidLookup: mockPidLookup},
+		Ledger: ledger.Ledger{
+			FindAllStateFiles: func(_ string) ([]ledger.StateFile, error) {
+				return states, nil
+			},
+		},
+	}
+
+	result := sm.findStatuses()
+
+	if len(result) != 1 {
+		t.Errorf("results has %d items expected 1", len(result))
+	}
+
+	if result[0].health != PASS {
+		t.Errorf("%s health was not PASS, it was %s", result[0].service, result[0].health)
 	}
 }
 

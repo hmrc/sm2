@@ -25,8 +25,10 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return fmt.Errorf("%s is not a valid service", serviceAndVersion.service)
 	}
 
+	port := sm.findPort(service)
+	healthcheckUrl := findHealthcheckUrl(service, port)
 	// check if its already running and exit if it is
-	if sm.CheckHealth(service.DefaultPort) {
+	if sm.CheckHealth(healthcheckUrl) {
 		sm.progress.update(serviceAndVersion.service, 100, "Already running")
 		return fmt.Errorf("already running")
 	}
@@ -75,13 +77,13 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	}
 
 	// start the service...
-	port := sm.findPort(service)
 	args := sm.generateArgs(service, versionToInstall, installFile.Path)
 	sm.progress.update(serviceAndVersion.service, 100, "Starting...")
 	state, err := run(service, installFile, args, port)
 	if err != nil {
 		return err
 	}
+	state.HealthcheckUrl = healthcheckUrl
 
 	// and finally, we record out success
 	return sm.Ledger.SaveStateFile(installDir, state)
@@ -117,7 +119,6 @@ func (sm *ServiceManager) installService(installDir string, serviceId string, gr
 		Artifact: artifact,
 		Version:  version,
 		Path:     serviceDir,
-		Md5Sum:   "TODO",
 		Created:  time.Now(),
 	}
 
@@ -158,7 +159,6 @@ func run(service Service, installFile ledger.InstallFile, args []string, port in
 		Artifact: service.Binary.Artifact,
 		Version:  version,
 		Path:     serviceDir,
-		Md5Sum:   "TODO",
 		Started:  time.Now(),
 		Pid:      cmd.Process.Pid,
 		Port:     port,
@@ -196,6 +196,17 @@ func (sm *ServiceManager) findPort(service Service) int {
 		portNumber = sm.Commands.Port
 	}
 	return portNumber
+}
+
+func defaultHealthcheckUrl(port int) string {
+	return fmt.Sprintf("http://localhost:%d/ping/ping", port)
+}
+
+func findHealthcheckUrl(service Service, port int) string {
+	if service.Healthcheck.Url != "" {
+		return strings.Replace(service.Healthcheck.Url, "${port}", fmt.Sprint(port), 1)
+	}
+	return defaultHealthcheckUrl(port)
 }
 
 func whatVersionToRun(service Service, serviceAndVersion ServiceAndVersion, offline bool, getLatest func(ServiceBinary, string) (MavenMetadata, error)) (string, string, string, error) {

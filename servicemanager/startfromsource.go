@@ -64,7 +64,6 @@ func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, servi
 		Artifact: service.Binary.Artifact,
 		Version:  "src",
 		Path:     srcDir,
-		Md5Sum:   "TODO",
 		Created:  time.Now(),
 	}
 
@@ -98,7 +97,6 @@ func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.
 		Artifact: service.Binary.Artifact,
 		Version:  "src",
 		Path:     srcDir,
-		Md5Sum:   "TODO",
 		Started:  time.Now(),
 		Pid:      cmd.Process.Pid,
 		Args:     args,
