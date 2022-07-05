@@ -174,3 +174,26 @@ func TestWhatVersionToRun(t *testing.T) {
 	}
 
 }
+
+func TestFindHealthcheckUrl(t *testing.T) {
+	customCheck := Service{
+		Id:          "FOO",
+		DefaultPort: 9999,
+		Healthcheck: Healthcheck{
+			Url: "http://localhost:${port}/foo/ping/pong",
+		},
+	}
+
+	defaultCheck := Service{
+		Id: "BAR",
+	}
+
+	if url := findHealthcheckUrl(customCheck, 9999); url != "http://localhost:9999/foo/ping/pong" {
+		t.Errorf("wrong custom healthcheck: %s", url)
+	}
+
+	if url := findHealthcheckUrl(defaultCheck, 8888); url != "http://localhost:8888/ping/ping" {
+		t.Errorf("wrong default healthcheck, %s", url)
+	}
+
+}

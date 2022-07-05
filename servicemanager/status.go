@@ -67,7 +67,11 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 		}
 
 		if _, ok := pids[state.Pid]; ok {
-			if sm.CheckHealth(state.Port) {
+			url := state.HealthcheckUrl
+			if url == "" {
+				url = defaultHealthcheckUrl(state.Port)
+			}
+			if sm.CheckHealth(url) {
 				status.health = PASS
 			} else {
 				// if boot grace period has passed, it fails
@@ -110,8 +114,8 @@ func printTable(statuses []serviceStatus) {
 }
 
 // returns true if the service ping endpoint responds
-func (sm *ServiceManager) CheckHealth(port int) bool {
-	resp, err := sm.Client.Get(fmt.Sprintf("http://localhost:%d/ping/ping", port))
+func (sm *ServiceManager) CheckHealth(url string) bool {
+	resp, err := sm.Client.Get(url)
 	return err == nil && resp.StatusCode == 200
 }
 

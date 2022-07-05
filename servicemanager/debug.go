@@ -67,13 +67,13 @@ func (sm *ServiceManager) showDebug(serviceName string) {
 
 	// ping service
 	fmt.Printf("pinging service on port %d...\n", stateFile.Port)
-	if sm.CheckHealth(stateFile.Port) {
-		fmt.Println("Service responded to ping, its alive.")
+	if sm.CheckHealth(stateFile.HealthcheckUrl) {
+		fmt.Printf("Service responded to ping on [%s], its alive.\n", stateFile.HealthcheckUrl)
 		if !pidFound {
 			fmt.Printf("It looks like %s was started by something other than service-manager.", stateFile.Service)
 		}
 	} else {
-		fmt.Println("Service did not respond... check the log files")
+		fmt.Printf("Service did not respond on [%s]... check the log files\n", stateFile.HealthcheckUrl)
 	}
 	// show what logs we have
 	logDir := path.Join(installFile.Path, "logs")
