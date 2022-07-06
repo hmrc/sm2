@@ -43,7 +43,94 @@ func TestBSTUptimeBug(t *testing.T) {
 	}
 }
 
-func TestFindStatuses(t *testing.T) {
+func TestExcudeFailedStatusFromPreviousBoot(t *testing.T) {
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	}))
+	defer svr.Close()
+
+	baseTime := time.Date(2020, time.Month(2), 1, 12, 0, 0, 0, time.UTC)
+	uptime := func() time.Time {
+		return baseTime.Add(time.Hour * 10)
+	}
+	mockStates := []ledger.StateFile{
+		// failed service started prior to the last boot
+		{
+			Service: "FOO",
+			Started: baseTime,
+			Port:    0,
+			Pid:     0,
+		},
+	}
+
+	sm := ServiceManager{
+		Client:   &http.Client{},
+		Platform: platform.Platform{Uptime: uptime, PidLookup: mockPidLookup},
+		Ledger: ledger.Ledger{
+			FindAllStateFiles: func(_ string) ([]ledger.StateFile, error) {
+				return mockStates, nil
+			},
+			ClearStateFile: func(_ string) error {
+				return nil
+			},
+		},
+	}
+
+	result := sm.findStatuses()
+	if len(result) != 0 {
+		t.Errorf("results has %d items expected 0", len(result))
+		for _, r := range result {
+			fmt.Printf("%s %s\n, ", r.service, string(r.health))
+		}
+	}
+
+}
+
+func TestCustomPingUrls(t *testing.T) {
+	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.EscapedPath() == "/pong" {
+			w.WriteHeader(200)
+		} else {
+			w.WriteHeader(404)
+		}
+	}))
+	defer svr.Close()
+
+	port := getPort(svr.URL)
+
+	states := []ledger.StateFile{
+		// healthy service (pid & ping)
+		{
+			Service:        "FOO",
+			Started:        time.Now().Add(time.Duration(-1) * time.Hour),
+			Port:           port,
+			Pid:            9999,
+			HealthcheckUrl: fmt.Sprintf("http://localhost:%d/pong", port),
+		},
+	}
+
+	sm := ServiceManager{
+		Client:   &http.Client{},
+		Platform: platform.Platform{Uptime: mockUptime, PidLookup: mockPidLookup},
+		Ledger: ledger.Ledger{
+			FindAllStateFiles: func(_ string) ([]ledger.StateFile, error) {
+				return states, nil
+			},
+		},
+	}
+
+	result := sm.findStatuses()
+
+	if len(result) != 1 {
+		t.Errorf("results has %d items expected 1", len(result))
+	}
+
+	if result[0].health != PASS {
+		t.Errorf("%s health was not PASS, it was %s", result[0].service, result[0].health)
+	}
+}
+
+func TestStatuses(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
 	}))
@@ -99,50 +186,6 @@ func TestFindStatuses(t *testing.T) {
 	}
 	if result[2].health != FAIL {
 		t.Errorf("%s health was not FAIL, it was %s", result[2].service, result[2].health)
-	}
-}
-
-func TestCustomPingUrls(t *testing.T) {
-	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.EscapedPath() == "/pong" {
-			w.WriteHeader(200)
-		} else {
-			w.WriteHeader(404)
-		}
-	}))
-	defer svr.Close()
-
-	port := getPort(svr.URL)
-
-	states := []ledger.StateFile{
-		// healthy service (pid & ping)
-		{
-			Service:        "FOO",
-			Started:        time.Now().Add(time.Duration(-1) * time.Hour),
-			Port:           port,
-			Pid:            9999,
-			HealthcheckUrl: fmt.Sprintf("http://localhost:%d/pong", port),
-		},
-	}
-
-	sm := ServiceManager{
-		Client:   &http.Client{},
-		Platform: platform.Platform{Uptime: mockUptime, PidLookup: mockPidLookup},
-		Ledger: ledger.Ledger{
-			FindAllStateFiles: func(_ string) ([]ledger.StateFile, error) {
-				return states, nil
-			},
-		},
-	}
-
-	result := sm.findStatuses()
-
-	if len(result) != 1 {
-		t.Errorf("results has %d items expected 1", len(result))
-	}
-
-	if result[0].health != PASS {
-		t.Errorf("%s health was not PASS, it was %s", result[0].service, result[0].health)
 	}
 }
 
