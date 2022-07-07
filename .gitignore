@@ -30,3 +30,4 @@ build/
 auto-save-list
 .\#*
 result
+.vscode/

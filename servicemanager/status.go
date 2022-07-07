@@ -48,15 +48,6 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 
 	// for each state file
 	for _, state := range states {
-		// ignore services that were started before the os started
-		if state.Started.Before(bootTime) {
-			// clean up state file
-			installDir, err := sm.findInstallDirOfService(state.Service)
-			if err != nil {
-				_ = sm.Ledger.ClearStateFile(installDir)
-			}
-			continue
-		}
 
 		status := serviceStatus{
 			pid:     state.Pid,
@@ -80,7 +71,17 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 				}
 			}
 		} else {
-			// no pid
+			// service is not running...
+
+			// ignore services that were started before the os started
+			if state.Started.Before(bootTime) {
+				// clean up state file
+				installDir, err := sm.findInstallDirOfService(state.Service)
+				if err != nil {
+					_ = sm.Ledger.ClearStateFile(installDir)
+				}
+				continue
+			}
 			status.health = FAIL
 		}
 		statuses = append(statuses, status)

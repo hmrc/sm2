@@ -49,8 +49,11 @@ func loadStateFile(installDir string) (StateFile, error) {
 
 func clearStateFile(installDir string) error {
 	err := os.Remove(path.Join(installDir, stateFileName))
-	if err != nil && !os.IsNotExist(err) {
-		// dont care it it dont exist
+	if err != nil {
+		if os.IsNotExist(err) {
+			// dont care it it dont exist
+			return nil
+		}
 		return err
 	}
 	return nil
