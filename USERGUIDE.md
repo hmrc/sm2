@@ -46,6 +46,18 @@ sm2 --start SERVICE_ONE SERVICE_TWO SERVICE_THREE
 | `--appendArgs`  | A json map of extra args for services being started: `{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"]}`                    |
 | `--workers 4`   | The number of services to download/start at the same time (default 2)                                                |
 
+
+Alternatively, instead of setting the version with the `-r` flag, you can start a specific release using the following syntax:
+```
+sm2 --start SERVICE_ONE:1.2.0 SERVICE_TWO:0.40.0
+```
+
+If the version you want to start was build in an older version to the one defined in services.json, you can tell sm2 which version to use by append the scala version to the end of the artifact name:
+
+```
+sm2 --start SERVICE_ONE_2.11:0.44.0
+```
+
 ## Stopping a Service
 
 A running service can be stopped with the --stop command:

@@ -57,7 +57,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		// if we're offline and its not installed, there's not much we can do!
 		if offline {
 			sm.progress.update(serviceAndVersion.service, 0, "Failed")
-			return fmt.Errorf("Unavailable")
+			return fmt.Errorf("Not available offline")
 		}
 
 		sm.progress.update(serviceAndVersion.service, 0, "Installing...")
@@ -81,6 +81,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	sm.progress.update(serviceAndVersion.service, 100, "Starting...")
 	state, err := run(service, installFile, args, port)
 	if err != nil {
+		sm.progress.update(serviceAndVersion.service, 0, "Failed")
 		return err
 	}
 	state.HealthcheckUrl = healthcheckUrl
@@ -104,12 +105,12 @@ func (sm *ServiceManager) installService(installDir string, serviceId string, gr
 	filename := fmt.Sprintf("%s-%s.tgz", url.PathEscape(artifact), url.PathEscape(version))
 	downloadUrl := sm.Config.ArtifactoryRepoUrl + path.Join("/", groupPath, url.PathEscape(artifact), url.PathEscape(version), filename)
 
-	progressTracker := ProgressTracker{
+	progressWriter := ProgressWriter{
 		service:  serviceId,
 		renderer: &sm.progress,
 	}
 
-	serviceDir, err := sm.downloadAndDecompress(downloadUrl, installDir, &progressTracker)
+	serviceDir, err := sm.downloadAndDecompress(downloadUrl, installDir, &progressWriter)
 	if err != nil {
 		return installFile, fmt.Errorf("failed %s", err)
 	}
@@ -291,6 +292,7 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 
 		if err != nil {
 			sm.progress.update(task.service, 100, err.Error())
+			sm.progress.error(task.service, err)
 		} else {
 			sm.progress.update(task.service, 100, "Done")
 		}
@@ -332,7 +334,14 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 	if sm.Commands.Wait > 0 {
 		fmt.Printf("Waiting %d secs for all services to start.", sm.Commands.Wait)
 		sm.Await(services, sm.Commands.Wait)
-	} else {
-		fmt.Println("Done")
 	}
+
+	// if anything has failed to start, report why
+	if len(sm.progress.errors) > 0 && !sm.progress.noProgress {
+		fmt.Println("\n\033[1;31mSome services failed to start:\033[0m")
+		for k, v := range sm.progress.errors {
+			fmt.Printf("  %s: %s\n", k, v.Error())
+		}
+	}
+
 }

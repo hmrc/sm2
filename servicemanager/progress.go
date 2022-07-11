@@ -12,7 +12,7 @@ type Progress struct {
 }
 
 // generates progress messages, should be Tee'd from another stream
-type ProgressTracker struct {
+type ProgressWriter struct {
 	service       string
 	contentLength int
 	totalRead     int
@@ -20,7 +20,7 @@ type ProgressTracker struct {
 	renderer      *ProgressRenderer
 }
 
-func (pt *ProgressTracker) Write(p []byte) (int, error) {
+func (pt *ProgressWriter) Write(p []byte) (int, error) {
 	pt.totalRead += len(p)
 	pt.lastMark += len(p)
 
@@ -36,6 +36,7 @@ func (pt *ProgressTracker) Write(p []byte) (int, error) {
 type ProgressRenderer struct {
 	watchlist  []string
 	state      map[string]Progress
+	errors     map[string]error
 	updateChan chan Progress
 	serviceLen int
 	noProgress bool
@@ -45,6 +46,7 @@ func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
 
 	pr.updateChan = make(chan Progress, 2)
 	pr.state = map[string]Progress{}
+	pr.errors = map[string]error{}
 	pr.serviceLen = 14
 
 	for _, s := range services {
@@ -87,4 +89,8 @@ func (pr *ProgressRenderer) update(service string, percent float32, state string
 	if !pr.noProgress {
 		pr.updateChan <- Progress{service: service, percent: percent, state: state}
 	}
+}
+
+func (pr *ProgressRenderer) error(service string, err error) {
+	pr.errors[service] = err
 }
