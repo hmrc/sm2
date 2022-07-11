@@ -25,17 +25,19 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return fmt.Errorf("%s is not a valid service", serviceAndVersion.service)
 	}
 
+	// check if its already running and exit if it is
+	// TODO: check PID too
 	port := sm.findPort(service)
 	healthcheckUrl := findHealthcheckUrl(service, port)
-	// check if its already running and exit if it is
 	if sm.CheckHealth(healthcheckUrl) {
 		sm.progress.update(serviceAndVersion.service, 100, "Already running")
-		return fmt.Errorf("already running")
+		return nil
 	}
 
 	// check if we need to and can connect...
 	if !offline && !checkVpn(sm.Config) {
-		return fmt.Errorf("check vpn")
+		sm.progress.update(serviceAndVersion.service, 0, "No VPN")
+		return fmt.Errorf("Check VPN connection, couldn't reach artifactory.")
 	}
 
 	// work out what we will install, where...
@@ -133,6 +135,7 @@ func run(service Service, installFile ledger.InstallFile, args []string, port in
 	serviceDir := installFile.Path
 	version := installFile.Version
 
+	// @TODO: check if pid is already running
 	removeRunningPid(serviceDir)
 
 	logFile, err := os.Create(path.Join(serviceDir, "logs", "stdout.log"))
