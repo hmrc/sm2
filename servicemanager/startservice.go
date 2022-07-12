@@ -31,7 +31,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	healthcheckUrl := findHealthcheckUrl(service, port)
 	if sm.CheckHealth(healthcheckUrl) {
 		sm.progress.update(serviceAndVersion.service, 100, "Already running")
-		return nil
+		return fmt.Errorf("Already running")
 	}
 
 	// check if we need to and can connect...
