@@ -27,6 +27,7 @@ func (sm *ServiceManager) PrintStatus() {
 	statues := []serviceStatus{sm.CheckMongo()}
 	statues = append(statues, sm.findStatuses()...)
 	printTable(statues)
+	printHelpIfRequired(statues)
 }
 
 func (sm *ServiceManager) findStatuses() []serviceStatus {
@@ -42,7 +43,7 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 	// find all the state files in the base dir...
 	states, err := sm.Ledger.FindAllStateFiles(sm.Config.TmpDir)
 	if err != nil {
-		fmt.Printf("error reading state files: %s", err)
+		fmt.Printf("Unable to read state files in %s: %s\n", sm.Config.TmpDir, err)
 		return statuses
 	}
 
@@ -112,6 +113,18 @@ func printTable(statuses []serviceStatus) {
 		}
 	}
 	fmt.Print(border)
+}
+
+func printHelpIfRequired(statuses []serviceStatus) {
+	for _, status := range statuses {
+		if status.health == FAIL && status.service != "MONGO" {
+			fmt.Print("\n\033[1;31mOne or more services have failed to start.\033[0m\n")
+			fmt.Print("You can check the logs of the fail service(s) or see at which point the service failed to start using:\n")
+			fmt.Print("  sm2 --logs  SERVICE_NAME\n")
+			fmt.Print("  sm2 --debug SERVICE_NAME\n\n")
+			return
+		}
+	}
 }
 
 // returns true if the service ping endpoint responds

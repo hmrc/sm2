@@ -90,7 +90,7 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 // downloads a url and attempt to decompress it to a folder
 // assumes the target is a .tgz file
 // this could return the install(service) dir, would remove need to look it up later
-func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progressTracker *ProgressTracker) (string, error) {
+func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progressWriter *ProgressWriter) (string, error) {
 
 	// ensure base dir and logs dir exist
 	if err := os.MkdirAll(outdir, 0755); err != nil {
@@ -117,9 +117,9 @@ func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progr
 	md5Hasher := md5.New()
 	expectedHash, hasMd5 := resp.Header["X-Checksum-Md5"]
 
-	progressTracker.contentLength = int(resp.ContentLength)
-	tee := io.TeeReader(resp.Body, progressTracker) // split off to progress tracker
-	body := io.TeeReader(tee, md5Hasher)            // split off to calculate the checksum
+	progressWriter.contentLength = int(resp.ContentLength)
+	tee := io.TeeReader(resp.Body, progressWriter) // split off to progress tracker
+	body := io.TeeReader(tee, md5Hasher)           // split off to calculate the checksum
 
 	gz, err := gzip.NewReader(body)
 	if err != nil {
