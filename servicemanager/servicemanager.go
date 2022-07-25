@@ -74,14 +74,13 @@ func (sm *ServiceManager) findInstallDirOfService(serviceName string) (string, e
 	return "", fmt.Errorf("unknown service: %s", serviceName)
 }
 
-func (sm *ServiceManager) LoadConfig() {
+func (sm *ServiceManager) LoadConfig() error {
 	workspacePath, envIsSet := os.LookupEnv("WORKSPACE")
 	if !envIsSet {
 		// todo print example of how to set this up
-		fmt.Println("Config issue! You need to set the WORKSPACE environment variable to poin to a folder service manager can install services to.")
-		fmt.Println("add something like: export WORKSPACE=$HOME/.servicemanager to your .bashrc or .profile")
-		fmt.Println("You'll need to make sure this directory exists, is writable and has sufficent space.")
-		os.Exit(1)
+		return fmt.Errorf("Config issue! You need to set the WORKSPACE environment variable to point to a folder service manager can install services to.\n" +
+			"add something like: export WORKSPACE=$HOME/.servicemanager to your .bashrc or .profile\n" +
+			"You'll need to make sure this directory exists, is writable and has sufficent space.\n")
 	}
 
 	configPath := path.Join(workspacePath, "service-manager-config")
@@ -90,9 +89,8 @@ func (sm *ServiceManager) LoadConfig() {
 	}
 
 	if stat, err := os.Stat(configPath); err != nil || !stat.IsDir() {
-		fmt.Println("Config issue! Your $WORKSPACE folder needs a copy of service-manager-config.")
-		fmt.Printf("This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n", workspacePath)
-		os.Exit(1)
+		return fmt.Errorf("Config issue! Your $WORKSPACE folder needs a copy of service-manager-config.\n"+
+			"This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n", workspacePath)
 	}
 
 	// load repo details from config.json
@@ -114,23 +112,22 @@ func (sm *ServiceManager) LoadConfig() {
 	serviceFilePath := path.Join(configPath, "services.json")
 	services, err := loadServicesFromFile(serviceFilePath)
 	if err != nil {
-		fmt.Printf("Failed to load %s\n  %s\n", serviceFilePath, err)
-		os.Exit(1)
+		return fmt.Errorf("Failed to load %s\n  %s\n", serviceFilePath, err)
 	}
 	sm.Services = *services
 
 	profileFilePath := path.Join(configPath, "profiles.json")
 	profiles, err := loadProfilesFromFile(profileFilePath)
 	if err != nil {
-		fmt.Printf("Failed to load %s\n %s\n", profileFilePath, err)
-		os.Exit(1)
+		return fmt.Errorf("Failed to load %s\n %s\n", profileFilePath, err)
 	}
 	sm.Profiles = *profiles
 
 	// ensure install dir exists
 	err = os.MkdirAll(sm.Config.TmpDir, 0755)
 	if err != nil {
-		fmt.Printf("Failed to create the installation directory in %s, %s.\n", sm.Config.TmpDir, err)
-		os.Exit(1)
+		return fmt.Errorf("Failed to create the installation directory in %s, %s.\n", sm.Config.TmpDir, err)
 	}
+
+	return nil
 }

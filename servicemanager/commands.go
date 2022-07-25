@@ -2,6 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sm2/version"
 )
@@ -37,7 +38,11 @@ func (sm *ServiceManager) Run() {
 			fmt.Println(err)
 			fmt.Println("Continuing with current config...")
 		}
-		sm.LoadConfig()
+		err = sm.LoadConfig()
+		if err != nil {
+			fmt.Print(err)
+			os.Exit(1)
+		}
 	}
 
 	if sm.Commands.Status || sm.Commands.StatusShort {

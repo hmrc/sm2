@@ -32,7 +32,11 @@ func main() {
 		Ledger:   ledger.NewLedger(),
 	}
 
-	serviceManager.LoadConfig()
+	err = serviceManager.LoadConfig()
+	if err != nil {
+		fmt.Print(err)
+		os.Exit(1)
+	}
 
 	serviceManager.Run()
 }
