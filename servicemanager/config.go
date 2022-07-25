@@ -1,11 +1,9 @@
-package main
+package servicemanager
 
 import (
 	"encoding/json"
 	"fmt"
-
 	"os"
-	"sm2/servicemanager"
 )
 
 type ArtifactoryUrls struct {
@@ -19,7 +17,7 @@ var DefaultArtifactoryUrls = ArtifactoryUrls{
 	PingUrl: "https://artefacts.tax.service.gov.uk/artifactory/api/system/ping",
 }
 
-type Services map[string]servicemanager.Service
+type Services map[string]Service
 type Profiles map[string][]string
 
 func loadServicesFromFile(serviceFile string) (*Services, error) {

@@ -2,6 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sm2/version"
 )
@@ -30,6 +31,19 @@ func parseServiceAndVersion(serviceDescriptor string) ServiceAndVersion {
 func (sm *ServiceManager) Run() {
 
 	var err error
+
+	if sm.Commands.UpdateConfig {
+		err := updateConfig(sm.Config.ConfigDir)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Continuing with current config...")
+		}
+		err = sm.LoadConfig()
+		if err != nil {
+			fmt.Print(err)
+			os.Exit(1)
+		}
+	}
 
 	if sm.Commands.Status || sm.Commands.StatusShort {
 		// prints table of running services
@@ -89,8 +103,6 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.Version {
 		// show version and build
 		version.PrintVersion()
-	} else if sm.Commands.UpdateConfig {
-		err = updateConfig(sm.Config.ConfigDir)
 	} else {
 		// show help
 		fmt.Print(helptext)

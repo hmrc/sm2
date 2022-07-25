@@ -53,10 +53,28 @@ func gitPull(repoDir string) error {
 	return cmd.Run()
 }
 
+func gitFetch(repoDir string, remote string, branch string) error {
+	cmd := exec.Command("git", "fetch", "--quiet", remote, branch)
+	cmd.Dir = repoDir
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+	return cmd.Run()
+}
+
 // returns the version of the git cli tool
 func gitVersion() (string, error) {
 	cmd := exec.Command("git", "--version")
 
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+	return strings.Trim(string(out), "\n "), nil
+}
+
+func gitShowShortRef(repoDir string, ref string) (string, error) {
+	cmd := exec.Command("git", "show-ref", "--hash=7", ref)
+	cmd.Dir = repoDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
