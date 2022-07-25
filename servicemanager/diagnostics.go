@@ -39,12 +39,21 @@ func checkWorkspace(config ServiceManagerConfig) {
 }
 
 func checkConfigRevision(config ServiceManagerConfig) {
-	revision, err := gitLastCommit(config.ConfigDir)
+	err := gitFetch(config.ConfigDir, "origin", "main")
 	if err != nil {
-		fmt.Printf("CONFIG:\t\t NOT OK: %s\n", err)
-	}
+		fmt.Print("CONFIG:\t\t WARN: Unable to fetch latest remote version to compare to local\n")
+	} else {
+		localVersion, _ := gitShowShortRef(config.ConfigDir, "refs/heads/main")
+		remoteVersion, _ := gitShowShortRef(config.ConfigDir, "refs/remotes/origin/main")
 
-	fmt.Printf("CONFIG:\t\t OK (%s)\n", revision)
+		if localVersion == "" || remoteVersion == "" {
+			fmt.Printf("CONFIG:\t\t NOT OK: Could not determine local (%s) or remote (%s) versions\n", localVersion, remoteVersion)
+		} else if localVersion != remoteVersion {
+			fmt.Printf("CONFIG:\t\t WARN: Local version (%s) is not up to date with remote version (%s)\n", localVersion, remoteVersion)
+		} else {
+			fmt.Printf("CONFIG:\t\t OK: Local version is up to date with remote version (%s)\n", localVersion)
+		}
+	}
 }
 
 func checkJava() {
