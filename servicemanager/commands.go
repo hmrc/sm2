@@ -31,6 +31,15 @@ func (sm *ServiceManager) Run() {
 
 	var err error
 
+	if sm.Commands.UpdateConfig {
+		err := updateConfig(sm.Config.ConfigDir)
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Continuing with current config...")
+		}
+		sm.LoadConfig()
+	}
+
 	if sm.Commands.Status || sm.Commands.StatusShort {
 		// prints table of running services
 		sm.PrintStatus()
@@ -89,8 +98,6 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.Version {
 		// show version and build
 		version.PrintVersion()
-	} else if sm.Commands.UpdateConfig {
-		err = updateConfig(sm.Config.ConfigDir)
 	} else {
 		// show help
 		fmt.Print(helptext)
