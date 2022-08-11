@@ -2,7 +2,9 @@ package servicemanager
 
 import (
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"strings"
 	"time"
 )
@@ -26,7 +28,7 @@ type serviceStatus struct {
 func (sm *ServiceManager) PrintStatus() {
 	statues := []serviceStatus{sm.CheckMongo()}
 	statues = append(statues, sm.findStatuses()...)
-	printTable(statues)
+	printTable(statues, os.Stdout)
 	printHelpIfRequired(statues)
 }
 
@@ -91,28 +93,28 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 	return statuses
 }
 
-func printTable(statuses []serviceStatus) {
+func printTable(statuses []serviceStatus, out io.Writer) {
 
 	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", 36), strings.Repeat("-", 11), strings.Repeat("-", 9), strings.Repeat("-", 7), strings.Repeat("-", 8))
 
-	fmt.Print(border)
-	fmt.Printf("| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
-	fmt.Print(border)
+	fmt.Fprint(out, border)
+	fmt.Fprintf(out, "| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
+	fmt.Fprint(out, border)
 	for _, status := range statuses {
-		fmt.Printf("| %-35s", crop(status.service, 35))
-		fmt.Printf("| %-10s", status.version)
-		fmt.Printf("| %-8d", status.pid)
-		fmt.Printf("| %-6d", status.port)
+		fmt.Fprintf(out, "| %-35s", crop(status.service, 35))
+		fmt.Fprintf(out, "| %-10s", status.version)
+		fmt.Fprintf(out, "| %-8d", status.pid)
+		fmt.Fprintf(out, "| %-6d", status.port)
 		switch status.health {
 		case PASS:
-			fmt.Printf("|  \033[1;32m%-6s\033[0m|\n", "PASS")
+			fmt.Fprintf(out, "|  \033[1;32m%-6s\033[0m|\n", "PASS")
 		case FAIL:
-			fmt.Printf("|  \033[1;31m%-6s\033[0m|\n", "FAIL")
+			fmt.Fprintf(out, "|  \033[1;31m%-6s\033[0m|\n", "FAIL")
 		case BOOT:
-			fmt.Printf("|  \033[1;34m%-6s\033[0m|\n", "BOOT")
+			fmt.Fprintf(out, "|  \033[1;34m%-6s\033[0m|\n", "BOOT")
 		}
 	}
-	fmt.Print(border)
+	fmt.Fprint(out, border)
 }
 
 func printHelpIfRequired(statuses []serviceStatus) {
