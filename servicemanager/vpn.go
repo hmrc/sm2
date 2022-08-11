@@ -1,6 +1,7 @@
 package servicemanager
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"time"
@@ -8,12 +9,19 @@ import (
 
 // Tests vpn connectivity by attempting to open a connection
 // to artifactory using a http client with a short timeout.
-func checkVpn(config ServiceManagerConfig) bool {
-	shortTimeoutClient := &http.Client{
-		Timeout: 4 * time.Second,
+func checkVpn(client *http.Client, config ServiceManagerConfig) bool {
+
+	// TODO: move short timeout to config
+	shortTimeout := 4 * time.Second
+	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+
+	req, err := http.NewRequestWithContext(ctx, "HEAD", config.ArtifactoryPingUrl, nil)
+	if err != nil {
+		println(err)
+		return false
 	}
 
-	resp, err := shortTimeoutClient.Head(config.ArtifactoryPingUrl)
+	resp, err := client.Do(req)
 	if err != nil {
 		return false
 	}

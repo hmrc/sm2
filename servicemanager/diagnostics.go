@@ -2,6 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -110,7 +111,9 @@ func checkNetwork(config ServiceManagerConfig) {
 		return
 	}
 
-	if !checkVpn(config) {
+	client := &http.Client{}
+
+	if !checkVpn(client, config) {
 		fmt.Print("VPN:\t\t NOT OK\n")
 		fmt.Printf("\t\t %s resolvable but not reachable\n", artifactoryUrl)
 	} else {
