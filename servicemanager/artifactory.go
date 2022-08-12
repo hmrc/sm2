@@ -3,6 +3,7 @@ package servicemanager
 import (
 	"archive/tar"
 	"compress/gzip"
+	"context"
 	"crypto/md5"
 	"encoding/xml"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"time"
 
 	"sm2/version"
 )
@@ -97,7 +99,10 @@ func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progr
 		return "", err
 	}
 
-	req, err := http.NewRequest("GET", url, nil)
+	// TODO: move the long timeout to config...
+	longTimeout := 4 * 60 * time.Second
+	ctx, _ := context.WithTimeout(context.Background(), longTimeout)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", err
 	}

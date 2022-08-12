@@ -1,12 +1,14 @@
 package servicemanager
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,6 +25,33 @@ func mockPidLookup() map[int]int {
 
 func mockUptime() time.Time {
 	return time.Now().Add(time.Duration(-2) * time.Hour)
+}
+
+func getPort(u string) int {
+	url, _ := url.Parse(u)
+	port, _ := strconv.Atoi(url.Port())
+	return port
+}
+
+// In order to keep the tables looking nice on everyones default terminals we cap the status at 80 chars
+func TestStatusFitsIn80Chars(t *testing.T) {
+	sb := bytes.NewBufferString("")
+	statuses := []serviceStatus{
+		serviceStatus{0, 1, "SHORT_ID", "1.2.3", "PASS"},
+		serviceStatus{1386351, 10801, "A_REALLY_LONG_SERVICE_NAME_INDEED_IT_IS_VERY_VERY_VERY_LONG", "42.999.1", "PASS"},
+	}
+	printTable(statuses, sb)
+
+	lines := strings.Split(sb.String(), "\n")
+	for _, line := range lines {
+
+		line = strings.ReplaceAll(line, "\033[;32m", "")
+		line = strings.ReplaceAll(line, "\033[0m", "")
+		fmt.Printf("%d: [%s]\n", len(line), line)
+		if len(line) > 80+11 {
+			t.Errorf("Status line is > 80 chars (%d)", len(line))
+		}
+	}
 }
 
 func TestBSTUptimeBug(t *testing.T) {
@@ -187,10 +216,4 @@ func TestStatuses(t *testing.T) {
 	if result[2].health != FAIL {
 		t.Errorf("%s health was not FAIL, it was %s", result[2].service, result[2].health)
 	}
-}
-
-func getPort(u string) int {
-	url, _ := url.Parse(u)
-	port, _ := strconv.Atoi(url.Port())
-	return port
 }

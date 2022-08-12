@@ -35,7 +35,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	}
 
 	// check if we need to and can connect...
-	if !offline && !checkVpn(sm.Config) {
+	if !offline && !checkVpn(sm.Client, sm.Config) {
 		sm.progress.update(serviceAndVersion.service, 0, "No VPN")
 		return fmt.Errorf("Check VPN connection, couldn't reach artifactory.")
 	}
