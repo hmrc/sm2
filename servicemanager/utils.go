@@ -25,3 +25,11 @@ func crop(s string, width int) string {
 	}
 	return s[:width]
 }
+
+func addDelimiter(initialStr string, separator string, step int) string {
+	str := initialStr
+	for i := step; i < len(str); i += step + 1 {
+		str = str[:i] + separator + str[i:]
+	}
+	return str
+}

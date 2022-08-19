@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -90,6 +91,10 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 		statuses = append(statuses, status)
 	}
 
+    sort.Slice(statuses, func(i, j int) bool {
+        return statuses[i].service < statuses[j].service
+    })
+
 	return statuses
 }
 
@@ -100,18 +105,47 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 	fmt.Fprint(out, border)
 	fmt.Fprintf(out, "| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
 	fmt.Fprint(out, border)
+
+	const chunkSize = 35 //max size of service name before we wrap to next line
+
 	for _, status := range statuses {
-		fmt.Fprintf(out, "| %-35s", crop(status.service, 35))
-		fmt.Fprintf(out, "| %-10s", status.version)
-		fmt.Fprintf(out, "| %-8d", status.pid)
-		fmt.Fprintf(out, "| %-6d", status.port)
-		switch status.health {
-		case PASS:
-			fmt.Fprintf(out, "|  \033[1;32m%-6s\033[0m|\n", "PASS")
-		case FAIL:
-			fmt.Fprintf(out, "|  \033[1;31m%-6s\033[0m|\n", "FAIL")
-		case BOOT:
-			fmt.Fprintf(out, "|  \033[1;34m%-6s\033[0m|\n", "BOOT")
+		serviceName := status.service
+
+		if len(serviceName) > chunkSize {
+			serviceName = addDelimiter(status.service, ",", chunkSize)
+		}
+
+		splitServiceName := strings.Split(serviceName, ",")
+		numberOfLines := len(splitServiceName)
+
+		for i, s := range splitServiceName {
+
+			//Don't show final line of service name, if overflow < 4 chars.
+			if numberOfLines > 1 && s == splitServiceName[len(splitServiceName) - 1] && len(s) < 4 {
+				break
+			} else {
+				fmt.Fprintf(out, "| %-35s", s)
+			}
+			//Only print the version/pid/port/status if first line of wrapped string
+			if i == 0 {
+				fmt.Fprintf(out, "| %-10s", status.version)
+				fmt.Fprintf(out, "| %-8d", status.pid)
+				fmt.Fprintf(out, "| %-6d", status.port)
+				switch status.health {
+				case PASS:
+					fmt.Fprintf(out, "|  \033[1;32m%-6s\033[0m|\n", "PASS")
+				case FAIL:
+					fmt.Fprintf(out, "|  \033[1;31m%-6s\033[0m|\n", "FAIL")
+				case BOOT:
+					fmt.Fprintf(out, "|  \033[1;34m%-6s\033[0m|\n", "BOOT")
+				}
+			} else {
+				fmt.Fprintf(out, "| %-10s", "")
+				fmt.Fprintf(out, "| %-8s", "")
+				fmt.Fprintf(out, "| %-6s", "")
+				fmt.Fprintf(out, "|  %-6s|\n", "")
+
+			}
 		}
 	}
 	fmt.Fprint(out, border)
