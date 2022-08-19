@@ -20,6 +20,19 @@ When building a new release, use the included makefile:
 make build_all package
 ```
 
+## Running tests 
+
+To run all tests in all sub-directories, ensure you are in the project root and run:
+
+```bash
+make test
+```
+
+To run tests for the subdirectory you are currently in:
+```bash
+go test
+```
+
 ## Build with Nix
 
 To install from source:
