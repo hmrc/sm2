@@ -106,8 +106,9 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 	fmt.Fprintf(out, "| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
 	fmt.Fprint(out, border)
 
+	const chunkSize = 35 //max size of service name before we wrap to next line
+
 	for _, status := range statuses {
-		chunkSize := 35 //max size of service name before we wrap to next line
 		serviceName := status.service
 
 		if len(serviceName) > chunkSize {
