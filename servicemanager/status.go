@@ -1,9 +1,11 @@
 package servicemanager
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
@@ -91,9 +93,9 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 		statuses = append(statuses, status)
 	}
 
-    sort.Slice(statuses, func(i, j int) bool {
-        return statuses[i].service < statuses[j].service
-    })
+	sort.Slice(statuses, func(i, j int) bool {
+		return statuses[i].service < statuses[j].service
+	})
 
 	return statuses
 }
@@ -121,7 +123,7 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 		for i, s := range splitServiceName {
 
 			//Don't show final line of service name, if overflow < 4 chars.
-			if numberOfLines > 1 && s == splitServiceName[len(splitServiceName) - 1] && len(s) < 4 {
+			if numberOfLines > 1 && s == splitServiceName[len(splitServiceName)-1] && len(s) < 4 {
 				break
 			} else {
 				fmt.Fprintf(out, "| %-35s", s)
@@ -165,7 +167,11 @@ func printHelpIfRequired(statuses []serviceStatus) {
 
 // returns true if the service ping endpoint responds
 func (sm *ServiceManager) CheckHealth(url string) bool {
-	resp, err := sm.Client.Get(url)
+	shortTimeout := 30 * time.Second
+	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+
+	resp, err := sm.Client.Do(req)
 	return err == nil && resp.StatusCode == 200
 }
 

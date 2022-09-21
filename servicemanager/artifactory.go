@@ -69,7 +69,9 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
-	req, err := http.NewRequest("GET", url, nil)
+	shortTimeout := 30 * time.Second
+	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return MavenMetadata{}, err
 	}
@@ -99,13 +101,13 @@ func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progr
 		return "", err
 	}
 
-	// TODO: move the long timeout to config...
-	longTimeout := 30 * time.Minute
-	ctx, _ := context.WithTimeout(context.Background(), longTimeout)
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	// use default timeout. limiting by ctx works if its < client's timeout but not longer...
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return "", err
 	}
+
+	// overrider header so we can track usage in artifactory
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := sm.Client.Do(req)
