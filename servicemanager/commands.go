@@ -104,8 +104,10 @@ func (sm *ServiceManager) Run() {
 		// show version and build
 		version.PrintVersion()
 	} else {
-		// show help
-		fmt.Print(helptext)
+		// show help if they're not using --update-config with another command
+		if !sm.Commands.UpdateConfig {
+			fmt.Print(helptext)
+		}
 	}
 
 	if err != nil {

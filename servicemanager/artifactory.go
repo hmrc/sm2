@@ -100,7 +100,7 @@ func (sm *ServiceManager) downloadAndDecompress(url string, outdir string, progr
 	}
 
 	// TODO: move the long timeout to config...
-	longTimeout := 4 * 60 * time.Second
+	longTimeout := 30 * time.Minute
 	ctx, _ := context.WithTimeout(context.Background(), longTimeout)
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
