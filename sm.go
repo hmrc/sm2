@@ -21,7 +21,7 @@ func main() {
 	}
 
 	client := &http.Client{
-		Timeout: 120 * time.Second,
+		Timeout: 30 * time.Minute,
 	}
 
 	serviceManager := servicemanager.ServiceManager{
