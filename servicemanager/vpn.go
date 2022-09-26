@@ -13,7 +13,7 @@ import (
 func checkVpn(client *http.Client, config ServiceManagerConfig) (bool, error) {
 
 	// TODO: move short timeout to config
-	shortTimeout := 30 * time.Second
+	shortTimeout := 8 * time.Second
 	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", config.ArtifactoryPingUrl, nil)
