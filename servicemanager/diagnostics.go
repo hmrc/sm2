@@ -2,6 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -105,19 +106,31 @@ func checkOS() {
 }
 
 func checkNetwork(config ServiceManagerConfig) {
-	artifactoryUrl, err := url.Parse(config.ArtifactoryRepoUrl)
+	artifactoryUrl, err := url.Parse(config.ArtifactoryPingUrl)
 	if err != nil {
 		fmt.Print("VPN:\t\t artifactory url not valid!\n")
 		return
 	}
 
+	_, err = net.Dial("tcp", fmt.Sprintf("%s:%d", artifactoryUrl.Host, 443))
+	if err != nil {
+		fmt.Printf("VPN\t\t NOT OK failed to establish tcp connection %s\n", fmt.Sprintf("%s:%d", artifactoryUrl.Host, 443))
+	}
+
+	ip, err := net.LookupIP(artifactoryUrl.Host)
+	if err != nil {
+		fmt.Printf("VPN DNS\t\t NOT OK failed to resolve IP of %s\n", artifactoryUrl.Host)
+	} else {
+		fmt.Printf("VPN DNS\t\t OK IP Address of %s resolves to %v\n", artifactoryUrl.Host, ip)
+	}
+
 	client := &http.Client{}
 
-	if !checkVpn(client, config) {
-		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s resolvable but not reachable\n", artifactoryUrl)
+	if ok, err := checkVpn(client, config); ok {
+		fmt.Printf("VPN:\t\t OK (%s responds to ping)\n", artifactoryUrl)
 	} else {
-		fmt.Printf("VPN:\t\t OK (%s resolvable)\n", artifactoryUrl)
+		fmt.Print("VPN:\t\t NOT OK\n")
+		fmt.Printf("\t\t %s resolvable but not reachable\n\t\t %v\n", artifactoryUrl, err)
 	}
 
 }
