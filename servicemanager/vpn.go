@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
 
 // Tests vpn connectivity by attempting to open a connection
 // to artifactory using a http client with a short timeout.
 func checkVpn(client *http.Client, config ServiceManagerConfig) (bool, error) {
 
-	// TODO: move short timeout to config
-	shortTimeout := 8 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+	ctx, _ := context.WithTimeout(context.Background(), config.TimeoutShort)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", config.ArtifactoryPingUrl, nil)
 	if err != nil {
@@ -29,7 +26,6 @@ func checkVpn(client *http.Client, config ServiceManagerConfig) (bool, error) {
 	defer resp.Body.Close()
 	_, err = io.ReadAll(resp.Body)
 	if err != nil {
-		println("failed reading body of vpn check")
 		return false, err
 	}
 

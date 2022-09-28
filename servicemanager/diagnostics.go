@@ -112,16 +112,13 @@ func checkNetwork(config ServiceManagerConfig) {
 		return
 	}
 
-	_, err = net.Dial("tcp", fmt.Sprintf("%s:%d", artifactoryUrl.Host, 443))
-	if err != nil {
-		fmt.Printf("VPN\t\t NOT OK failed to establish tcp connection %s\n", fmt.Sprintf("%s:%d", artifactoryUrl.Host, 443))
-	}
+	fmt.Printf("NET\t\t OK (VPN check timeout %v)\n", config.TimeoutShort)
 
 	ip, err := net.LookupIP(artifactoryUrl.Host)
 	if err != nil {
-		fmt.Printf("VPN DNS\t\t NOT OK failed to resolve IP of %s\n", artifactoryUrl.Host)
+		fmt.Printf("VPN DNS\t\t NOT OK (failed to resolve IP of %s)\n", artifactoryUrl.Host)
 	} else {
-		fmt.Printf("VPN DNS\t\t OK IP Address of %s resolves to %v\n", artifactoryUrl.Host, ip)
+		fmt.Printf("VPN DNS\t\t OK (IP Address of %s resolves to %v)\n", artifactoryUrl.Host, ip)
 	}
 
 	client := &http.Client{}

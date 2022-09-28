@@ -1,10 +1,13 @@
 package servicemanager
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
+	"time"
 
 	"sm2/cli"
 	"sm2/ledger"
@@ -28,6 +31,7 @@ type ServiceManagerConfig struct {
 	ArtifactoryRepoUrl string
 	ArtifactoryPingUrl string
 	ConfigDir          string
+	TimeoutShort       time.Duration
 }
 
 type Service struct {
@@ -62,6 +66,15 @@ func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	if sm.Commands.Verbose {
 		fmt.Printf(s, args...)
 	}
+}
+
+func (sm *ServiceManager) NewShortContext() context.Context {
+	ttl := sm.Config.TimeoutShort
+	if ttl == 0 {
+		ttl = 10 * time.Second
+	}
+	ctx, _ := context.WithTimeout(context.Background(), ttl)
+	return ctx
 }
 
 // based on config, find the directory a service is installed into.
@@ -106,6 +119,14 @@ func (sm *ServiceManager) LoadConfig() error {
 		ArtifactoryPingUrl: repoConfig.PingUrl,
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
+		TimeoutShort:       10 * time.Second,
+	}
+
+	// allow for short timout (vpn check etc) to be overriden in case of network weirdness
+	if timeout, isSet := os.LookupEnv("SM_TIMEOUT"); isSet {
+		if value, err := strconv.ParseInt(timeout, 10, 64); err == nil {
+			sm.Config.TimeoutShort = time.Second * time.Duration(value)
+		}
 	}
 
 	// @speed consider lazy loading these rather than loading on startup

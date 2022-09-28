@@ -115,3 +115,36 @@ Running `sm2 --diagnotic` will perform some basic health checks for the sm2 tool
 
 ## Keeping service-manager-config up to date
 You can use service manager to get the latest config using the `sm2 --update-config` command. It requires the copy of service-manager-config in your $WORKSPACE be on the HEAD branch, if it is not it will not perform the update (so as not to overwrite any changes you may be working on etc).
+
+## Config Options
+You can override some of the default settings in sm2 using environment variables.
+These environment variables can either be set temporarily in your shell, or added to .profile or .bashrc etc to apply them permanently.
+
+### Number of concurrent downloads
+The number of services that will be installed at the same time (default 2) can be set via the `SM_WORKERS` environment variable, e.g.
+
+```
+export SM_WORKERS=4
+```
+
+would download and install 4 services at the same time. It can be worth tweaking this setting depending on your internet connection.
+This is the same as using the --workers argument.
+
+### Increasing the default timeout
+The timeout (in seconds) for the vpn check and other calls can be changed via the `SM_TIMEOUT` environment variable, e.g.
+
+```
+export SM_TIMEOUT=30
+```
+
+would set the timeout to 30 seconds. The vpn check is performed every time you attempt to start a service, unless the `--offline` flag is used.
+
+### Disabling the vpn check
+The vpn check can be disabled completely if it is causing issues or for testing via `SM_NOVPN`, e.g.
+
+```
+export SM_NOPVN=true
+```
+
+This would completely disable the vpn connectivity check when installing a service. The install will still fail if the VPN is not connected.
+This is the same as using the --no-vpn-check argument.
