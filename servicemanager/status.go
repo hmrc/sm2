@@ -1,7 +1,6 @@
 package servicemanager
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net"
@@ -167,8 +166,7 @@ func printHelpIfRequired(statuses []serviceStatus) {
 
 // returns true if the service ping endpoint responds
 func (sm *ServiceManager) CheckHealth(url string) bool {
-	shortTimeout := 30 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+	ctx := sm.NewShortContext()
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 
 	resp, err := sm.Client.Do(req)

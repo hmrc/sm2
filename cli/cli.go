@@ -23,6 +23,7 @@ type UserOption struct {
 	List          bool                // lists all the services
 	Logs          string              // prints the logs of a service, running or otherwise
 	NoProgress    bool                // hides the animated download progress meter
+	NoVpnCheck    bool                // skips checking if vpn is connected before starting a service
 	Offline       bool                // prints downloaded services, used with --start bypasses download and uses local copy
 	Port          int                 // overrides service port, only works with the first service when starting multiple
 	Ports         bool                // prints all the ports
@@ -57,6 +58,7 @@ func Parse(args []string) (*UserOption, error) {
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
 	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
+	flagset.BoolVar(&opts.NoVpnCheck, "no-vpn-check", defaultVpnCheck(), "disables checking if the vpn is connected")
 	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
 	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
 	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
@@ -136,6 +138,11 @@ func defaultWorkers() int {
 		return defaultValue
 	}
 	return int(value)
+}
+
+func defaultVpnCheck() bool {
+	_, isSet := os.LookupEnv("SM_NOVPN")
+	return isSet
 }
 
 // check the version number is vaguely like what we'd expect to see

@@ -34,10 +34,13 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return fmt.Errorf("Already running")
 	}
 
-	// check if we need to and can connect...
-	if !offline && !checkVpn(sm.Client, sm.Config) {
-		sm.progress.update(serviceAndVersion.service, 0, "No VPN")
-		return fmt.Errorf("Check VPN connection, couldn't reach artifactory.")
+	// check if we're on the VPN (if required)
+	if !sm.Commands.NoVpnCheck {
+		vpnOk, _ := checkVpn(sm.Client, sm.Config)
+		if !offline && !vpnOk {
+			sm.progress.update(serviceAndVersion.service, 0, "No VPN")
+			return fmt.Errorf("Check VPN connection, couldn't reach artifactory.")
+		}
 	}
 
 	// work out what we will install, where...

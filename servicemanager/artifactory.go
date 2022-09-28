@@ -3,7 +3,6 @@ package servicemanager
 import (
 	"archive/tar"
 	"compress/gzip"
-	"context"
 	"crypto/md5"
 	"encoding/xml"
 	"fmt"
@@ -15,7 +14,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"time"
 
 	"sm2/version"
 )
@@ -69,8 +67,7 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
-	shortTimeout := 30 * time.Second
-	ctx, _ := context.WithTimeout(context.Background(), shortTimeout)
+	ctx := sm.NewShortContext()
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return MavenMetadata{}, err
