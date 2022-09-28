@@ -62,6 +62,8 @@ type Healthcheck struct {
 	Response string `json:"response"`
 }
 
+const DEFAULT_SHORT_TIMEOUT = 20
+
 func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	if sm.Commands.Verbose {
 		fmt.Printf(s, args...)
@@ -71,7 +73,7 @@ func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 func (sm *ServiceManager) NewShortContext() context.Context {
 	ttl := sm.Config.TimeoutShort
 	if ttl == 0 {
-		ttl = 10 * time.Second
+		ttl = DEFAULT_SHORT_TIMEOUT * time.Second
 	}
 	ctx, _ := context.WithTimeout(context.Background(), ttl)
 	return ctx
@@ -119,7 +121,7 @@ func (sm *ServiceManager) LoadConfig() error {
 		ArtifactoryPingUrl: repoConfig.PingUrl,
 		TmpDir:             path.Join(workspacePath, "install"),
 		ConfigDir:          configPath,
-		TimeoutShort:       10 * time.Second,
+		TimeoutShort:       DEFAULT_SHORT_TIMEOUT * time.Second,
 	}
 
 	// allow for short timout (vpn check etc) to be overriden in case of network weirdness
