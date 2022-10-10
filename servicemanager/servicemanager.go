@@ -98,6 +98,10 @@ func (sm *ServiceManager) LoadConfig() error {
 			"You'll need to make sure this directory exists, is writable and has sufficent space.\n")
 	}
 
+	if !path.IsAbs(workspacePath) {
+		return fmt.Errorf("Config issue! Your WORKSPACE environment variable must be an absolute path:\ni.e. starting with a '/' like '/home/user/.servicemanager'\n")
+	}
+
 	configPath := path.Join(workspacePath, "service-manager-config")
 	if sm.Commands.Config != "" {
 		configPath = sm.Commands.Config
