@@ -82,7 +82,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	}
 
 	// start the service...
-	args := sm.generateArgs(service, versionToInstall, installFile.Path)
+	args := sm.generateArgs(service, versionToInstall, installFile.Path, service.Binary.Cmd[1:])
 	sm.progress.update(serviceAndVersion.service, 100, "Starting...")
 	state, err := run(service, installFile, args, port)
 	if err != nil {
@@ -240,10 +240,9 @@ func whatVersionToRun(service Service, serviceAndVersion ServiceAndVersion, offl
 }
 
 // builds an array of arguments from service config, user supplied args and some sm defaults
-func (sm *ServiceManager) generateArgs(service Service, version string, serviceDir string) []string {
+func (sm *ServiceManager) generateArgs(service Service, version string, serviceDir string, serviceArgs []string) []string {
 
-	args := service.Binary.Cmd[1:]
-
+	args := serviceArgs
 	// add service-manager generated args
 	smArgs := []string{
 		fmt.Sprintf("-Dservice.manager.serviceName=%s", service.Id),

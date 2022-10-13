@@ -12,13 +12,7 @@ func (sm *ServiceManager) StopService(serviceName string) error {
 
 	for _, status := range statues {
 		if status.service == serviceName {
-			fmt.Printf("Stopping %-40s(pid %-7d).\n", serviceName, status.pid)
-			stopPid(status.pid)
-
-			// clean up service.state
-			if installDir, err := sm.findInstallDirOfService(serviceName); err == nil { // ok
-				sm.Ledger.ClearStateFile(installDir)
-			}
+			sm.stop(status)
 			return nil
 		}
 	}
@@ -40,13 +34,35 @@ func (sm *ServiceManager) StopAll() {
 	statues := sm.findStatuses()
 
 	for _, status := range statues {
-		fmt.Printf("Stopping %-40s(pid %-7d)\n", status.service, status.pid)
-		stopPid(status.pid)
+		sm.stop(status)
+	}
 
-		// clean up service.state
-		if installDir, err := sm.findInstallDirOfService(status.service); err == nil { // ok
-			sm.Ledger.ClearStateFile(installDir)
+}
+
+func (sm *ServiceManager) stop(status serviceStatus) {
+	serviceName := status.service
+
+	// services running from source will have been forked from the original sbt process
+	// to stop them we need to look them up by service name and stop all the associated pids
+	if status.version == SOURCE {
+		if found, pids := sm.Platform.PidLookupByService(serviceName); found {
+			fmt.Printf("Stopping %-40s (running from source)\n", serviceName)
+			for _, pid := range pids {
+				stopPid(pid)
+			}
+		} else {
+			fmt.Printf("Unable to find pid for service started from source %s.\n", serviceName)
+			return
 		}
+	} else {
+		// run from release, kill the pid in the .state file
+		fmt.Printf("Stopping %-40s(pid %-7d).\n", serviceName, status.pid)
+		stopPid(status.pid)
+	}
+
+	// clean up service.state
+	if installDir, err := sm.findInstallDirOfService(serviceName); err == nil { // ok
+		sm.Ledger.ClearStateFile(installDir)
 	}
 
 }

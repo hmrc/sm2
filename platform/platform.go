@@ -13,16 +13,17 @@ import (
 )
 
 type Platform struct {
-	Uptime    func() time.Time
-	PidLookup func() map[int]int
+	Uptime             func() time.Time
+	PidLookup          func() map[int]int
+	PidLookupByService func(string) (bool, []int)
 }
 
 func DetectPlatform() Platform {
 	switch runtime.GOOS {
 	case "darwin":
-		return Platform{uptimeDarwin, processLookupUnix}
+		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName}
 	case "linux":
-		return Platform{uptimeLinux, processLookupUnix}
+		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName}
 	case "windows":
 		log.Fatal("windows is not supported yet!")
 	default:
@@ -93,4 +94,36 @@ func processLookupUnix() map[int]int {
 	}
 
 	return lookup
+}
+
+// Looks at the arguments of a process for a arg matching `service.manager.serviceName=$SERVICE`.
+// When starting from source its possible to have multiple processes (sbt bash script, sbt itself and the server)
+// all with this argument. To avoid making it overly-specific to sbt all pids are returned.
+func processLookupByServiceName(service string) (bool, []int) {
+
+	pids := []int{}
+	cmd := exec.Command("ps", "-eo", "pid,args")
+
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("Failed to get process list. Unable to list running services.\n%s\n", err)
+		return false, pids
+	}
+
+	lookFor := fmt.Sprintf("service.manager.serviceName=%s", service)
+	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	for scanner.Scan() {
+
+		split := strings.SplitN(strings.Trim(scanner.Text(), " "), " ", 2)
+
+		if len(split) == 2 {
+			if strings.Contains(split[1], lookFor) {
+				if pid, err := strconv.Atoi(split[0]); err == nil {
+					pids = append(pids, pid)
+				}
+			}
+		}
+	}
+
+	return len(pids) > 0, pids
 }
