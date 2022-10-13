@@ -74,30 +74,11 @@ func (pr *ProgressRenderer) renderLoop() {
 		// clear
 		fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
 
-		pendingStart := 0
-		maxLines := 20
-		if maxLines > len(pr.watchlist) {
-			maxLines = len(pr.watchlist)
-		}
-
-		for i, service := range pr.watchlist {
-			if p, ok := pr.state[service]; ok && p.state == "Pending" {
-				pendingStart = i
-				break
-			}
-		}
-
-		drawFrom := 0
-		drawTo := maxLines
-		if pendingStart > maxLines {
-			drawFrom = pendingStart - maxLines
-			drawTo = maxLines + drawFrom
-		}
 		// draw all the stuff
 		linesDrawn = 0
-		for _, service := range pr.watchlist[drawFrom:drawTo] {
+		for _, service := range pr.watchlist {
 			if p, ok := pr.state[service]; ok {
-				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", crop(pad(p.service, pr.serviceLen), 40), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 8))
+				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", pad(p.service, pr.serviceLen), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 40))
 				linesDrawn++
 			}
 		}
