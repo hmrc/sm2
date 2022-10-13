@@ -5,10 +5,13 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 	"time"
 
 	"sm2/ledger"
 )
+
+const SOURCE = "source"
 
 func (sm *ServiceManager) StartFromSource(serviceName string) error {
 
@@ -16,6 +19,8 @@ func (sm *ServiceManager) StartFromSource(serviceName string) error {
 	if !ok {
 		return fmt.Errorf("%s is not a valid service", serviceName)
 	}
+
+	// TODO: check its not already running
 
 	installDir, _ := sm.findInstallDirOfService(serviceName)
 
@@ -43,10 +48,8 @@ func (sm *ServiceManager) StartFromSource(serviceName string) error {
 
 func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, service Service) (ledger.InstallFile, error) {
 
-	// TODO work out if we should update or clone
-	if sm.Commands.Clean {
-		removeSrcDir(installDir)
-	}
+	// TODO work out if we can just git pull instead
+	removeExistingVersions(installDir)
 
 	srcDir, err := gitClone(gitUrl, installDir)
 	if err != nil {
@@ -62,7 +65,7 @@ func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, servi
 	installFile := ledger.InstallFile{
 		Service:  service.Id,
 		Artifact: service.Binary.Artifact,
-		Version:  "src",
+		Version:  SOURCE,
 		Path:     srcDir,
 		Created:  time.Now(),
 	}
@@ -73,8 +76,9 @@ func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, servi
 func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.StateFile, error) {
 	state := ledger.StateFile{}
 	port := sm.findPort(service)
-	args := []string{"run", fmt.Sprintf("-Dhttp.port=%d", port)}
-	args = append(args, sm.generateArgs(service, "src", srcDir)...)
+
+	sbtStartCmds := "start " + fmt.Sprintf("start -Dhttp.port=%d ", port) + strings.Join(sm.generateArgs(service, "src", srcDir, append(service.Binary.Cmd[1:], service.Source.ExtraParams...)), " ")
+	args := []string{"-mem", "2048", sbtStartCmds}
 
 	cmd := exec.Command("sbt", args...)
 	cmd.Dir = srcDir
@@ -95,10 +99,11 @@ func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.
 	state = ledger.StateFile{
 		Service:  service.Id,
 		Artifact: service.Binary.Artifact,
-		Version:  "src",
+		Version:  SOURCE,
 		Path:     srcDir,
 		Started:  time.Now(),
 		Pid:      cmd.Process.Pid,
+		Port:     port,
 		Args:     args,
 	}
 

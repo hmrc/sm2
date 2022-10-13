@@ -74,9 +74,13 @@ func TestFindStatusesSortsResultsAlphabetically(t *testing.T) {
 		health:  FAIL,
 	}
 
+	mockServicePidLookup := func(s string) (bool, []int) {
+		return false, []int{}
+	}
+
 	sm := ServiceManager{
 		Client:   &http.Client{},
-		Platform: platform.Platform{Uptime: mockUptime, PidLookup: mockPidLookup},
+		Platform: platform.Platform{Uptime: mockUptime, PidLookup: mockPidLookup, PidLookupByService: mockServicePidLookup},
 		Ledger: ledger.Ledger{
 			FindAllStateFiles: func(_ string) ([]ledger.StateFile, error) {
 				return mockStates, nil
@@ -84,7 +88,7 @@ func TestFindStatusesSortsResultsAlphabetically(t *testing.T) {
 		},
 	}
 
-	statuses := []serviceStatus {mockMongoStatus}
+	statuses := []serviceStatus{mockMongoStatus}
 
 	//Sorting occurs within the `findStatuses() function
 	statuses = append(statuses, sm.findStatuses()...)
@@ -120,7 +124,7 @@ func TestStatusWrapsAndDiscardsServiceNames(t *testing.T) {
 		serviceStatus{6, 7, "SERVICE_IS_74_CHARS_SO_DEFINITELY_WRAP_THE_3RD_LINE_SO_WE_CAN_SEE_OVERFLOW", "3.3", "PASS"},
 	}
 	expectedOutput :=
-`+------------------------------------+-----------+---------+-------+--------+
+		`+------------------------------------+-----------+---------+-------+--------+
 | Name                               | Version   | PID     | Port  | Status |
 +------------------------------------+-----------+---------+-------+--------+
 | SHORT_ID                           | 1.2.3     | 0       | 1     |  PASS  |

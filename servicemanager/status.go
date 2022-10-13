@@ -14,9 +14,11 @@ import (
 type health string
 
 const (
-	PASS health = "PASS"
-	FAIL health = "FAIL"
-	BOOT health = "BOOT"
+	PASS          health  = "PASS"
+	FAIL          health  = "FAIL"
+	BOOT          health  = "BOOT"
+	GRACE_RELEASE float64 = 30
+	GRACE_SOURCE  float64 = 60
 )
 
 type serviceStatus struct {
@@ -71,7 +73,12 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 				status.health = PASS
 			} else {
 				// if boot grace period has passed, it fails
-				if time.Since(state.Started).Seconds() > 30 {
+				grace := GRACE_RELEASE
+				if status.version == SOURCE {
+					println("grace from source")
+					grace = GRACE_SOURCE
+				}
+				if time.Since(state.Started).Seconds() > grace {
 					status.health = FAIL
 				}
 			}

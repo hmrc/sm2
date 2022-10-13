@@ -54,7 +54,8 @@ type ServiceBinary struct {
 }
 
 type Source struct {
-	Repo string `json:"repo"`
+	Repo        string   `json:"repo"`
+	ExtraParams []string `json:"extra_params"`
 }
 
 type Healthcheck struct {

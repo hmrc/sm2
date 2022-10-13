@@ -92,7 +92,7 @@ func TestGenerateArgs(t *testing.T) {
 		"-user1",
 		"-user2",
 	}
-	args := sm.generateArgs(foo, "1.0.1", "/tmp/foo/foo-1.0.1")
+	args := sm.generateArgs(foo, "1.0.1", "/tmp/foo/foo-1.0.1", foo.Binary.Cmd[1:])
 
 	for i, arg := range args {
 		if expectedArgs[i] != arg {
