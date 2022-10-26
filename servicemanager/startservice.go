@@ -65,7 +65,7 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 			return fmt.Errorf("Not available offline")
 		}
 
-		sm.progress.update(serviceAndVersion.service, 0, "Installing...")
+		sm.progress.update(serviceAndVersion.service, 0, "Install")
 
 		var err error
 		installFile, err = sm.installService(installDir, service.Id, group, artifact, versionToInstall)
@@ -296,7 +296,7 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 		}
 
 		if err != nil {
-			sm.progress.update(task.service, 100, err.Error())
+			sm.progress.update(task.service, 100, "Failed")
 			sm.progress.error(task.service, err)
 		} else {
 			sm.progress.update(task.service, 100, "Done")
