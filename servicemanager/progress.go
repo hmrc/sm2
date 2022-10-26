@@ -28,7 +28,7 @@ func (pt *ProgressWriter) Write(p []byte) (int, error) {
 	if pt.lastMark > (1024 * 1024) {
 		pt.lastMark = 0
 		percent := (float32(pt.totalRead) / float32(pt.contentLength)) * 100.0
-		pt.renderer.update(pt.service, percent, "Installing")
+		pt.renderer.update(pt.service, percent, "Install")
 	}
 	return len(p), nil
 }
@@ -63,10 +63,14 @@ func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
 
 func (pr *ProgressRenderer) renderLoop() {
 
+	const MAX_ROWS = 22 // ideally we'd do the syscalls to get the actual terminal size
 	linesDrawn := 0
 
 	for {
+		// block til update
 		u := <-pr.updateChan
+
+		// update the state
 		if _, ok := pr.state[u.service]; ok {
 			pr.state[u.service] = u
 		}
@@ -74,11 +78,40 @@ func (pr *ProgressRenderer) renderLoop() {
 		// clear
 		fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
 
+		// We only want to draw as many services as will fit into our MAX_ROWS, otherwise we get some
+		// weird scrolling issues on some terminals if we clear past the top of the terminal.
+		// We do this by working out how many services we have, and only drawing a slice that runs from the
+		// first service thats PENDING, dropping DONE services as we need space...
+		// FOO [=======] DONE    <- would be dropped first if we need the space
+		// BAR [==     ] INSTALL
+		// BAZ [       ] PENDING
+		//
+		pendingStartsAt := 0 // position of the first 'Pending' service in service list
+		maxLines := MAX_ROWS // how many services we want to draw
+
+		if maxLines > len(pr.watchlist) {
+			maxLines = len(pr.watchlist)
+		}
+
+		for i, service := range pr.watchlist {
+			if p, ok := pr.state[service]; ok && p.state == "Pending" {
+				pendingStartsAt = i
+				break
+			}
+		}
+
+		drawFrom := 0
+		drawTo := maxLines
+		if pendingStartsAt > maxLines {
+			drawFrom = pendingStartsAt - maxLines
+			drawTo = maxLines + drawFrom + 1 // we add 1 here to we see at least 1 pending, it makes the scrolling look more convincing
+		}
+
 		// draw all the stuff
 		linesDrawn = 0
-		for _, service := range pr.watchlist {
+		for _, service := range pr.watchlist[drawFrom:drawTo] {
 			if p, ok := pr.state[service]; ok {
-				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", pad(p.service, pr.serviceLen), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 40))
+				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", crop(pad(p.service, pr.serviceLen), 40), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 8))
 				linesDrawn++
 			}
 		}
