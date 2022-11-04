@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sm2/cli"
 	"sm2/version"
 )
 
@@ -81,10 +82,10 @@ func (sm *ServiceManager) Run() {
 		sm.checkPorts()
 	} else if sm.Commands.Search != "" {
 		// regex search of services and profiles
-		sm.ListServices(sm.Commands.Search)
+		sm.ListServices(sm.Commands.Search, sm.Commands.FormatPlain)
 	} else if sm.Commands.List {
 		// alias for search everything
-		sm.ListServices(".")
+		sm.ListServices(".", sm.Commands.FormatPlain)
 	} else if sm.Commands.Logs != "" {
 		// dumps stdout.log to stdout
 		sm.PrintLogsForService(sm.Commands.Logs)
@@ -103,6 +104,8 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.Version {
 		// show version and build
 		version.PrintVersion()
+	} else if sm.Commands.AutoComplete {
+		cli.GenerateAutoCompletions()
 	} else {
 		// show help if they're not using --update-config with another command
 		if !sm.Commands.UpdateConfig {

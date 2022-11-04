@@ -41,7 +41,7 @@ func (sm *ServiceManager) ListPorts() {
 	}
 }
 
-func (sm *ServiceManager) ListServices(filter string) {
+func (sm *ServiceManager) ListServices(filter string, formatPlain bool) {
 
 	// check if its a profile, list services and exit
 	if profile, ok := sm.Profiles[strings.ToUpper(filter)]; ok {
@@ -88,8 +88,15 @@ func (sm *ServiceManager) ListServices(filter string) {
 	}
 	sort.Strings(keys)
 
-	// run search
-	fmt.Printf("Searching for (%s)...\n", search.String())
+	if formatPlain {
+		printServiceListPlain(keys)
+	} else {
+		sm.printServiceListFormatted(keys, search.String(), longestKey)
+	}
+}
+
+func (sm *ServiceManager) printServiceListFormatted(keys []string, searchTerm string, longestKey int) {
+	fmt.Printf("Searching for (%s)...\n", searchTerm)
 	for _, k := range keys {
 		if service, ok := sm.Services[k]; ok {
 			fmt.Printf("[SERVICE] %s -> %s\n", pad(service.Id, longestKey), service.Name)
@@ -100,6 +107,12 @@ func (sm *ServiceManager) ListServices(filter string) {
 				fmt.Printf("  - %s\n", profileService)
 			}
 		}
+	}
+}
+
+func printServiceListPlain(keys []string) {
+	for _, k := range keys {
+		fmt.Println(k)
 	}
 }
 
