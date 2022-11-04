@@ -12,6 +12,7 @@ import (
 
 type UserOption struct {
 	appendArgs    string              // not exported, content decoded into ExtraArgs
+	AutoComplete  bool                // generates an autocomplete script
 	CheckPorts    bool                // finds duplicate ports
 	Clean         bool                // used with --start to force redownloading
 	Config        string              // uses a different service-manager-config folder
@@ -20,6 +21,7 @@ type UserOption struct {
 	ExtraArgs     map[string][]string // parsed from content of AppendArgs
 	ExtraServices []string            // ids of services to start
 	FromSource    bool                // used with --start to run from source rather than bin
+	FormatPlain   bool                // flag for setting enabling machine friendly/undecorated output
 	List          bool                // lists all the services
 	Logs          string              // prints the logs of a service, running or otherwise
 	NoProgress    bool                // hides the animated download progress meter
@@ -46,37 +48,7 @@ type UserOption struct {
 func Parse(args []string) (*UserOption, error) {
 
 	opts := new(UserOption)
-
-	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
-	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
-	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
-	flagset.BoolVar(&opts.Clean, "clean", false, "forces reinstall of service (use with --start)")
-	flagset.StringVar(&opts.Config, "config", "", "sets an alternate directory for service-manager-config")
-	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given `service` may not have started")
-	flagset.BoolVar(&opts.Diagnostic, "diagnostic", false, "a suite of checks to debug issues with service manager")
-	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
-	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
-	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
-	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
-	flagset.BoolVar(&opts.NoVpnCheck, "no-vpn-check", defaultVpnCheck(), "disables checking if the vpn is connected")
-	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
-	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
-	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
-	flagset.StringVar(&opts.Release, "r", "", "sets which `version` to run (use with --start)")
-	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
-	flagset.BoolVar(&opts.ReverseProxy, "reverse-proxy", false, "starts a reverse proxy to all services on port :3000")
-	flagset.StringVar(&opts.Search, "search", "", "searches for services and profiles that match a given `regex`")
-	flagset.BoolVar(&opts.Start, "start", false, "starts one or more service, for a single service use -r to specify version")
-	flagset.BoolVar(&opts.Status, "status", false, "shows which services are running")
-	flagset.BoolVar(&opts.StatusShort, "s", false, "shows which services are running")
-	flagset.BoolVar(&opts.StopAll, "stop-all", false, "stops all services")
-	flagset.BoolVar(&opts.Stop, "stop", false, "stops one or more services")
-	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "pulls the latest version of service-manager-config")
-	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
-	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
-	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
-	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
-
+	flagset := buildFlagSet(opts)
 	flagset.Parse(args)
 
 	if opts.Workers <= 0 {
@@ -149,4 +121,41 @@ func defaultVpnCheck() bool {
 func releaseIsValid(release string) bool {
 	rx := regexp.MustCompile("^\\d+\\.\\d+.*")
 	return rx.MatchString(release)
+}
+
+func buildFlagSet(opts *UserOption) *flag.FlagSet {
+	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
+
+	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
+	flagset.BoolVar(&opts.AutoComplete, "generate-autocomplete", false, "generates bash completions script")
+	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
+	flagset.BoolVar(&opts.Clean, "clean", false, "forces reinstall of service (use with --start)")
+	flagset.StringVar(&opts.Config, "config", "", "sets an alternate directory for service-manager-config")
+	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given `service` may not have started")
+	flagset.BoolVar(&opts.Diagnostic, "diagnostic", false, "a suite of checks to debug issues with service manager")
+	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
+	flagset.BoolVar(&opts.FormatPlain, "format-plain", false, "list services without formatting")
+	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
+	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
+	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
+	flagset.BoolVar(&opts.NoVpnCheck, "no-vpn-check", defaultVpnCheck(), "disables checking if the vpn is connected")
+	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
+	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
+	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
+	flagset.StringVar(&opts.Release, "r", "", "sets which `version` to run (use with --start)")
+	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
+	flagset.BoolVar(&opts.ReverseProxy, "reverse-proxy", false, "starts a reverse proxy to all services on port :3000")
+	flagset.StringVar(&opts.Search, "search", "", "searches for services and profiles that match a given `regex`")
+	flagset.BoolVar(&opts.Start, "start", false, "starts one or more service, for a single service use -r to specify version")
+	flagset.BoolVar(&opts.Status, "status", false, "shows which services are running")
+	flagset.BoolVar(&opts.StatusShort, "s", false, "shows which services are running")
+	flagset.BoolVar(&opts.StopAll, "stop-all", false, "stops all services")
+	flagset.BoolVar(&opts.Stop, "stop", false, "stops one or more services")
+	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "pulls the latest version of service-manager-config")
+	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
+	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
+	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
+	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
+
+	return flagset
 }
