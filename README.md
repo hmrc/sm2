@@ -9,19 +9,19 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 
 **Linux**
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.3/sm2-1.0.3-linux-intel.zip && unzip sm2-1.0.3-linux-intel.zip && rm sm2-1.0.3-linux-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-linux-intel.zip && unzip sm2-1.0.4-linux-intel.zip && rm sm2-1.0.4-linux-intel.zip
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.3/sm2-1.0.3-apple-arm64.zip && unzip sm2-1.0.3-apple-arm64.zip && rm sm2-1.0.3-apple-arm64.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-apple-arm64.zip && unzip sm2-1.0.4-apple-arm64.zip && rm sm2-1.0.4-apple-arm64.zip
 ```
 
 **OSX/Apple (older Intel cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.3/sm2-1.0.3-apple-intel.zip && unzip sm2-1.0.3-apple-intel.zip && rm sm2-1.0.3-apple-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-apple-intel.zip && unzip sm2-1.0.4-apple-intel.zip && rm sm2-1.0.4-apple-intel.zip
 ```
 
 If everything has worked you should have an executable called `sm2`. 
