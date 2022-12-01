@@ -65,6 +65,8 @@ type Healthcheck struct {
 
 const DEFAULT_SHORT_TIMEOUT = 20
 
+const DEFAULT_WORKSPACE = ".sm2"
+
 func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	if sm.Commands.Verbose {
 		fmt.Printf(s, args...)
@@ -92,29 +94,33 @@ func (sm *ServiceManager) findInstallDirOfService(serviceName string) (string, e
 
 func (sm *ServiceManager) LoadConfig() error {
 	workspacePath, envIsSet := os.LookupEnv("WORKSPACE")
+
+	// use the default workspace path if one isn't set
 	if !envIsSet {
-		// todo print example of how to set this up
-		return fmt.Errorf("Config issue! You need to set the WORKSPACE environment variable to point to a folder service manager can install services to.\n" +
-			"add something like: export WORKSPACE=$HOME/.servicemanager to your .bashrc or .profile\n" +
-			"You'll need to make sure this directory exists, is writable and has sufficent space.\n")
+		defaultWorkspacePath, err := createDefaultWorkspace()
+		if err != nil {
+			return fmt.Errorf("Failed to create the default workspace in %v. Check this is writable or override the default workspace path by setting a WORKSPACE environment variable. %v", workspacePath, err)
+		}
+		workspacePath = defaultWorkspacePath
 	}
 
+	// ensure workspace isn't a relative path like ./sm2 or ../../../sm2 or some weirdness
 	if !path.IsAbs(workspacePath) {
 		return fmt.Errorf("Config issue! Your WORKSPACE environment variable must be an absolute path:\ni.e. starting with a '/' like '/home/user/.servicemanager'\n")
 	}
 
+	// check service-manager-config is present
 	configPath := path.Join(workspacePath, "service-manager-config")
 	if sm.Commands.Config != "" {
 		configPath = sm.Commands.Config
 	}
 
 	if stat, err := os.Stat(configPath); err != nil || !stat.IsDir() {
-		return fmt.Errorf("Config issue! Your $WORKSPACE folder needs a copy of service-manager-config.\n"+
-			"This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n", workspacePath)
+		return fmt.Errorf("Setup incomplete! No copy of service-manager-config found in your workspace (%s).\n"+
+			"This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n", workspacePath, workspacePath)
 	}
 
 	// load repo details from config.json
-	// @todo does this need to return an error if loader can return safe default?
 	configJsonFileName := path.Join(configPath, "config.json")
 	repoConfig, err := loadRepoConfig(configJsonFileName)
 	if err != nil {
@@ -158,4 +164,22 @@ func (sm *ServiceManager) LoadConfig() error {
 	}
 
 	return nil
+}
+
+func createDefaultWorkspace() (string, error) {
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", fmt.Errorf("Failed to lookup users home dir! %v", err)
+	}
+	workspacePath := path.Join(homeDir, DEFAULT_WORKSPACE)
+
+	// check if folder exists
+	if Exists(workspacePath) {
+		return workspacePath, nil
+	}
+
+	// create it if it doesn't
+	fmt.Printf("Creating default workspace in %s...\n", workspacePath)
+	return workspacePath, os.MkdirAll(workspacePath, 0755)
 }

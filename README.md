@@ -33,6 +33,9 @@ If everything has worked you should have an executable called `sm2`.
 Alternatively you can download and decompress sm2 yourself from the [releases]() section
 
 ### Setup
+If you are upgrading from the original service-manager, sm2 will use your existing config.
+
+By default `sm2` will create a workspace folder in `$HOME/.sm2`. If you want to override this default you can do so by following these steps:
 
 1. Create a workspace directory somewhere in your $HOME directory. The directory can be named anything.
 ```mkdir /home/username/.servicemanager```
@@ -42,7 +45,7 @@ export WORKSPACE=/path/to/workspace
 ```
 Once working add the export to your .bashrc and/or .profile to set it permanently.
 
-2. Using git, clone a copy of service-manager-config into your $WORKSPACE folder.
+2. Using git, clone a copy of service-manager-config into your workspace folder (which will be `$HOME/.sm2` by default unless you've overriden it via `$WORKSPACE`).
 
 ### Post install/setup checkers
 You can check everything is setup correctly by running:
