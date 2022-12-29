@@ -49,7 +49,7 @@ func Parse(args []string) (*UserOption, error) {
 
 	opts := new(UserOption)
 	flagset := buildFlagSet(opts)
-	flagset.Parse(args)
+	flagset.Parse(fixupInvalidFlags(args))
 
 	if opts.Workers <= 0 {
 		return nil, fmt.Errorf("invalid number of workers set must be > 0")
@@ -72,11 +72,6 @@ func Parse(args []string) (*UserOption, error) {
 		}
 	}
 
-	// Check they've not used -r without a version (as was common in sm1) and its used the following param as the ver
-	if opts.Release != "" && !releaseIsValid(opts.Release) {
-		return nil, fmt.Errorf("-r invalid version: %s", opts.Release)
-	}
-
 	// Decode appendArgs (to keep legacy compatibility they're encoded as json for some reason)
 	if opts.appendArgs != "" {
 		args, err := parseAppendArgs(opts.appendArgs)
@@ -86,6 +81,36 @@ func Parse(args []string) (*UserOption, error) {
 		opts.ExtraArgs = args
 	}
 	return opts, nil
+}
+
+// remove the solo -r flag since running from release is the default behaviour
+// we could just let it error but there's a lot of hard coded scripts out there
+func fixupInvalidFlags(args []string) []string {
+	const warnMsg = "[deprecated] sm2 runs from release by default, the -r flag is only needed when setting specific versions"
+
+	// find the index of the -r flag, if it exists
+	pos := -1
+	for i, arg := range args {
+		if arg == "-r" {
+			pos = i
+			break
+		}
+	}
+
+	// check the next arg, if its a version number cool, else warn and purge
+	if pos > -1 {
+		if pos+1 < len(args) && !releaseIsValid(args[pos+1]) {
+			// if it doesnt look like a version number assume the worse
+			fmt.Println(warnMsg)
+			return append(args[:pos], args[pos+1:]...)
+		}
+		if pos == len(args)-1 {
+			// if its the last arg, just drop it
+			fmt.Println(warnMsg)
+			return args[:len(args)-1]
+		}
+	}
+	return args
 }
 
 /*

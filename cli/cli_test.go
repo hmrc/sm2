@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -328,15 +329,44 @@ func TestReleaseIsValid(t *testing.T) {
 	}
 }
 
-func TestErrorOnMisuseOfReleaseFlag(t *testing.T) {
-	args := []string{
-		"--start",
-		"FOO",
-		"-r",
-		"--clean",
+func TestRemovalOfMinusRFlag(t *testing.T) {
+
+	tests := map[string]struct {
+		in  []string
+		out []string
+	}{
+		"-r at end": {
+			in:  []string{"-foo", "-r"},
+			out: []string{"-foo"},
+		},
+		"empty args": {
+			in:  []string{},
+			out: []string{},
+		},
+		"-r in the middle": {
+			in:  []string{"-start", "FOO", "-r", "-offline"},
+			out: []string{"-start", "FOO", "-offline"},
+		},
+		"-r with a valid version": {
+			in:  []string{"-start", "-r", "0.1.2", "FOO"},
+			out: []string{"-start", "-r", "0.1.2", "FOO"},
+		},
+		"-r with service name": {
+			in:  []string{"--start", "-r", "FOO"},
+			out: []string{"--start", "FOO"},
+		},
+		"no -r flag": {
+			in:  []string{"-start", "FOO:123", "-src"},
+			out: []string{"-start", "FOO:123", "-src"},
+		},
 	}
-	_, err := Parse(args)
-	if err == nil {
-		t.Error("expected single -r flag to cause a problem")
+
+	for k, test := range tests {
+		res := fixupInvalidFlags(test.in)
+
+		if !reflect.DeepEqual(res, test.out) {
+			t.Errorf("fixupInvalidFlags: %s failed, %v != %v", k, test.out, res)
+		}
 	}
+
 }
