@@ -30,10 +30,14 @@ type serviceStatus struct {
 }
 
 func (sm *ServiceManager) PrintStatus() {
-	statues := []serviceStatus{sm.CheckMongo()}
-	statues = append(statues, sm.findStatuses()...)
-	printTable(statues, os.Stdout)
-	printHelpIfRequired(statues)
+	statuses := []serviceStatus{sm.CheckMongo()}
+	statuses = append(statuses, sm.findStatuses()...)
+	if sm.Commands.FormatPlain {
+		printPlainText(statuses, os.Stdout)
+	} else {
+		printTable(statuses, os.Stdout)
+		printHelpIfRequired(statuses)
+	}
 }
 
 func (sm *ServiceManager) findStatuses() []serviceStatus {
@@ -104,6 +108,12 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 	})
 
 	return statuses
+}
+
+func printPlainText(statuses []serviceStatus, out io.Writer) {
+	for _, status := range statuses {
+		fmt.Fprintf(out, "%s\t%s\t%d\t%d\t%s\n", status.service, status.version, status.port, status.pid, status.health)
+	}
 }
 
 func printTable(statuses []serviceStatus, out io.Writer) {
@@ -198,4 +208,33 @@ func (sm ServiceManager) CheckMongo() serviceStatus {
 	}
 
 	return mongoStatus
+}
+
+func (sm *ServiceManager) VerifyAllServicesAreRunning(services []ServiceAndVersion) bool {
+	statuses := sm.findStatuses()
+	return verifyIsRunning(services, statuses, os.Stdout)
+}
+
+// For a given list of services check if they're running (i.e. in PASS state)
+// Print out the results and return a bool to indicate everything is ok
+func verifyIsRunning(services []ServiceAndVersion, statuses []serviceStatus, out io.Writer) bool {
+
+	allOk := true
+	for _, service := range services {
+		found := false
+		for _, status := range statuses {
+			if service.service == status.service && status.health == PASS {
+				found = true
+				break
+			}
+		}
+		if found {
+			fmt.Printf("%s\tOK\n", service.service)
+		} else {
+			allOk = false
+			fmt.Printf("%s\tMISSING\n", service.service)
+		}
+	}
+
+	return allOk
 }

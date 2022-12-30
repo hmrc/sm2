@@ -344,3 +344,38 @@ func TestStatuses(t *testing.T) {
 		t.Errorf("%s health was not PASS, it was %s", result[2].service, result[2].health)
 	}
 }
+
+func TestVerifyIsRunning(t *testing.T) {
+	services := []ServiceAndVersion{
+		{"FOO", "1.0.0", "2.12"},
+		{"BAZ", "2.0.0", "2.12"},
+		{"BAR", "3.0.0", "2.12"},
+	}
+
+	statuses := []serviceStatus{
+		{0, 0, "FOO", "1.0.0", PASS},
+		{0, 0, "BAZ", "1.0.0", PASS},
+		{0, 0, "BAR", "1.0.0", PASS},
+	}
+
+	output := bytes.NewBufferString("")
+
+	// happy case
+	if verifyIsRunning(services, statuses, output) == false {
+		t.Errorf("verifyIsRunning returned false when it should be true!")
+	}
+
+	// unhappy cases
+	if verifyIsRunning(services, statuses[:1], output) {
+		t.Errorf("verifyIsRunning returned a false positive")
+	}
+
+	if verifyIsRunning(services, []serviceStatus{}, output) {
+		t.Errorf("verifyIsRunning returned a false positive with an empty status list")
+	}
+
+	statuses[0].health = FAIL
+	if verifyIsRunning(services, statuses, output) {
+		t.Errorf("verifyIsRunning returned true when status was FAILED")
+	}
+}
