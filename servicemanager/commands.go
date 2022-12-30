@@ -104,6 +104,12 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.Version {
 		// show version and build
 		version.PrintVersion()
+	} else if sm.Commands.Verify {
+		services := sm.requestedServicesAndProfiles()
+		ok := sm.VerifyAllServicesAreRunning(services)
+		if !ok {
+			os.Exit(13)
+		}
 	} else if sm.Commands.AutoComplete {
 		cli.GenerateAutoCompletions()
 	} else {

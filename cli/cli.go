@@ -41,6 +41,7 @@ type UserOption struct {
 	UpdateConfig  bool                // pulls the latest copy of service-manager-config
 	Verbose       bool                // shows extra logging
 	Version       bool                // prints sm2 version number
+	Verify        bool                // checks if a given service or profile is running
 	Wait          int                 // waits given number of secs after starting services for then to respond to pings
 	Workers       int                 // sets the number of concurrent downloads/service starts
 }
@@ -179,6 +180,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.UpdateConfig, "update-config", false, "pulls the latest version of service-manager-config")
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
+	flagset.BoolVar(&opts.Verify, "verify", false, "for scripts, checks if a service/profile is running")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
 
