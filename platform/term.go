@@ -13,10 +13,10 @@ type TermSize struct {
 	Ypixels uint16
 }
 
-func GetTerminalSize() TermSize {
+func GetTerminalSize() (int, int) {
 	ts := TermSize{}
 
-	syscall.Syscall6(
+	_, _, err := syscall.Syscall6(
 		syscall.SYS_IOCTL,
 		os.Stdin.Fd(),
 		syscall.TIOCGWINSZ,
@@ -24,5 +24,13 @@ func GetTerminalSize() TermSize {
 		0, 0, 0,
 	)
 
-	return ts
+	if err != 0 {
+		return 80, 25
+	}
+
+	return int(ts.Cols), int(ts.Rows)
+<<<<<<< Updated upstream
+
+=======
+>>>>>>> Stashed changes
 }
