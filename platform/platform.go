@@ -16,14 +16,15 @@ type Platform struct {
 	Uptime             func() time.Time
 	PidLookup          func() map[int]int
 	PidLookupByService func(string) (bool, []int)
+	PortPidLookup      func() map[int]int
 }
 
 func DetectPlatform() Platform {
 	switch runtime.GOOS {
 	case "darwin":
-		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName}
+		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName, portPidLookup}
 	case "linux":
-		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName}
+		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName, portPidLookup}
 	case "windows":
 		log.Fatal("windows is not supported yet!")
 	default:
@@ -126,4 +127,34 @@ func processLookupByServiceName(service string) (bool, []int) {
 	}
 
 	return len(pids) > 0, pids
+}
+
+// Returns a map of all the open TCP listening ports and their Pid
+func portPidLookup() map[int]int {
+
+	rx := regexp.MustCompile(`.+\:(\d+)\D*`)
+	portPid := map[int]int{}
+
+	cmd := exec.Command("lsof", "-iTCP", "-sTCP:LISTEN", "-n", "-P", "-T")
+
+	output, err := cmd.Output()
+	if err != nil {
+		fmt.Printf("Failed to list running ports.\n%s\n", err)
+		return portPid
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(string(output)))
+	for scanner.Scan() {
+		split := strings.Fields(scanner.Text())
+
+		if len(split) == 9 {
+			if matches := rx.FindStringSubmatch(string(split[8])); matches != nil {
+				port, _ := strconv.Atoi(matches[1]) // no err check since regex ensures its a number
+				pid, _ := strconv.Atoi(split[1])    // no err check since regex ensures its a number
+				portPid[port] = pid
+			}
+		}
+	}
+
+	return portPid
 }

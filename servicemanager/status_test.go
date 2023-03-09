@@ -110,7 +110,7 @@ func TestFindStatusesSortsResultsAlphabetically(t *testing.T) {
 	}
 }
 
-//We wrap service names onto a new line if > 35 chars, unless the overflow is <4 chars, in which case we discard it.
+// We wrap service names onto a new line if > 35 chars, unless the overflow is <4 chars, in which case we discard it.
 func TestStatusWrapsAndDiscardsServiceNames(t *testing.T) {
 	sb := bytes.NewBufferString("")
 	statuses := []serviceStatus{
@@ -152,7 +152,7 @@ func TestStatusWrapsAndDiscardsServiceNames(t *testing.T) {
 	}
 
 	for i, line := range actualLines {
-		line = strings.ReplaceAll(line, "\033[1;32m", "")
+		line = strings.ReplaceAll(line, "\033[32m", "")
 		line = strings.ReplaceAll(line, "\033[0m", "")
 		if line != expectedLines[i] {
 			t.Errorf("Line %d in actualLines was: \n%s, but in expectedLines was \n%s", i, line, expectedLines[i])
@@ -172,7 +172,7 @@ func TestStatusFitsIn80Chars(t *testing.T) {
 	lines := strings.Split(sb.String(), "\n")
 	for _, line := range lines {
 
-		line = strings.ReplaceAll(line, "\033[1;32m", "")
+		line = strings.ReplaceAll(line, "\033[32m", "")
 		line = strings.ReplaceAll(line, "\033[0m", "")
 		fmt.Printf("%d: [%s]\n", len(line), line)
 		if len(line) > 80+11 {

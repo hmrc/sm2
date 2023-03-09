@@ -32,12 +32,54 @@ type serviceStatus struct {
 func (sm *ServiceManager) PrintStatus() {
 	statuses := []serviceStatus{sm.CheckMongo()}
 	statuses = append(statuses, sm.findStatuses()...)
+	other := sm.findUnmanagedServices(statuses)
+
 	if sm.Commands.FormatPlain {
 		printPlainText(statuses, os.Stdout)
 	} else {
 		printTable(statuses, os.Stdout)
 		printHelpIfRequired(statuses)
+
+		if len(other) > 0 {
+			fmt.Print("\n\033[34mAlso, it looks like the following services are running outside of sm2:\n\n")
+			fmt.Print("These might include services running from inside your IDE or by other means.\n")
+			fmt.Print("Please note: You will not be able to manage these services using sm2.\n")
+			printUnmanagedTable(other, os.Stdout)
+			fmt.Print("\033[0m\n")
+		}
 	}
+}
+
+func (sm *ServiceManager) findUnmanagedServices(knownStatuses []serviceStatus) []serviceStatus {
+	statuses := []serviceStatus{}
+
+	portLookup := map[int]string{}
+	for _, s := range sm.Services {
+		portLookup[s.DefaultPort] = s.Id
+	}
+
+	knownPorts := map[int]string{}
+	for _, s := range knownStatuses {
+		knownPorts[s.port] = ""
+	}
+
+	for port, pid := range sm.Platform.PortPidLookup() {
+		if _, ok := knownPorts[port]; ok {
+			continue
+		}
+
+		if service, ok := portLookup[port]; ok {
+			status := serviceStatus{
+				pid:     pid,
+				port:    port,
+				service: service,
+			}
+
+			statuses = append(statuses, status)
+		}
+	}
+
+	return statuses
 }
 
 func (sm *ServiceManager) findStatuses() []serviceStatus {
@@ -151,11 +193,11 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 				fmt.Fprintf(out, "| %-6d", status.port)
 				switch status.health {
 				case PASS:
-					fmt.Fprintf(out, "|  \033[1;32m%-6s\033[0m|\n", "PASS")
+					fmt.Fprintf(out, "|  \033[32m%-6s\033[0m|\n", "PASS")
 				case FAIL:
-					fmt.Fprintf(out, "|  \033[1;31m%-6s\033[0m|\n", "FAIL")
+					fmt.Fprintf(out, "|  \033[31m%-6s\033[0m|\n", "FAIL")
 				case BOOT:
-					fmt.Fprintf(out, "|  \033[1;34m%-6s\033[0m|\n", "BOOT")
+					fmt.Fprintf(out, "|  \033[34m%-6s\033[0m|\n", "BOOT")
 				}
 			} else {
 				fmt.Fprintf(out, "| %-10s", "")
@@ -164,6 +206,35 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 				fmt.Fprintf(out, "|  %-6s|\n", "")
 
 			}
+		}
+	}
+	fmt.Fprint(out, border)
+}
+
+func printUnmanagedTable(statuses []serviceStatus, out io.Writer) {
+
+	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", 7), strings.Repeat("-", 9), strings.Repeat("-", 57))
+
+	fmt.Fprint(out, border)
+	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Looks like")
+	fmt.Fprint(out, border)
+
+	const chunkSize = 35 //max size of service name before we wrap to next line
+
+	for _, status := range statuses {
+		serviceName := status.service
+
+		if len(serviceName) > chunkSize {
+			serviceName = addDelimiter(status.service, ",", chunkSize)
+		}
+
+		splitServiceName := strings.Split(serviceName, ",")
+
+		for _, s := range splitServiceName {
+			fmt.Fprintf(out, "| %-6d", status.port)
+			//Only print the pid/port if first line of wrapped string
+			fmt.Fprintf(out, "| %-8d", status.pid)
+			fmt.Fprintf(out, "| %-56s|\n", s)
 		}
 	}
 	fmt.Fprint(out, border)
