@@ -40,6 +40,4 @@ func main() {
 
 	serviceManager.Run()
 
-	ts := platform.GetTerminalSize()
-	fmt.Printf("Terminal Size cols %d rows %d\n", ts.Cols, ts.Rows)
 }

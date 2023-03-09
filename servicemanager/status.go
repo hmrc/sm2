@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"sm2/platform"
 )
 
 type health string
@@ -160,37 +162,66 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 
 func printTable(statuses []serviceStatus, out io.Writer) {
 
-	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", 36), strings.Repeat("-", 11), strings.Repeat("-", 9), strings.Repeat("-", 7), strings.Repeat("-", 8))
+	termSize := platform.GetTerminalSize()
+
+	maxWidth := 80
+	if int(termSize.Cols) > maxWidth {
+		maxWidth = int(termSize.Cols)
+	}
+
+	longestServiceName := 35
+	for _, s := range statuses {
+		if len(s.service)+2 > longestServiceName {
+			longestServiceName = len(s.service) + 2
+		}
+	}
+
+	// work out how much space we can assign to the service col
+	const (
+		widthVersion = 11
+		widthPid     = 9
+		widthPort    = 7
+		widthStatus  = 8
+	)
+	freeSpace := maxWidth - (widthVersion + widthPid + widthPort + widthStatus + 6)
+	chunkSize := freeSpace
+	if longestServiceName < chunkSize {
+		chunkSize = longestServiceName
+	}
+
+	fmt.Printf("maxWidth %d, longestServiceName %d chunkSize %d\n", maxWidth, longestServiceName, chunkSize)
+
+	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", chunkSize), strings.Repeat("-", widthVersion), strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthStatus))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
+	fmt.Fprintf(out, "|%s|%s|%s|%s|%s|\n", pad(" Name", chunkSize), pad(" Version", widthVersion), pad(" PID", widthPid), pad(" Port", widthPort), pad(" Status", widthStatus))
 	fmt.Fprint(out, border)
-
-	const chunkSize = 35 //max size of service name before we wrap to next line
 
 	for _, status := range statuses {
 		serviceName := status.service
 
+		splitServiceName := []string{serviceName}
+
+		serviceName = serviceName + " "
 		if len(serviceName) > chunkSize {
-			serviceName = addDelimiter(status.service, ",", chunkSize)
+
+			splitServiceName = []string{}
+			for i := 0; i < len(serviceName); i += chunkSize - 1 {
+				l := i + chunkSize - 1
+				if l > len(serviceName) {
+					l = len(serviceName)
+				}
+				splitServiceName = append(splitServiceName, serviceName[i:l])
+			}
 		}
 
-		splitServiceName := strings.Split(serviceName, ",")
-		numberOfLines := len(splitServiceName)
-
 		for i, s := range splitServiceName {
-
-			//Don't show final line of service name, if overflow < 4 chars.
-			if numberOfLines > 1 && s == splitServiceName[len(splitServiceName)-1] && len(s) < 4 {
-				break
-			} else {
-				fmt.Fprintf(out, "| %-35s", s)
-			}
+			fmt.Fprintf(out, "| %s", s+strings.Repeat(" ", chunkSize-1-len(s)))
 			//Only print the version/pid/port/status if first line of wrapped string
 			if i == 0 {
-				fmt.Fprintf(out, "| %-10s", status.version)
-				fmt.Fprintf(out, "| %-8d", status.pid)
-				fmt.Fprintf(out, "| %-6d", status.port)
+				fmt.Fprintf(out, "| %s", pad(status.version, widthVersion-1))
+				fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.pid), widthPid-1))
+				fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.port), widthPort-1))
 				switch status.health {
 				case PASS:
 					fmt.Fprintf(out, "|  \033[32m%-6s\033[0m|\n", "PASS")
@@ -200,10 +231,10 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 					fmt.Fprintf(out, "|  \033[34m%-6s\033[0m|\n", "BOOT")
 				}
 			} else {
-				fmt.Fprintf(out, "| %-10s", "")
-				fmt.Fprintf(out, "| %-8s", "")
-				fmt.Fprintf(out, "| %-6s", "")
-				fmt.Fprintf(out, "|  %-6s|\n", "")
+				fmt.Fprintf(out, "|%s", pad("", widthVersion))
+				fmt.Fprintf(out, "|%s", pad("", widthPid))
+				fmt.Fprintf(out, "|%s", pad("", widthPort))
+				fmt.Fprintf(out, "|%s|\n", pad("", widthStatus))
 
 			}
 		}
