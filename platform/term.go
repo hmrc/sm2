@@ -29,8 +29,4 @@ func GetTerminalSize() (int, int) {
 	}
 
 	return int(ts.Cols), int(ts.Rows)
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 }

@@ -129,5 +129,4 @@ func checkNetwork(config ServiceManagerConfig) {
 		fmt.Print("VPN:\t\t NOT OK\n")
 		fmt.Printf("\t\t %s resolvable but not reachable\n\t\t %v\n", artifactoryUrl, err)
 	}
-
 }

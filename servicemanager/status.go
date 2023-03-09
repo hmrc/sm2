@@ -162,63 +162,67 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 
 func printTable(statuses []serviceStatus, out io.Writer) {
 
-	termSize := platform.GetTerminalSize()
-
-	maxWidth := 80
-	if int(termSize.Cols) > maxWidth {
-		maxWidth = int(termSize.Cols)
-	}
-
-	longestServiceName := 35
-	for _, s := range statuses {
-		if len(s.service)+2 > longestServiceName {
-			longestServiceName = len(s.service) + 2
-		}
-	}
-
-	// work out how much space we can assign to the service col
 	const (
 		widthVersion = 11
 		widthPid     = 9
 		widthPort    = 7
 		widthStatus  = 8
 	)
-	freeSpace := maxWidth - (widthVersion + widthPid + widthPort + widthStatus + 6)
-	chunkSize := freeSpace
-	if longestServiceName < chunkSize {
-		chunkSize = longestServiceName
+
+	// Work out how much space we can give to the Name column.
+	maxWidth := 80
+	if wsCols, _ := platform.GetTerminalSize(); wsCols > maxWidth {
+		maxWidth = wsCols
 	}
 
-	fmt.Printf("maxWidth %d, longestServiceName %d chunkSize %d\n", maxWidth, longestServiceName, chunkSize)
+	// Find the service with the longest name.
+	longestServiceName := 35
+	for _, s := range statuses {
+		if len(s.service)+2 > longestServiceName { // service name + 1 space either size
+			longestServiceName = len(s.service) + 2
+		}
+	}
 
-	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", chunkSize), strings.Repeat("-", widthVersion), strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthStatus))
+	// We want it to be at least 35 cols wide, and at most as long as the longest service name or
+	// the width of the terminal - the space we've given to the other columns.
+	widthName := maxWidth - (widthVersion + widthPid + widthPort + widthStatus + 6)
+	if longestServiceName < widthName {
+		widthName = longestServiceName
+	}
+
+	// Draw the border & header.
+	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", widthName), strings.Repeat("-", widthVersion), strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthStatus))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "|%s|%s|%s|%s|%s|\n", pad(" Name", chunkSize), pad(" Version", widthVersion), pad(" PID", widthPid), pad(" Port", widthPort), pad(" Status", widthStatus))
+	fmt.Fprintf(out, "|%s|%s|%s|%s|%s|\n", pad(" Name", widthName), pad(" Version", widthVersion), pad(" PID", widthPid), pad(" Port", widthPort), pad(" Status", widthStatus))
 	fmt.Fprint(out, border)
 
 	for _, status := range statuses {
-		serviceName := status.service
 
+		// Handle word-wrapping.
+		serviceName := status.service + " "
 		splitServiceName := []string{serviceName}
 
-		serviceName = serviceName + " "
-		if len(serviceName) > chunkSize {
-
+		// Split the name into `widthName` sized chunk
+		if len(serviceName) > widthName {
 			splitServiceName = []string{}
-			for i := 0; i < len(serviceName); i += chunkSize - 1 {
-				l := i + chunkSize - 1
-				if l > len(serviceName) {
-					l = len(serviceName)
+			for i := 0; i < len(serviceName); i += widthName - 1 {
+				if l := i + widthName - 1; l > len(serviceName) {
+					splitServiceName = append(splitServiceName, serviceName[i:])
+				} else {
+					splitServiceName = append(splitServiceName, serviceName[i:l])
 				}
-				splitServiceName = append(splitServiceName, serviceName[i:l])
 			}
 		}
 
+		// Draw a line per section of the name. The first line will always have port/pid/etc while the following
+		// lines will only have the name fragment.
 		for i, s := range splitServiceName {
-			fmt.Fprintf(out, "| %s", s+strings.Repeat(" ", chunkSize-1-len(s)))
-			//Only print the version/pid/port/status if first line of wrapped string
+
+			fmt.Fprintf(out, "| %s", pad(s, widthName-1))
+
 			if i == 0 {
+				// first line
 				fmt.Fprintf(out, "| %s", pad(status.version, widthVersion-1))
 				fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.pid), widthPid-1))
 				fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.port), widthPort-1))
@@ -231,11 +235,11 @@ func printTable(statuses []serviceStatus, out io.Writer) {
 					fmt.Fprintf(out, "|  \033[34m%-6s\033[0m|\n", "BOOT")
 				}
 			} else {
+				// subsequent lines...
 				fmt.Fprintf(out, "|%s", pad("", widthVersion))
 				fmt.Fprintf(out, "|%s", pad("", widthPid))
 				fmt.Fprintf(out, "|%s", pad("", widthPort))
 				fmt.Fprintf(out, "|%s|\n", pad("", widthStatus))
-
 			}
 		}
 	}
