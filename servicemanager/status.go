@@ -216,7 +216,7 @@ func printUnmanagedTable(statuses []serviceStatus, out io.Writer) {
 	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", 7), strings.Repeat("-", 9), strings.Repeat("-", 57))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Looks like")
+	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Reserved by")
 	fmt.Fprint(out, border)
 
 	const chunkSize = 35 //max size of service name before we wrap to next line
