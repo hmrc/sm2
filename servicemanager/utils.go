@@ -33,3 +33,20 @@ func addDelimiter(initialStr string, separator string, step int) string {
 	}
 	return str
 }
+
+// Splits a string into equal `width` sized partitons.
+func partition(s string, width int) []string {
+	split := []string{}
+
+	for i := 0; i < len(s); i += width {
+
+		if i+width > len(s) {
+			// past end of string
+			split = append(split, s[i:])
+		} else {
+
+			split = append(split, s[i:i+width])
+		}
+	}
+	return split
+}

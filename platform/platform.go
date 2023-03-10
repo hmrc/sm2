@@ -23,9 +23,9 @@ type Platform struct {
 func DetectPlatform() Platform {
 	switch runtime.GOOS {
 	case "darwin":
-		return Platform{uptimeDarwin, processLookupUnix, portPidLookup, processLookupByServiceName}
+		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName, portPidLookup, GetTerminalSize}
 	case "linux":
-		return Platform{uptimeLinux, processLookupUnix, portPidLookup, processLookupByServiceName}
+		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName, portPidLookup, GetTerminalSize}
 	case "windows":
 		log.Fatal("windows is not supported yet!")
 	default:
