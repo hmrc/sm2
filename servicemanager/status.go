@@ -211,7 +211,7 @@ func printTable(statuses []serviceStatus, maxWidth int, out io.Writer) {
 
 		// Draw the subsequent lines if the name wraps, we leave non-name fields empty so they're not repeated.
 		for _, s := range splitServiceName[1:] {
-			fmt.Fprintf(out, "|%s|%s|%s|%s|%s|\n", pad(s, widthName), pad("", widthVersion), pad("", widthPid), pad("", widthPort), pad("", widthStatus))
+			fmt.Fprintf(out, "| %s|%s|%s|%s|%s|\n", pad(s, widthName-1), pad("", widthVersion), pad("", widthPid), pad("", widthPort), pad("", widthStatus))
 		}
 	}
 	fmt.Fprint(out, border)

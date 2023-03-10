@@ -314,6 +314,7 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 
 	// fire up the progress bar renderer
 	sm.progress.noProgress = sm.Commands.NoProgress
+	sm.progress.getTerminalSize = sm.Platform.GetTerminalSize
 	go sm.progress.renderLoop()
 	sm.progress.init(services)
 	taskQueue := make(chan ServiceAndVersion, len(services))
