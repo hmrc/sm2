@@ -135,8 +135,11 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 			if state.Started.Before(bootTime) {
 				// clean up state file
 				installDir, err := sm.findInstallDirOfService(state.Service)
-				if err != nil {
-					_ = sm.Ledger.ClearStateFile(installDir)
+				if err == nil {
+					err = sm.Ledger.ClearStateFile(installDir)
+					if err != nil {
+						fmt.Printf("Error clearing %s state file: %s", state.Service, err)
+					}
 				}
 				continue
 			}
