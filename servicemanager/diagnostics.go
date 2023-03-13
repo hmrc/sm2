@@ -19,9 +19,9 @@ func RunDiagnostics(config ServiceManagerConfig) {
 	checkOS()
 	checkJava()
 	checkGit()
-	checkNetwork(config)
 	checkWorkspace(config)
 	checkConfigRevision(config)
+	checkNetwork(config)
 
 }
 
