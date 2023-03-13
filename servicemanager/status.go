@@ -38,14 +38,15 @@ func (sm *ServiceManager) PrintStatus() {
 	if sm.Commands.FormatPlain || termWidth < 80 {
 		printPlainText(statuses, os.Stdout)
 	} else {
-		printTable(statuses, termWidth, os.Stdout)
+		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
+		printTable(statuses, termWidth, longestServiceName, os.Stdout)
 		printHelpIfRequired(statuses)
 
 		if len(unmanaged) > 0 {
 			fmt.Print("\n\033[34mAlso, it looks like the following services are running outside of sm2:\n\n")
 			fmt.Print("These might include services running from inside your IDE or by other means.\n")
 			fmt.Print("Please note: You will not be able to manage these services using sm2.\n")
-			printUnmanagedTable(unmanaged, os.Stdout)
+			printUnmanagedTable(unmanaged, termWidth, longestServiceName, os.Stdout)
 			fmt.Print("\033[0m\n")
 		}
 	}
@@ -162,15 +163,14 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 	}
 }
 
-func printTable(statuses []serviceStatus, maxWidth int, out io.Writer) {
+const (
+	widthVersion = 11
+	widthPid     = 9
+	widthPort    = 7
+	widthStatus  = 8
+)
 
-	const (
-		widthVersion = 11
-		widthPid     = 9
-		widthPort    = 7
-		widthStatus  = 8
-	)
-
+func getLongestServiceName(statuses []serviceStatus) int {
 	// Work out how much space we can give to the Name column.
 	longestServiceName := 35
 	for _, s := range statuses {
@@ -178,7 +178,10 @@ func printTable(statuses []serviceStatus, maxWidth int, out io.Writer) {
 			longestServiceName = len(s.service) + 2
 		}
 	}
+	return longestServiceName
+}
 
+func printTable(statuses []serviceStatus, maxWidth int, longestServiceName int, out io.Writer) {
 	// We want it to be at least 35 cols wide, and at most as long as the longest service name or
 	// the width of the terminal - the space we've given to the other columns.
 	widthName := maxWidth - (widthVersion + widthPid + widthPort + widthStatus + 6)
@@ -220,18 +223,24 @@ func printTable(statuses []serviceStatus, maxWidth int, out io.Writer) {
 	fmt.Fprint(out, border)
 }
 
-func printUnmanagedTable(statuses []serviceStatus, out io.Writer) {
+func printUnmanagedTable(statuses []serviceStatus, maxWidth int, longestServiceName int, out io.Writer) {
+	// We want it to be at least 35 cols wide, and at most as long as the longest service name or
+	// the width of the terminal - the space we've given to the other columns.
+	widthName := maxWidth - (widthPid + widthPort + 6)
+	if longestServiceName < widthName {
+		widthName = longestServiceName + widthVersion + widthStatus + 2
+	}
 
-	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", 7), strings.Repeat("-", 9), strings.Repeat("-", 57))
+	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthName))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Reserved by")
+	fmt.Fprintf(out, "|%s|%s|%s|\n", pad(" PID", widthPid), pad(" Port", widthPort), pad(" Reserved by", widthName))
 	fmt.Fprint(out, border)
 
 	for _, status := range statuses {
-		fmt.Fprintf(out, "| %-6d", status.port)
-		fmt.Fprintf(out, "| %-8d", status.pid)
-		fmt.Fprintf(out, "| %-56s|\n", crop(status.service, 56))
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.pid), widthPid-1))
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.port), widthPort-1))
+		fmt.Fprintf(out, "| %s|\n", pad(status.service, widthName-1))
 	}
 	fmt.Fprint(out, border)
 }
