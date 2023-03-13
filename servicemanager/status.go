@@ -136,8 +136,11 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 			if state.Started.Before(bootTime) {
 				// clean up state file
 				installDir, err := sm.findInstallDirOfService(state.Service)
-				if err != nil {
-					_ = sm.Ledger.ClearStateFile(installDir)
+				if err == nil {
+					err = sm.Ledger.ClearStateFile(installDir)
+					if err != nil {
+						fmt.Printf("Error clearing %s state file: %s", state.Service, err)
+					}
 				}
 				continue
 			}
@@ -222,7 +225,7 @@ func printUnmanagedTable(statuses []serviceStatus, out io.Writer) {
 	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", 7), strings.Repeat("-", 9), strings.Repeat("-", 57))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Looks like")
+	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Reserved by")
 	fmt.Fprint(out, border)
 
 	for _, status := range statuses {
