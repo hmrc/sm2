@@ -1,0 +1,36 @@
+{
+    "SERVICE_NAME": {
+        "name": "human readable service name",
+        "defaultPort": 12345,
+        "sources": {
+            "repo": "git@github.com:example/reponame.git"
+        },
+        "binary": {
+            "artifact": "service-name",
+            "groupId": "com/example",
+            "cmd": [
+                "./service-name/bin/service-name",
+                "-Dfoo.bar=baz",
+                "-Dsome.setting=true",
+                "-J-Xms256m"
+            ]
+        }
+    },
+    "ANOTHER_SERVICE_NAME": {
+        "name": "another human readable service name",
+        "defaultPort": 54321,
+        "sources": {
+            "repo": "git@github.com:example/another-reponame.git"
+        },
+        "binary": {
+            "artifact": "another-service-name",
+            "groupId": "com/example",
+            "cmd": [
+                "./anotherservice-name/bin/another-service-name",
+                "-Dfoo.bar=baz",
+                "-Dsome.setting=true",
+                "-J-Xms256m"
+            ]
+        }
+    }
+}
