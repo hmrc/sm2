@@ -32,19 +32,21 @@ type serviceStatus struct {
 func (sm *ServiceManager) PrintStatus() {
 	statuses := []serviceStatus{sm.CheckMongo()}
 	statuses = append(statuses, sm.findStatuses()...)
-	other := sm.findUnmanagedServices(statuses)
+	unmanaged := sm.findUnmanagedServices(statuses)
 
-	if sm.Commands.FormatPlain {
+	termWidth, _ := sm.Platform.GetTerminalSize()
+	if sm.Commands.FormatPlain || termWidth < 80 {
 		printPlainText(statuses, os.Stdout)
 	} else {
-		printTable(statuses, os.Stdout)
+		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
+		printTable(statuses, termWidth, longestServiceName, os.Stdout)
 		printHelpIfRequired(statuses)
 
-		if len(other) > 0 {
+		if len(unmanaged) > 0 {
 			fmt.Print("\n\033[34mAlso, it looks like the following services are running outside of sm2:\n\n")
 			fmt.Print("These might include services running from inside your IDE or by other means.\n")
 			fmt.Print("Please note: You will not be able to manage these services using sm2.\n")
-			printUnmanagedTable(other, os.Stdout)
+			printUnmanagedTable(unmanaged, termWidth, longestServiceName, os.Stdout)
 			fmt.Print("\033[0m\n")
 		}
 	}
@@ -161,84 +163,84 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 	}
 }
 
-func printTable(statuses []serviceStatus, out io.Writer) {
+const (
+	widthVersion = 11
+	widthPid     = 9
+	widthPort    = 7
+	widthStatus  = 8
+)
 
-	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", 36), strings.Repeat("-", 11), strings.Repeat("-", 9), strings.Repeat("-", 7), strings.Repeat("-", 8))
+func getLongestServiceName(statuses []serviceStatus) int {
+	// Work out how much space we can give to the Name column.
+	longestServiceName := 35
+	for _, s := range statuses {
+		if len(s.service)+2 > longestServiceName { // service name + 1 space either size
+			longestServiceName = len(s.service) + 2
+		}
+	}
+	return longestServiceName
+}
+
+func printTable(statuses []serviceStatus, maxWidth int, longestServiceName int, out io.Writer) {
+	// We want it to be at least 35 cols wide, and at most as long as the longest service name or
+	// the width of the terminal - the space we've given to the other columns.
+	widthName := maxWidth - (widthVersion + widthPid + widthPort + widthStatus + 6)
+	if longestServiceName < widthName {
+		widthName = longestServiceName
+	}
+
+	// Draw the border & header.
+	border := fmt.Sprintf("+%s+%s+%s+%s+%s+\n", strings.Repeat("-", widthName), strings.Repeat("-", widthVersion), strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthStatus))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-35s| %-10s| %-8s| %-6s| %-7s|\n", "Name", "Version", "PID", "Port", "Status")
+	fmt.Fprintf(out, "|%s|%s|%s|%s|%s|\n", pad(" Name", widthName), pad(" Version", widthVersion), pad(" PID", widthPid), pad(" Port", widthPort), pad(" Status", widthStatus))
 	fmt.Fprint(out, border)
-
-	const chunkSize = 35 //max size of service name before we wrap to next line
 
 	for _, status := range statuses {
-		serviceName := status.service
 
-		if len(serviceName) > chunkSize {
-			serviceName = addDelimiter(status.service, ",", chunkSize)
+		// Handle word-wrapping.
+		splitServiceName := partition(status.service, widthName-1)
+
+		// Draw the first line complete with ports and pids.
+		fmt.Fprintf(out, "| %s", pad(splitServiceName[0], widthName-1))
+		fmt.Fprintf(out, "| %s", pad(status.version, widthVersion-1))
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.pid), widthPid-1))
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.port), widthPort-1))
+		switch status.health {
+		case PASS:
+			fmt.Fprintf(out, "|  \033[32m%-6s\033[0m|\n", "PASS")
+		case FAIL:
+			fmt.Fprintf(out, "|  \033[31m%-6s\033[0m|\n", "FAIL")
+		case BOOT:
+			fmt.Fprintf(out, "|  \033[34m%-6s\033[0m|\n", "BOOT")
 		}
 
-		splitServiceName := strings.Split(serviceName, ",")
-		numberOfLines := len(splitServiceName)
-
-		for i, s := range splitServiceName {
-
-			//Don't show final line of service name, if overflow < 4 chars.
-			if numberOfLines > 1 && s == splitServiceName[len(splitServiceName)-1] && len(s) < 4 {
-				break
-			} else {
-				fmt.Fprintf(out, "| %-35s", s)
-			}
-			//Only print the version/pid/port/status if first line of wrapped string
-			if i == 0 {
-				fmt.Fprintf(out, "| %-10s", status.version)
-				fmt.Fprintf(out, "| %-8d", status.pid)
-				fmt.Fprintf(out, "| %-6d", status.port)
-				switch status.health {
-				case PASS:
-					fmt.Fprintf(out, "|  \033[32m%-6s\033[0m|\n", "PASS")
-				case FAIL:
-					fmt.Fprintf(out, "|  \033[31m%-6s\033[0m|\n", "FAIL")
-				case BOOT:
-					fmt.Fprintf(out, "|  \033[34m%-6s\033[0m|\n", "BOOT")
-				}
-			} else {
-				fmt.Fprintf(out, "| %-10s", "")
-				fmt.Fprintf(out, "| %-8s", "")
-				fmt.Fprintf(out, "| %-6s", "")
-				fmt.Fprintf(out, "|  %-6s|\n", "")
-
-			}
+		// Draw the subsequent lines if the name wraps, we leave non-name fields empty so they're not repeated.
+		for _, s := range splitServiceName[1:] {
+			fmt.Fprintf(out, "| %s|%s|%s|%s|%s|\n", pad(s, widthName-1), pad("", widthVersion), pad("", widthPid), pad("", widthPort), pad("", widthStatus))
 		}
 	}
 	fmt.Fprint(out, border)
 }
 
-func printUnmanagedTable(statuses []serviceStatus, out io.Writer) {
+func printUnmanagedTable(statuses []serviceStatus, maxWidth int, longestServiceName int, out io.Writer) {
+	// We want it to be at least 35 cols wide, and at most as long as the longest service name or
+	// the width of the terminal - the space we've given to the other columns.
+	widthName := maxWidth - (widthPid + widthPort + 6)
+	if longestServiceName < widthName {
+		widthName = longestServiceName + widthVersion + widthStatus + 2
+	}
 
-	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", 7), strings.Repeat("-", 9), strings.Repeat("-", 57))
+	border := fmt.Sprintf("+%s+%s+%s+\n", strings.Repeat("-", widthPid), strings.Repeat("-", widthPort), strings.Repeat("-", widthName))
 
 	fmt.Fprint(out, border)
-	fmt.Fprintf(out, "| %-6s| %-8s| %-56s|\n", "Port", "PID", "Reserved by")
+	fmt.Fprintf(out, "|%s|%s|%s|\n", pad(" PID", widthPid), pad(" Port", widthPort), pad(" Reserved by", widthName))
 	fmt.Fprint(out, border)
-
-	const chunkSize = 35 //max size of service name before we wrap to next line
 
 	for _, status := range statuses {
-		serviceName := status.service
-
-		if len(serviceName) > chunkSize {
-			serviceName = addDelimiter(status.service, ",", chunkSize)
-		}
-
-		splitServiceName := strings.Split(serviceName, ",")
-
-		for _, s := range splitServiceName {
-			fmt.Fprintf(out, "| %-6d", status.port)
-			//Only print the pid/port if first line of wrapped string
-			fmt.Fprintf(out, "| %-8d", status.pid)
-			fmt.Fprintf(out, "| %-56s|\n", s)
-		}
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.pid), widthPid-1))
+		fmt.Fprintf(out, "| %s", pad(fmt.Sprintf("%d", status.port), widthPort-1))
+		fmt.Fprintf(out, "| %s|\n", pad(status.service, widthName-1))
 	}
 	fmt.Fprint(out, border)
 }

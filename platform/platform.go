@@ -17,14 +17,15 @@ type Platform struct {
 	PidLookup          func() map[int]int
 	PidLookupByService func(string) (bool, []int)
 	PortPidLookup      func() map[int]int
+	GetTerminalSize    func() (int, int)
 }
 
 func DetectPlatform() Platform {
 	switch runtime.GOOS {
 	case "darwin":
-		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName, portPidLookup}
+		return Platform{uptimeDarwin, processLookupUnix, processLookupByServiceName, portPidLookup, GetTerminalSize}
 	case "linux":
-		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName, portPidLookup}
+		return Platform{uptimeLinux, processLookupUnix, processLookupByServiceName, portPidLookup, GetTerminalSize}
 	case "windows":
 		log.Fatal("windows is not supported yet!")
 	default:

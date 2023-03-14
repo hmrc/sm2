@@ -39,4 +39,5 @@ func main() {
 	}
 
 	serviceManager.Run()
+
 }

@@ -3,6 +3,8 @@ package servicemanager
 import (
 	"fmt"
 	"strings"
+
+	"sm2/platform"
 )
 
 type Progress struct {
@@ -34,12 +36,13 @@ func (pt *ProgressWriter) Write(p []byte) (int, error) {
 }
 
 type ProgressRenderer struct {
-	watchlist  []string
-	state      map[string]Progress
-	errors     map[string]error
-	updateChan chan Progress
-	serviceLen int
-	noProgress bool
+	watchlist       []string
+	state           map[string]Progress
+	errors          map[string]error
+	updateChan      chan Progress
+	serviceLen      int
+	noProgress      bool
+	getTerminalSize func() (int, int)
 }
 
 func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
@@ -63,7 +66,6 @@ func (pr *ProgressRenderer) init(services []ServiceAndVersion) {
 
 func (pr *ProgressRenderer) renderLoop() {
 
-	const MAX_ROWS = 22 // ideally we'd do the syscalls to get the actual terminal size
 	linesDrawn := 0
 
 	for {
@@ -77,6 +79,11 @@ func (pr *ProgressRenderer) renderLoop() {
 
 		// clear
 		fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
+
+		var MAX_ROWS = 22
+		if _, rows := platform.GetTerminalSize(); rows > 2 {
+			MAX_ROWS = rows - 2
+		}
 
 		// We only want to draw as many services as will fit into our MAX_ROWS, otherwise we get some
 		// weird scrolling issues on some terminals if we clear past the top of the terminal.
