@@ -80,8 +80,13 @@ func (pr *ProgressRenderer) renderLoop() {
 		// clear
 		fmt.Print(strings.Repeat("\033[F\033[2K\r", linesDrawn))
 
+		var MAX_COLS = 40
 		var MAX_ROWS = 22
-		if _, rows := platform.GetTerminalSize(); rows > 2 {
+		cols, rows := platform.GetTerminalSize()
+		if cols > 80 {
+			MAX_COLS = cols - 40
+		}
+		if rows > 2 {
 			MAX_ROWS = rows - 2
 		}
 
@@ -118,7 +123,7 @@ func (pr *ProgressRenderer) renderLoop() {
 		linesDrawn = 0
 		for _, service := range pr.watchlist[drawFrom:drawTo] {
 			if p, ok := pr.state[service]; ok {
-				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", crop(pad(p.service, pr.serviceLen), 40), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 8))
+				fmt.Printf(" %s [%-20s][%3.0f%%] %s\n", crop(pad(p.service, pr.serviceLen), MAX_COLS), strings.Repeat("=", int(p.percent/5)), p.percent, crop(p.state, 8))
 				linesDrawn++
 			}
 		}
