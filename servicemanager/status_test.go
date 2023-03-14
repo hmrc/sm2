@@ -152,7 +152,7 @@ func TestStatusWrapsServiceNames(t *testing.T) {
 | _THE_3RD_LINE_SO_WE_CAN_SEE_OVERFLOW  |           |         |       |        |
 +---------------------------------------+-----------+---------+-------+--------+`
 
-	printTable(statuses, 80, sb)
+	printTable(statuses, 80, 39, sb)
 
 	println(sb.String())
 	actualOutput := strings.TrimSuffix(sb.String(), "\n")
@@ -187,7 +187,8 @@ func TestStatusExpandsServiceName(t *testing.T) {
 | SERVICE_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK | 3.3       | 6       | 7     |  PASS  |
 +----------------------------------------------------------+-----------+---------+-------+--------+`
 
-	printTable(statuses, 256, sb)
+	longestServiceName := getLongestServiceName(statuses)
+	printTable(statuses, 256, longestServiceName, sb)
 
 	actualOutput := strings.TrimSuffix(sb.String(), "\n")
 	actualLines := strings.Split(actualOutput, "\n")
