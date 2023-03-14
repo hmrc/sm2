@@ -1,0 +1,9 @@
+{
+    "artifactory": {
+        "protocol": "https",
+        "host": "artefacts.example.hostname",
+        "repoMappings": {
+          "RELEASE": "artifactory/example-releases"
+        }
+    }
+}
