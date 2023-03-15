@@ -9,22 +9,22 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 
 **Linux**
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-linux-intel.zip && unzip sm2-1.0.4-linux-intel.zip && rm sm2-1.0.4-linux-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-linux-intel.zip && unzip sm2-1.0.6-linux-intel.zip && rm sm2-1.0.6-linux-intel.zip
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-apple-arm64.zip && unzip sm2-1.0.4-apple-arm64.zip && rm sm2-1.0.4-apple-arm64.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-apple-arm64.zip && unzip sm2-1.0.6-apple-arm64.zip && rm sm2-1.0.6-apple-arm64.zip
 ```
 
 **OSX/Apple (older Intel cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.4/sm2-1.0.4-apple-intel.zip && unzip sm2-1.0.4-apple-intel.zip && rm sm2-1.0.4-apple-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-apple-intel.zip && unzip sm2-1.0.6-apple-intel.zip && rm sm2-1.0.6-apple-intel.zip
 ```
 
-If everything has worked you should have an executable called `sm2`. 
+If everything has worked you should have an executable called `sm2`.
 
 2. Move the executable somewhere on your systems $PATH.
 3. Run `sm2` from the terminal and follow the instructions to configure your system (if its not already set up)
@@ -54,7 +54,7 @@ sm2 --diagnostic
 ```
 
 ### Upgrading Service Manager 2
-Upgrades are a simple matter of downloading the latest version of sm2 and overwriting the `sm2` binary with the new one. 
+Upgrades are a simple matter of downloading the latest version of sm2 and overwriting the `sm2` binary with the new one.
 
 If you are unsure where `sm2` is installed you can use the whereis command to find it:
 ```base
@@ -67,7 +67,7 @@ sm2 : /usr/local/bin/sm2
 
 ### Starting a service (-start)
 From your terminal type:
-```shell 
+```shell
 $ sm2 -start SERVICE_NAME
 Starting 1 services on 2 workers
  SERVICE_NAME         [====================][100%] Done
@@ -184,7 +184,7 @@ Sometimes a service will fail to start up. To help determine why, service manage
 Before doing anything else, it’s worth running service-manager’s self-checks to ensure it is installed correctly.
 ```shell
 $ sm2 -diagnostic
-version: 1.0.4
+version: 1.0.6
   build: ef49b60
 OS:		 OK (linux, amd64)
 JAVA:		 OK (11.0.17)
@@ -280,9 +280,9 @@ export WORKSPACE=/home/myusername/.servicemanager
 
 | Environment Variable | Description                                                                                           |
 |----------------------|-------------------------------------------------------------------------------------------------------|
-| WORKSPACE | (required) Path to service managers workspace folder. Cached services and config will be stored here  | 
+| WORKSPACE | (required) Path to service managers workspace folder. Cached services and config will be stored here  |
 | SM_TIMEOUT | Overrides the default http timeouts. Useful if you have a very slow internet connection |
-| SM_WORKERS | Sets the number of concurrent downloads. Same as using the -workers flag. | 
+| SM_WORKERS | Sets the number of concurrent downloads. Same as using the -workers flag. |
 
  ### Service Manager Config
 To run service manager you will require a folder named service-manager-config to exist inside your WORKSPACE folder. It should typically be a clone of a git repository.
@@ -290,8 +290,8 @@ Service-manager-config is expected to have the following structure:
 
 | File          | Description                                                |
 |---------------|------------------------------------------------------------|
-| config.json   | Defines the urls for artifactory                           | 
-| services.json | Defines all the available services                         | 
+| config.json   | Defines the urls for artifactory                           |
+| services.json | Defines all the available services                         |
 | profiles.json | Defines groups of services that should be started together |
 
 
@@ -309,7 +309,7 @@ When building a new release, use the included makefile:
 make build_all package
 ```
 
-## Running tests 
+## Running tests
 
 To run all tests in all sub-directories, ensure you are in the project root and run:
 
