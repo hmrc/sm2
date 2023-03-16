@@ -113,10 +113,12 @@ The `proxyPaths` setting consists of an array of strings, each string representi
 This can be useful if a frontend service needs to pass cookies etc. to another frontend service.
 Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
 
-If the reverse proxy is started without one or more services and/or profiles it will reverse proxy every service with a `proxyPaths` setting.
-By specifying services and/or profiles it limits itself to reverse proxying only those services referenced.
+By default, the reverse-proxy will forward any proxy-path it finds. e.g.
+```
+sm2 --reverse-proxy
+```
 
-For example to reverse proxy all the services defined in the CATALOGUE profile.
+You may restrict this behaviour to only a few services or profiles by listing them. e.g.
 ```
 sm2 --reverse-proxy CATALOGUE
 ```
