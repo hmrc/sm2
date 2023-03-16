@@ -116,6 +116,11 @@ Often browsers will prevent cookies being passed between hosts and can consider 
 If the reverse proxy is started without one or more services and/or profiles it will reverse proxy every service with a `proxyPaths` setting.
 By specifying services and/or profiles it limits itself to reverse proxying only those services referenced.
 
+For example to reverse proxy all the services defined in the CATALOGUE profile.
+```
+sm2 --reverse-proxy CATALOGUE
+```
+
 ## Diagnostic Mode
 Running `sm2 --diagnostic` will perform some basic health checks for the sm2 tool. It can help diagnose connectivity and configuration issues.
 
