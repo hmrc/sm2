@@ -34,17 +34,18 @@ Multiple services can be started in one go by passing in more than one service n
 sm2 --start SERVICE_ONE SERVICE_TWO SERVICE_THREE
 ```
 
-| Option          | Description                                                                                                          |
-|-----------------|----------------------------------------------------------------------------------------------------------------------|
-| `-r 1.0.0`      | Starts a specific release of a service. When starting multiple services the flag only applies to the first service.  |
-| `--src`         | Start a service from source. Requires git and sbt to be installed.                                                   |
-| `--port 1234`   | Overrides the default port of the service.                                                                           |
-| `--noprogress`  | Surpresses the progress bars when downloading the service. Suitable for scripts etc.                                 |
-| `--offline`     | Starts services that are already without attempting to download the latest version                                   |
-| `--clean`       | Removes existing install, forcing a re-download                                                                      |
-| `--wait 20`     | Waits a specified number of seconds for all services to reach a healthy state                                        |
-| `--appendArgs`  | A json map of extra args for services being started: `{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"]}`                    |
-| `--workers 4`   | The number of services to download/start at the same time (default 2)                                                |
+| Option            | Description                                                                                                          |
+|-------------------|----------------------------------------------------------------------------------------------------------------------|
+| `-r 1.0.0`        | Starts a specific release of a service. When starting multiple services the flag only applies to the first service.  |
+| `--src`           | Start a service from source. Requires git and sbt to be installed.                                                   |
+| `--port 1234`     | Overrides the default port of the service.                                                                           |
+| `--noprogress`    | Supresses the progress bars when downloading the service. Suitable for scripts etc.                                  |
+| `--offline`       | Starts services that are already without attempting to download the latest version                                   |
+| `--clean`         | Removes existing install, forcing a re-download                                                                      |
+| `--wait 20`       | Waits a specified number of seconds for all services to reach a healthy state                                        |
+| `--appendArgs`    | A json map of extra args for services being started: `{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"]}`                    |
+| `--workers 4`     | The number of services to download/start at the same time (default 2)                                                |
+| `--reverse-proxy` | Starts a reverse proxy                                                                                               |
 
 
 Alternatively, instead of setting the version with the `-r` flag, you can start a specific release using the following syntax:
@@ -107,11 +108,23 @@ Services can be started in offline mode using `--start SERVICE_NAME --offline`.
 
 ## Reverse Proxy
 A new feature in version 2 is the reverse proxy mode. Using the --reverse-proxy option starts an http server running on port 3000.
-Any service that has a valid `location` entry in services.json will be available on port 3000 under that path.
-This can be useful if a frontend service needs to pass cookies etc to another frontend service. Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
+Any service that has a valid `proxyPaths` entry in services.json will be available on port 3000 under that path. 
+The `proxyPaths` setting consists of an array of strings, each string representing a path to be proxied to that service.
+This can be useful if a frontend service needs to pass cookies etc. to another frontend service.
+Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
+
+By default, the reverse-proxy will forward any proxy-path it finds. e.g.
+```
+sm2 --reverse-proxy
+```
+
+You may restrict this behaviour to only a few services or profiles by listing them. e.g.
+```
+sm2 --reverse-proxy CATALOGUE
+```
 
 ## Diagnostic Mode
-Running `sm2 --diagnotic` will perform some basic health checks for the sm2 tool. It can help diagnose connectivity and configuration issues.
+Running `sm2 --diagnostic` will perform some basic health checks for the sm2 tool. It can help diagnose connectivity and configuration issues.
 
 ## Keeping service-manager-config up to date
 You can use service manager to get the latest config using the `sm2 --update-config` command. It requires the copy of service-manager-config in your $WORKSPACE be on the HEAD branch, if it is not it will not perform the update (so as not to overwrite any changes you may be working on etc).

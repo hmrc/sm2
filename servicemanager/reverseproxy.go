@@ -10,7 +10,6 @@ import (
 
 func (sm *ServiceManager) StartProxy() {
 
-	routes := map[string]string{}
 	rootServicePort := 9017
 	proxyPort := 3000
 
@@ -18,12 +17,19 @@ func (sm *ServiceManager) StartProxy() {
 		proxyPort = sm.Commands.Port
 	}
 
-	// build routing table for services tagged as frontend
-	for _, v := range sm.Services {
-		if v.Location != "" && v.Location != "/" && v.Frontend {
-			routes[v.Location] = fmt.Sprintf("localhost:%d", v.DefaultPort)
-			sm.PrintVerbose("Setup: routing %s to %s on port %s\n", v.Location, v.Id, fmt.Sprint(v.DefaultPort))
+	var routes map[string]string
+
+	requestedServices := sm.requestedServicesAndProfiles()
+	if len(requestedServices) > 0 {
+		definedServices := map[string]Service{}
+		for _, v := range requestedServices {
+			if s, ok := sm.Services[v.service]; ok {
+				definedServices[v.service] = s
+			}
 		}
+		routes = buildRoutingTable(definedServices)
+	} else {
+		routes = buildRoutingTable(sm.Services)
 	}
 
 	log.Printf("ReverseProxy: Loaded %d frontend routes\n", len(routes))
@@ -62,4 +68,15 @@ func (sm *ServiceManager) StartProxy() {
 
 	log.Printf("ReverseProxy: listening on port %d...", proxyPort)
 	log.Fatal(server.ListenAndServe())
+}
+
+func buildRoutingTable(services map[string]Service) map[string]string {
+	routes := map[string]string{}
+	for _, v := range services {
+		for _, path := range v.ProxyPaths {
+			routes[path] = fmt.Sprintf("localhost:%d", v.DefaultPort)
+			log.Printf("Setup: routing %s to %s on port %s\n", path, v.Id, fmt.Sprint(v.DefaultPort))
+		}
+	}
+	return routes
 }

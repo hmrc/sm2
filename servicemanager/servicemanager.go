@@ -44,6 +44,7 @@ type Service struct {
 	Binary      ServiceBinary `json:"binary"`
 	Location    string        `json:"location"`
 	Healthcheck Healthcheck   `json:"healthcheck"`
+	ProxyPaths  []string      `json:"proxyPaths"`
 }
 
 type ServiceBinary struct {
