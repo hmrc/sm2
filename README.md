@@ -27,7 +27,7 @@ curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-apple-
 If everything has worked you should have an executable called `sm2`.
 
 2. Move the executable somewhere on your systems $PATH.
-3. Run `sm2` from the terminal and follow the instructions to configure your system (if its not already set up)
+3. Run `sm2` from the terminal and follow the instructions to configure your system (if its not already set up). OSX/Apple users will need to [allow `sm2` to run](https://support.apple.com/en-gb/guide/mac-help/mh40616/mac).
 4. For more information, see [USERGUIDE.md](USERGUIDE.md)
 
 Alternatively you can download and decompress sm2 yourself from the [releases]() section
