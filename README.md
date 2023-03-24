@@ -30,7 +30,7 @@ If everything has worked you should have an executable called `sm2`.
 3. Run `sm2` from the terminal and follow the instructions to configure your system (if its not already set up)
 4. For more information, see [USERGUIDE.md](USERGUIDE.md)
 
-Alternatively you can download and decompress sm2 yourself from the [releases](https://github.com/hmrc/sm2/releases/latest) section
+Alternatively you can download and decompress sm2 yourself from the [releases](https://github.com/hmrc/sm2/releases/latest) section. Please note OSX/Apple users will have to [allow `sm2` to run](https://support.apple.com/en-gb/guide/mac-help/mh40616/mac) when downloading via the browser.
 
 ### Setup
 If you are upgrading from the original service-manager, sm2 will use your existing config.
