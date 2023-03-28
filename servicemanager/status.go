@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sm2/ledger"
 	"sort"
 	"strings"
 	"time"
@@ -33,10 +34,14 @@ func (sm *ServiceManager) PrintStatus() {
 	statuses := []serviceStatus{sm.CheckMongo()}
 	statuses = append(statuses, sm.findStatuses()...)
 	unmanaged := sm.findUnmanagedServices(statuses)
+	proxyStatus := sm.Ledger.LoadProxyStateFile(sm.Config.TmpDir)
 
 	termWidth, _ := sm.Platform.GetTerminalSize()
 	if sm.Commands.FormatPlain || termWidth < 80 {
 		printPlainText(statuses, os.Stdout)
+		if proxyStatus.Pid > 0 {
+			printProxyPlainText(proxyStatus, os.Stdout)
+		}
 	} else {
 		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
 		printTable(statuses, termWidth, longestServiceName, os.Stdout)
@@ -48,6 +53,9 @@ func (sm *ServiceManager) PrintStatus() {
 			fmt.Print("Please note: You will not be able to manage these services using sm2.\n")
 			printUnmanagedTable(unmanaged, termWidth, longestServiceName, os.Stdout)
 			fmt.Print("\033[0m\n")
+		}
+		if proxyStatus.Pid > 0 {
+			printProxyTable(proxyStatus, termWidth, os.Stdout)
 		}
 	}
 }
@@ -163,22 +171,45 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 	}
 }
 
+func printProxyPlainText(proxyStatus ledger.ProxyStateFile, out *os.File) {
+	fmt.Fprintf(out, "Reverse Proxy Running with PID %d", proxyStatus.Pid)
+	for path, port := range proxyStatus.ProxyPaths {
+		fmt.Fprintf(out, "%s\t%s\n", path, port)
+	}
+}
+
 const (
-	widthVersion = 11
-	widthPid     = 9
-	widthPort    = 7
-	widthStatus  = 8
+	widthVersion     = 11
+	widthPid         = 9
+	widthPort        = 7
+	widthStatus      = 8
+	widthServicePath = 16
 )
 
 func getLongestServiceName(statuses []serviceStatus) int {
-	// Work out how much space we can give to the Name column.
-	longestServiceName := 35
-	for _, s := range statuses {
-		if len(s.service)+2 > longestServiceName { // service name + 1 space either size
-			longestServiceName = len(s.service) + 2
+	var serviceNames []string
+	for _, s := range append(statuses) {
+		serviceNames = append(serviceNames, s.service)
+	}
+	return getLongestString(serviceNames)
+}
+
+func getLongestProxyPath(paths map[string]string) int {
+	proxyPath := make([]string, 0, len(paths))
+	for k, _ := range paths {
+		proxyPath = append(proxyPath, k)
+	}
+	return getLongestString(proxyPath)
+}
+
+func getLongestString(strings []string) int {
+	longestString := 35
+	for _, s := range strings {
+		if len(s)+2 > longestString {
+			longestString = len(s) + 2
 		}
 	}
-	return longestServiceName
+	return longestString
 }
 
 func printTable(statuses []serviceStatus, maxWidth int, longestServiceName int, out io.Writer) {
@@ -218,6 +249,36 @@ func printTable(statuses []serviceStatus, maxWidth int, longestServiceName int, 
 		// Draw the subsequent lines if the name wraps, we leave non-name fields empty so they're not repeated.
 		for _, s := range splitServiceName[1:] {
 			fmt.Fprintf(out, "| %s|%s|%s|%s|%s|\n", pad(s, widthName-1), pad("", widthVersion), pad("", widthPid), pad("", widthPort), pad("", widthStatus))
+		}
+	}
+	fmt.Fprint(out, border)
+}
+
+func printProxyTable(status ledger.ProxyStateFile, maxWidth int, out io.Writer) {
+	longestProxyPath := getLongestProxyPath(status.ProxyPaths)
+	widthProxyPath := maxWidth - (widthServicePath + 3)
+	if longestProxyPath < widthProxyPath {
+		widthProxyPath = longestProxyPath
+	}
+
+	// Draw the border & header.
+	border := fmt.Sprintf("+%s+%s+\n", strings.Repeat("-", widthProxyPath), strings.Repeat("-", widthServicePath))
+
+	fmt.Fprint(out, border)
+	fmt.Fprintf(out, "|%s|%s|\n", pad(" Proxy Path", widthProxyPath), pad(" Service Path", widthServicePath))
+	fmt.Fprint(out, border)
+
+	var sortedProxyPaths []string
+	for k, _ := range status.ProxyPaths {
+		sortedProxyPaths = append(sortedProxyPaths, k)
+	}
+	sort.Strings(sortedProxyPaths)
+	for _, k := range sortedProxyPaths {
+		splitServiceName := partition(k, widthProxyPath-1)
+		fmt.Fprintf(out, "| %s", pad(splitServiceName[0], widthProxyPath-1))
+		fmt.Fprintf(out, "| %s|\n", pad(status.ProxyPaths[k], widthServicePath-1))
+		for _, s := range splitServiceName[1:] {
+			fmt.Fprintf(out, "|%s|%s|\n", pad(s, widthProxyPath), pad("", widthServicePath))
 		}
 	}
 	fmt.Fprint(out, border)

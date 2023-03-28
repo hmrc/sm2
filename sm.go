@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"sm2/cli"
@@ -37,7 +39,17 @@ func main() {
 		fmt.Print(err)
 		os.Exit(1)
 	}
+	SetupCloseHandler(serviceManager)
 
 	serviceManager.Run()
 
+}
+func SetupCloseHandler(sm servicemanager.ServiceManager) {
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		sm.Ledger.ClearProxyStateFile(sm.Config.TmpDir)
+		os.Exit(0)
+	}()
 }
