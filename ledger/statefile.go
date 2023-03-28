@@ -9,6 +9,7 @@ import (
 )
 
 const stateFileName = ".state"
+const proxyStateFileName = ".proxy_state"
 
 type StateFile struct {
 	Service        string
@@ -20,6 +21,12 @@ type StateFile struct {
 	Port           int
 	Args           []string
 	HealthcheckUrl string
+}
+
+type ProxyStateFile struct {
+	Started    time.Time
+	Pid        int
+	ProxyPaths map[string]string
 }
 
 func saveStateFile(installDir string, ledger StateFile) error {
@@ -48,15 +55,7 @@ func loadStateFile(installDir string) (StateFile, error) {
 }
 
 func clearStateFile(installDir string) error {
-	err := os.Remove(path.Join(installDir, stateFileName))
-	if err != nil {
-		if os.IsNotExist(err) {
-			// dont care it it dont exist
-			return nil
-		}
-		return err
-	}
-	return nil
+	return clearFile(installDir, stateFileName)
 }
 
 func findAll(baseDir string) ([]StateFile, error) {
@@ -75,4 +74,45 @@ func findAll(baseDir string) ([]StateFile, error) {
 		}
 	}
 	return matches, nil
+}
+
+func saveProxyStateFile(installDir string, ledger ProxyStateFile) error {
+	file, err := os.Create(path.Join(installDir, proxyStateFileName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	return encoder.Encode(ledger)
+}
+
+func loadProxyStateFile(installDir string) ProxyStateFile {
+	state := ProxyStateFile{}
+
+	file, err := os.OpenFile(path.Join(installDir, proxyStateFileName), os.O_RDONLY, 0755)
+	if err != nil {
+		return state
+	}
+	defer file.Close()
+
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&state)
+	return state
+}
+
+func clearProxyStateFile(installDir string) error {
+	return clearFile(installDir, proxyStateFileName)
+}
+
+func clearFile(installDir string, fileName string) error {
+	err := os.Remove(path.Join(installDir, fileName))
+	if err != nil {
+		if os.IsNotExist(err) {
+			// don't care if it doesn't exist
+			return nil
+		}
+		return err
+	}
+	return nil
 }

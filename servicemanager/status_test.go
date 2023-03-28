@@ -187,7 +187,7 @@ func TestStatusExpandsServiceName(t *testing.T) {
 | SERVICE_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK | 3.3       | 6       | 7     |  PASS  |
 +----------------------------------------------------------+-----------+---------+-------+--------+`
 
-	longestServiceName := getLongestServiceName(statuses)
+	longestServiceName := getLongestString([]string{"SHORT_ID", "SERVICE_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK"})
 	printTable(statuses, 256, longestServiceName, sb)
 
 	actualOutput := strings.TrimSuffix(sb.String(), "\n")
@@ -405,5 +405,83 @@ func TestVerifyIsRunning(t *testing.T) {
 	statuses[0].health = FAIL
 	if verifyIsRunning(services, statuses, output) {
 		t.Errorf("verifyIsRunning returned true when status was FAILED")
+	}
+}
+
+func TestStatusWrapsProxyPaths(t *testing.T) {
+	sb := bytes.NewBufferString("")
+	stateFile := ledger.ProxyStateFile{
+		Pid: 101,
+		ProxyPaths: map[string]string{
+			"/1/SHORT_PATH": "localhost:4000",
+			"/2/THE_PATH____IS_60_CHARS_DO_NOT_WRAP______________________":                                                                 "localhost:4001",
+			"/3/PATH____IS_61_CHARS_WRAP_OVERFLOW_OK____________________OK":                                                                "localhost:4002",
+			"/4/PATH____IS_124_CHARS_SO_DEFINITELY_WRAP_THE_OVERFLOW_TO_3_LINES___________________________________________________WRAPPED": "localhost:4003",
+		},
+	}
+	expectedOutput :=
+		`+-------------------------------------------------------------+----------------+
+| Proxy Path                                                  | Service Path   |
++-------------------------------------------------------------+----------------+
+| /1/SHORT_PATH                                               | localhost:4000 |
+| /2/THE_PATH____IS_60_CHARS_DO_NOT_WRAP______________________| localhost:4001 |
+| /3/PATH____IS_61_CHARS_WRAP_OVERFLOW_OK____________________O| localhost:4002 |
+|K                                                            |                |
+| /4/PATH____IS_124_CHARS_SO_DEFINITELY_WRAP_THE_OVERFLOW_TO_3| localhost:4003 |
+|_LINES___________________________________________________WRA |                |
+|PPED                                                         |                |
++-------------------------------------------------------------+----------------+`
+
+	printProxyTable(stateFile, 80, 124, sb)
+
+	println(sb.String())
+	actualOutput := strings.TrimSuffix(sb.String(), "\n")
+	actualLines := strings.Split(actualOutput, "\n")
+
+	expectedLines := strings.Split(expectedOutput, "\n")
+
+	if len(expectedLines) != len(actualLines) {
+		t.Errorf("Actual lines was %d, but expected lines was %d", len(actualLines), len(expectedLines))
+	}
+
+	for i, line := range actualLines {
+		if line != expectedLines[i] {
+			t.Errorf("Line %d in actualLines was: \n%s\n, but in expectedLines was \n%s\n", i, line, expectedLines[i])
+		}
+	}
+}
+
+func TestStatusExpandsProxyPaths(t *testing.T) {
+	sb := bytes.NewBufferString("")
+	stateFile := ledger.ProxyStateFile{
+		Pid: 101,
+		ProxyPaths: map[string]string{
+			"/1/SHORT_PATH": "localhost:4000",
+			"/2/PATH_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK": "localhost:4001",
+		},
+	}
+	expectedOutput := `+----------------------------------------------------------+----------------+
+| Proxy Path                                               | Service Path   |
++----------------------------------------------------------+----------------+
+| /1/SHORT_PATH                                            | localhost:4000 |
+| /2/PATH_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK | localhost:4001 |
++----------------------------------------------------------+----------------+`
+
+	longestServiceName := getLongestString([]string{"/1/SHORT_PATH", "/2/PATH_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK"})
+	printProxyTable(stateFile, 256, longestServiceName, sb)
+
+	actualOutput := strings.TrimSuffix(sb.String(), "\n")
+	actualLines := strings.Split(actualOutput, "\n")
+
+	expectedLines := strings.Split(expectedOutput, "\n")
+
+	if len(expectedLines) != len(actualLines) {
+		t.Errorf("Actual lines was %d, but expected lines was %d", len(actualLines), len(expectedLines))
+	}
+
+	for i, line := range actualLines {
+		if line != expectedLines[i] {
+			t.Errorf("Line %d in actualLines was: \n%s, but in expectedLines was \n%s", i, line, expectedLines[i])
+		}
 	}
 }
