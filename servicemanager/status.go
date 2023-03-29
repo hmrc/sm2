@@ -34,13 +34,13 @@ func (sm *ServiceManager) PrintStatus() {
 	statuses := []serviceStatus{sm.CheckMongo()}
 	statuses = append(statuses, sm.findStatuses()...)
 	unmanaged := sm.findUnmanagedServices(statuses)
-	proxyStatus := sm.Ledger.LoadProxyStateFile(sm.Config.TmpDir)
+	proxyState := sm.Ledger.LoadProxyState(sm.Config.TmpDir)
 
 	termWidth, _ := sm.Platform.GetTerminalSize()
 	if sm.Commands.FormatPlain || termWidth < 80 {
 		printPlainText(statuses, os.Stdout)
-		if proxyStatus.Pid > 0 {
-			printProxyPlainText(proxyStatus, os.Stdout)
+		if proxyState.Pid > 0 {
+			printProxyPlainText(proxyState, os.Stdout)
 		}
 	} else {
 		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
@@ -54,8 +54,8 @@ func (sm *ServiceManager) PrintStatus() {
 			printUnmanagedTable(unmanaged, termWidth, longestServiceName, os.Stdout)
 			fmt.Print("\033[0m\n")
 		}
-		if proxyStatus.Pid > 0 {
-			printProxyTable(proxyStatus, termWidth, os.Stdout)
+		if proxyState.Pid > 0 {
+			printProxyTable(proxyState, termWidth, os.Stdout)
 		}
 	}
 }
@@ -171,9 +171,9 @@ func printPlainText(statuses []serviceStatus, out io.Writer) {
 	}
 }
 
-func printProxyPlainText(proxyStatus ledger.ProxyStateFile, out *os.File) {
-	fmt.Fprintf(out, "Reverse Proxy Running with PID %d", proxyStatus.Pid)
-	for path, port := range proxyStatus.ProxyPaths {
+func printProxyPlainText(proxyState ledger.ProxyState, out *os.File) {
+	fmt.Fprintf(out, "Reverse Proxy Running with PID %d", proxyState.Pid)
+	for path, port := range proxyState.ProxyPaths {
 		fmt.Fprintf(out, "%s\t%s\n", path, port)
 	}
 }
@@ -254,7 +254,7 @@ func printTable(statuses []serviceStatus, maxWidth int, longestServiceName int, 
 	fmt.Fprint(out, border)
 }
 
-func printProxyTable(status ledger.ProxyStateFile, maxWidth int, out io.Writer) {
+func printProxyTable(status ledger.ProxyState, maxWidth int, out io.Writer) {
 	longestProxyPath := getLongestProxyPath(status.ProxyPaths)
 	widthProxyPath := maxWidth - (widthServicePath + 3)
 	if longestProxyPath < widthProxyPath {
