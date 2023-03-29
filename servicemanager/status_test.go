@@ -410,7 +410,7 @@ func TestVerifyIsRunning(t *testing.T) {
 
 func TestStatusWrapsProxyPaths(t *testing.T) {
 	sb := bytes.NewBufferString("")
-	stateFile := ledger.ProxyStateFile{
+	state := ledger.ProxyState{
 		Pid: 101,
 		ProxyPaths: map[string]string{
 			"/1/SHORT_PATH": "localhost:4000",
@@ -432,7 +432,7 @@ func TestStatusWrapsProxyPaths(t *testing.T) {
 |PPED                                                         |                |
 +-------------------------------------------------------------+----------------+`
 
-	printProxyTable(stateFile, 80, 124, sb)
+	printProxyTable(state, 80, sb)
 
 	println(sb.String())
 	actualOutput := strings.TrimSuffix(sb.String(), "\n")
@@ -453,7 +453,7 @@ func TestStatusWrapsProxyPaths(t *testing.T) {
 
 func TestStatusExpandsProxyPaths(t *testing.T) {
 	sb := bytes.NewBufferString("")
-	stateFile := ledger.ProxyStateFile{
+	state := ledger.ProxyState{
 		Pid: 101,
 		ProxyPaths: map[string]string{
 			"/1/SHORT_PATH": "localhost:4000",
@@ -467,8 +467,7 @@ func TestStatusExpandsProxyPaths(t *testing.T) {
 | /2/PATH_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK | localhost:4001 |
 +----------------------------------------------------------+----------------+`
 
-	longestServiceName := getLongestString([]string{"/1/SHORT_PATH", "/2/PATH_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK"})
-	printProxyTable(stateFile, 256, longestServiceName, sb)
+	printProxyTable(state, 256, sb)
 
 	actualOutput := strings.TrimSuffix(sb.String(), "\n")
 	actualLines := strings.Split(actualOutput, "\n")

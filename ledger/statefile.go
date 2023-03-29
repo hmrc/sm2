@@ -23,7 +23,7 @@ type StateFile struct {
 	HealthcheckUrl string
 }
 
-type ProxyStateFile struct {
+type ProxyState struct {
 	Started    time.Time
 	Pid        int
 	ProxyPaths map[string]string
@@ -76,7 +76,7 @@ func findAll(baseDir string) ([]StateFile, error) {
 	return matches, nil
 }
 
-func saveProxyStateFile(installDir string, ledger ProxyStateFile) error {
+func saveProxyState(installDir string, ledger ProxyState) error {
 	file, err := os.Create(path.Join(installDir, proxyStateFileName))
 	if err != nil {
 		return err
@@ -87,8 +87,8 @@ func saveProxyStateFile(installDir string, ledger ProxyStateFile) error {
 	return encoder.Encode(ledger)
 }
 
-func loadProxyStateFile(installDir string) ProxyStateFile {
-	state := ProxyStateFile{}
+func loadProxyState(installDir string) ProxyState {
+	state := ProxyState{}
 
 	file, err := os.OpenFile(path.Join(installDir, proxyStateFileName), os.O_RDONLY, 0755)
 	if err != nil {
@@ -101,7 +101,7 @@ func loadProxyStateFile(installDir string) ProxyStateFile {
 	return state
 }
 
-func clearProxyStateFile(installDir string) error {
+func clearProxyState(installDir string) error {
 	return clearFile(installDir, proxyStateFileName)
 }
 

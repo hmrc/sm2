@@ -38,8 +38,8 @@ func (sm *ServiceManager) StartProxy() {
 	log.Printf("ReverseProxy: Loaded %d frontend routes\n", len(routes))
 	log.Println("(only services with 'frontend: true' in services.json are addressable)")
 
-	state := ledger.ProxyStateFile{Started: time.Now(), Pid: os.Getpid(), ProxyPaths: routes}
-	sm.Ledger.SaveProxyStateFile(sm.Config.TmpDir, state)
+	state := ledger.ProxyState{Started: time.Now(), Pid: os.Getpid(), ProxyPaths: routes}
+	sm.Ledger.SaveProxyState(sm.Config.TmpDir, state)
 
 	director := func(req *http.Request) {
 

@@ -1,15 +1,15 @@
 package ledger
 
 type Ledger struct {
-	SaveStateFile       func(string, StateFile) error
-	LoadStateFile       func(string) (StateFile, error)
-	ClearStateFile      func(string) error
-	FindAllStateFiles   func(string) ([]StateFile, error)
-	SaveProxyStateFile  func(string, ProxyStateFile) error
-	LoadProxyStateFile  func(string) ProxyStateFile
-	ClearProxyStateFile func(string) error
-	SaveInstallFile     func(string, InstallFile) error
-	LoadInstallFile     func(string) (InstallFile, error)
+	SaveStateFile     func(string, StateFile) error
+	LoadStateFile     func(string) (StateFile, error)
+	ClearStateFile    func(string) error
+	FindAllStateFiles func(string) ([]StateFile, error)
+	SaveProxyState    func(string, ProxyState) error
+	LoadProxyState    func(string) ProxyState
+	ClearProxyState   func(string) error
+	SaveInstallFile   func(string, InstallFile) error
+	LoadInstallFile   func(string) (InstallFile, error)
 }
 
 func NewLedger() Ledger {
@@ -19,9 +19,9 @@ func NewLedger() Ledger {
 		ClearStateFile:    clearStateFile,
 		FindAllStateFiles: findAll,
 
-		SaveProxyStateFile:  saveProxyStateFile,
-		LoadProxyStateFile:  loadProxyStateFile,
-		ClearProxyStateFile: clearProxyStateFile,
+		SaveProxyState:  saveProxyState,
+		LoadProxyState:  loadProxyState,
+		ClearProxyState: clearProxyState,
 
 		SaveInstallFile: saveInstallFile,
 		LoadInstallFile: loadInstallFile,

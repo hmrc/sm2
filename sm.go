@@ -49,7 +49,7 @@ func SetupCloseHandler(sm servicemanager.ServiceManager) {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		sm.Ledger.ClearProxyStateFile(sm.Config.TmpDir)
+		sm.Ledger.ClearProxyState(sm.Config.TmpDir)
 		os.Exit(0)
 	}()
 }
