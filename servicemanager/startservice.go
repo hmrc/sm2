@@ -90,9 +90,20 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return err
 	}
 	state.HealthcheckUrl = healthcheckUrl
-
 	// and finally, we record out success
-	return sm.Ledger.SaveStateFile(installDir, state)
+	err = sm.Ledger.SaveStateFile(installDir, state)
+	sm.pauseTillHealthy(healthcheckUrl)
+	return err
+}
+
+func (sm *ServiceManager) pauseTillHealthy(healthcheckUrl string) {
+	if sm.Commands.Delay > 0 {
+		count := 0
+		for count < sm.Commands.Delay*2 && !sm.CheckHealth(healthcheckUrl) {
+			count++
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
 }
 
 func (sm *ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {

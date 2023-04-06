@@ -44,6 +44,7 @@ type UserOption struct {
 	Verify        bool                // checks if a given service or profile is running
 	Wait          int                 // waits given number of secs after starting services for then to respond to pings
 	Workers       int                 // sets the number of concurrent downloads/service starts
+	Delay         int                 // sets the pause in seconds between starting services
 }
 
 func Parse(args []string) (*UserOption, error) {
@@ -115,8 +116,8 @@ func fixupInvalidFlags(args []string) []string {
 }
 
 /*
-   Parses extra args for all the services. Expected format is:
-   {"SERVICE_NAME":["-DFoo=Bar","SOMETHING"],"SERVICE_TWO":["APPEND_THIS"]}
+Parses extra args for all the services. Expected format is:
+{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"],"SERVICE_TWO":["APPEND_THIS"]}
 */
 func parseAppendArgs(jsonArgs string) (map[string][]string, error) {
 
@@ -183,6 +184,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Verify, "verify", false, "for scripts, checks if a service/profile is running")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
+	flagset.IntVar(&opts.Delay, "delay", 0, "how long to pause after starting a service before starting another")
 
 	return flagset
 }
