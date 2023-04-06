@@ -97,9 +97,9 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 }
 
 func (sm *ServiceManager) pauseTillHealthy(healthcheckUrl string) {
-	if sm.Commands.Delay > 0 {
+	if sm.Commands.DelaySeconds > 0 {
 		count := 0
-		for count < sm.Commands.Delay*2 && !sm.CheckHealth(healthcheckUrl) {
+		for count < sm.Commands.DelaySeconds*2 && !sm.CheckHealth(healthcheckUrl) {
 			count++
 			time.Sleep(500 * time.Millisecond)
 		}

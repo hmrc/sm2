@@ -44,7 +44,7 @@ type UserOption struct {
 	Verify        bool                // checks if a given service or profile is running
 	Wait          int                 // waits given number of secs after starting services for then to respond to pings
 	Workers       int                 // sets the number of concurrent downloads/service starts
-	Delay         int                 // sets the pause in seconds between starting services
+	DelaySeconds  int                 // sets the pause in seconds between starting services
 }
 
 func Parse(args []string) (*UserOption, error) {
@@ -184,7 +184,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Verify, "verify", false, "for scripts, checks if a service/profile is running")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
-	flagset.IntVar(&opts.Delay, "delay", 0, "how long to pause after starting a service before starting another")
+	flagset.IntVar(&opts.DelaySeconds, "delay", 0, "how long to pause, in seconds, after starting a service before starting another")
 
 	return flagset
 }
