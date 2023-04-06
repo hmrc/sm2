@@ -43,7 +43,9 @@ func (sm *ServiceManager) StartFromSource(serviceName string) error {
 		return err
 	}
 
-	return sm.Ledger.SaveStateFile(installDir, state)
+	err = sm.Ledger.SaveStateFile(installDir, state)
+	sm.pauseTillHealthy(state.HealthcheckUrl)
+	return err
 }
 
 func (sm *ServiceManager) installFromGit(installDir string, gitUrl string, service Service) (ledger.InstallFile, error) {
@@ -96,17 +98,18 @@ func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.
 		return state, err
 	}
 
+	healthcheckUrl := findHealthcheckUrl(service, state.Port)
 	state = ledger.StateFile{
-		Service:  service.Id,
-		Artifact: service.Binary.Artifact,
-		Version:  SOURCE,
-		Path:     srcDir,
-		Started:  time.Now(),
-		Pid:      cmd.Process.Pid,
-		Port:     port,
-		Args:     args,
+		Service:        service.Id,
+		Artifact:       service.Binary.Artifact,
+		Version:        SOURCE,
+		Path:           srcDir,
+		Started:        time.Now(),
+		Pid:            cmd.Process.Pid,
+		Port:           port,
+		Args:           args,
+		HealthcheckUrl: healthcheckUrl,
 	}
-
 	return state, nil
 }
 
