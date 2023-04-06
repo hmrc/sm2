@@ -7,21 +7,26 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 ### Installing From Binary
 1. Run the following command in your terminal for your operating system/cpu:
 
-**Linux**
+**Linux Intel**
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-linux-intel.zip && unzip sm2-1.0.6-linux-intel.zip && rm sm2-1.0.6-linux-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.7/sm2-1.0.6-linux-intel.zip && unzip sm2-1.0.6-linux-intel.zip && rm sm2-1.0.6-linux-intel.zip
+```
+
+**Linux Arm64**
+```base
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.7/sm2-1.0.6-linux-arm64.zip && unzip sm2-1.0.6-linux-arm64.zip && rm sm2-1.0.6-linux-arm64.zip
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-apple-arm64.zip && unzip sm2-1.0.6-apple-arm64.zip && rm sm2-1.0.6-apple-arm64.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.7/sm2-1.0.6-apple-arm64.zip && unzip sm2-1.0.6-apple-arm64.zip && rm sm2-1.0.6-apple-arm64.zip
 ```
 
 **OSX/Apple (older Intel cpus)**
 
 ```base
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.6/sm2-1.0.6-apple-intel.zip && unzip sm2-1.0.6-apple-intel.zip && rm sm2-1.0.6-apple-intel.zip
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.7/sm2-1.0.6-apple-intel.zip && unzip sm2-1.0.6-apple-intel.zip && rm sm2-1.0.6-apple-intel.zip
 ```
 
 If everything has worked you should have an executable called `sm2`.
@@ -88,6 +93,13 @@ Alternatively you can start more than one service at once by typing multiple ser
 $ sm2 -start SERVICE_ONE SERVICE_TWO
 ```
 
+#### Starting a large group of services
+Starting a large group of services can overload the cpu of a machine and lead to services failing to start.
+If this happens use the following command to start the services at a slower pace.
+```shell
+$ sm2 --start LARGE_PROFILE_NAME --workers 1 --DelaySeconds 5
+```
+The workers argument starts one service at a time and the DelaySeconds argument adds a 5 second delay inbetween services.
 
 ### Starting specific versions
 If you need to run a specific version of a service you can do so by adding a colon followed by the version number to the service name, e.g.
