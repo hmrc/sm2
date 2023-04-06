@@ -8,7 +8,7 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 BINARY := sm2
-VERSION := 1.0.6
+VERSION := 1.0.7
 BUILD := `git rev-parse HEAD`
 
 # Setup linker flags option for build that interoperate with variable names in src code
@@ -26,6 +26,7 @@ build:
 build_all:
 	@echo building all versions...
 	$(shell export CGO_ENABLED=0; export GOOS=linux;  export GOARCH=amd64; go build $(LDFLAGS) -o build/$(BINARY)-$(VERSION)-linux-intel/$(BINARY))
+	$(shell export CGO_ENABLED=0; export GOOS=linux;  export GOARCH=arm64; go build $(LDFLAGS) -o build/$(BINARY)-$(VERSION)-linux-arm64/$(BINARY))
 	$(shell export CGO_ENABLED=0; export GOOS=darwin; export GOARCH=amd64; go build $(LDFLAGS) -o build/$(BINARY)-$(VERSION)-apple-intel/$(BINARY))
 	$(shell export CGO_ENABLED=0; export GOOS=darwin; export GOARCH=arm64; go build $(LDFLAGS) -o build/$(BINARY)-$(VERSION)-apple-arm64/$(BINARY))
 
