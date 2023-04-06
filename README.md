@@ -97,7 +97,7 @@ $ sm2 -start SERVICE_ONE SERVICE_TWO
 Starting a large group of services can overload the cpu of a machine and lead to services failing to start.
 If this happens use the following command to start the services at a slower pace.
 ```shell
-$ sm2 --start LARGE_PROFILE_NAME --workers 1 --DelaySeconds 5
+$ sm2 --start LARGE_PROFILE_NAME --workers 1 --delay-seconds 5
 ```
 The workers argument starts one service at a time and the DelaySeconds argument adds a 5 second delay inbetween services.
 

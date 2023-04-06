@@ -184,7 +184,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Verify, "verify", false, "for scripts, checks if a service/profile is running")
 	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
-	flagset.IntVar(&opts.DelaySeconds, "delay", 0, "how long to pause, in seconds, after starting a service before starting another")
+	flagset.IntVar(&opts.DelaySeconds, "delay-seconds", 0, "how long to pause, in seconds, after starting a service before starting another")
 
 	return flagset
 }
