@@ -165,6 +165,26 @@ func (sm *ServiceManager) findStatuses() []serviceStatus {
 	return statuses
 }
 
+func (sm *ServiceManager) cleanupFailedServices() {
+	statuses := sm.findStatuses()
+
+	// for each service status
+	for _, status := range statuses {
+		if status.health == FAIL && status.service != "MONGO" {
+			// clean up state file
+			installDir, err := sm.findInstallDirOfService(status.service)
+			if err == nil {
+				err = sm.Ledger.ClearStateFile(installDir)
+				if err != nil {
+					fmt.Printf("Error clearing %s state file: %s\n", status.service, err)
+				} else {
+					fmt.Printf("Cleaned up %s\n", status.service)
+				}
+			}
+		}
+	}
+}
+
 func printPlainText(statuses []serviceStatus, out io.Writer) {
 	for _, status := range statuses {
 		fmt.Fprintf(out, "%s\t%s\t%d\t%d\t%s\n", status.service, status.version, status.port, status.pid, status.health)
@@ -311,8 +331,10 @@ func printHelpIfRequired(statuses []serviceStatus) {
 		if status.health == FAIL && status.service != "MONGO" {
 			fmt.Print("\n\033[1;31mOne or more services have failed to start.\033[0m\n")
 			fmt.Print("You can check the logs of the fail service(s) or see at which point the service failed to start using:\n")
-			fmt.Print("  sm2 --logs  SERVICE_NAME\n")
-			fmt.Print("  sm2 --debug SERVICE_NAME\n\n")
+			fmt.Print("  sm2 -logs  SERVICE_NAME\n")
+			fmt.Print("  sm2 -debug SERVICE_NAME\n\n")
+			fmt.Print("Alternatively, you can remove them from this list by using:\n")
+			fmt.Print("  sm2 -prune\n\n")
 			return
 		}
 	}
