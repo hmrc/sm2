@@ -49,6 +49,9 @@ func (sm *ServiceManager) Run() {
 	if sm.Commands.Status || sm.Commands.StatusShort {
 		// prints table of running services
 		sm.PrintStatus()
+	} else if sm.Commands.Prune {
+		// cleans up state files for services with a status of FAIL
+		sm.cleanupFailedServices()
 	} else if sm.Commands.Start {
 		// starts service(s) or profile(s)
 		services := sm.requestedServicesAndProfiles()

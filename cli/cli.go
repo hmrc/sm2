@@ -14,10 +14,10 @@ type UserOption struct {
 	appendArgs    string              // not exported, content decoded into ExtraArgs
 	AutoComplete  bool                // generates an autocomplete script
 	CheckPorts    bool                // finds duplicate ports
-	Clean         bool                // used with --start to force redownloading
+	Clean         bool                // used with --start to force re-downloading
 	Config        string              // uses a different service-manager-config folder
-	Debug         string              // debug info about a service, used to determin why it failed to start
-	Diagnostic    bool                // runs tests to determin if there are problems with the install
+	Debug         string              // debug info about a service, used to determine why it failed to start
+	Diagnostic    bool                // runs tests to determine if there are problems with the install
 	ExtraArgs     map[string][]string // parsed from content of AppendArgs
 	ExtraServices []string            // ids of services to start
 	FromSource    bool                // used with --start to run from source rather than bin
@@ -29,12 +29,13 @@ type UserOption struct {
 	Offline       bool                // prints downloaded services, used with --start bypasses download and uses local copy
 	Port          int                 // overrides service port, only works with the first service when starting multiple
 	Ports         bool                // prints all the ports
+	Prune         bool                // deletes .state files of services with a status of FAIL
 	Release       string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
 	Restart       bool                // restarts a service or profile
 	ReverseProxy  bool                // starts a reverse-proxy on 3000 (override with --port)
 	Search        string              // searches for services/profiles
 	Start         bool                // starts a service, multiple services or a profile(s)
-	Status        bool                // shows status of everything thats running
+	Status        bool                // shows status of everything that's running
 	StatusShort   bool                // same as --status but is the -s short version of the cmd
 	StopAll       bool                // stops all the services that are running
 	Stop          bool                // stops a service, multiple services or profile(s)
@@ -169,6 +170,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
 	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
 	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
+	flagset.BoolVar(&opts.Prune, "prune", false, "cleans up services with a status of FAIL")
 	flagset.StringVar(&opts.Release, "r", "", "sets which `version` to run (use with --start)")
 	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
 	flagset.BoolVar(&opts.ReverseProxy, "reverse-proxy", false, "starts a reverse proxy to all services on port :3000")
