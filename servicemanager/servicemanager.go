@@ -85,7 +85,8 @@ func (sm *ServiceManager) NewShortContext() context.Context {
 
 // based on config, find the directory a service is installed into.
 // TODO: rename this something less confusing. it doesnt really 'find' anything,
-//       rather it guesses where it is...
+//
+//	rather it guesses where it is...
 func (sm *ServiceManager) findInstallDirOfService(serviceName string) (string, error) {
 	if service, ok := sm.Services[serviceName]; ok {
 		return path.Join(sm.Config.TmpDir, service.Binary.DestinationSubdir), nil
@@ -117,8 +118,20 @@ func (sm *ServiceManager) LoadConfig() error {
 	}
 
 	if stat, err := os.Stat(configPath); err != nil || !stat.IsDir() {
-		return fmt.Errorf("Setup incomplete! No copy of service-manager-config found in your workspace (%s).\n"+
-			"This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n", workspacePath, workspacePath)
+		msg := "Setup incomplete! No copy of service-manager-config found in your workspace (%s).\n" +
+			"This can be fixed by `cd %s` and cloning a copy of service-manager-config from github.\n"
+
+		if !envIsSet {
+			return fmt.Errorf(msg+
+				"\n"+
+				"Alternatively, you can explicitly set your workspace by defining a $WORKSPACE environment\n"+
+				"variable, or passing in the full path to your service-manager-config using -config\n"+
+				"\n"+
+				"e.g. `sm2 -config /path/to/service-manager-config -start MY_SERVICE`\n",
+				workspacePath, workspacePath)
+		} else {
+			return fmt.Errorf(msg, workspacePath, workspacePath)
+		}
 	}
 
 	// load repo details from config.json
