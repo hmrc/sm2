@@ -52,76 +52,6 @@ const mavenMetadata213 string = `
 </metadata>
 `
 
-func TestGetLatestVersionGetsScala213IfPresent(t *testing.T) {
-	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/foo/bar/foo_2.13/maven-metadata.xml" {
-			fmt.Fprint(w, mavenMetadata213)
-		} else if r.URL.Path == "/foo/bar/foo_2.12/maven-metadata.xml" {
-			fmt.Fprint(w, mavenMetadata)
-		} else {
-			w.WriteHeader(404)
-		}
-	}))
-	defer svr.Close()
-
-	sm := ServiceManager{
-		Client: &http.Client{},
-		Config: ServiceManagerConfig{
-			ArtifactoryRepoUrl: svr.URL,
-		},
-	}
-
-	sb := ServiceBinary{
-		GroupId:  "foo/bar/",
-		Artifact: "foo_2.12",
-	}
-	meta, err := sm.GetLatestVersions(sb, "")
-
-	AssertNotErr(t, err)
-
-	if meta.Latest != "3.44.0" {
-		t.Errorf("latest version was not 3.44.0, it was %s", meta.Latest)
-	}
-
-	if meta.Release != "3.44.0" {
-		t.Errorf("release version was not 3.44.0, it was %s", meta.Latest)
-	}
-}
-
-func TestGetLatestVersionGetsScala212IfMissing(t *testing.T) {
-	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/foo/bar/foo_2.12/maven-metadata.xml" {
-			fmt.Fprint(w, mavenMetadata)
-		} else {
-			w.WriteHeader(404)
-		}
-	}))
-	defer svr.Close()
-
-	sm := ServiceManager{
-		Client: &http.Client{},
-		Config: ServiceManagerConfig{
-			ArtifactoryRepoUrl: svr.URL,
-		},
-	}
-
-	sb := ServiceBinary{
-		GroupId:  "foo/bar/",
-		Artifact: "foo_2.12",
-	}
-	meta, err := sm.GetLatestVersions(sb, "")
-
-	AssertNotErr(t, err)
-
-	if meta.Latest != "2.33.0" {
-		t.Errorf("latest version was not 2.32.0, it was %s", meta.Latest)
-	}
-
-	if meta.Release != "2.32.0" {
-		t.Errorf("release version was not 2.32.0, it was %s", meta.Latest)
-	}
-}
-
 func TestGetLatestVersionHonoursSuppliedScalaVersion(t *testing.T) {
 	svr := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/foo/bar/foo_2.13/maven-metadata.xml" {
@@ -143,7 +73,7 @@ func TestGetLatestVersionHonoursSuppliedScalaVersion(t *testing.T) {
 
 	sb := ServiceBinary{
 		GroupId:  "foo/bar/",
-		Artifact: "foo_2.12",
+		Artifact: "foo_2.13",
 	}
 	meta, err := sm.GetLatestVersions(sb, "2.12")
 

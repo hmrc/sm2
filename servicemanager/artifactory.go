@@ -36,26 +36,22 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
+// GetLatestVersions
+// `scalaVersion` in this context is the one optionally specified on the command line
+// e.g. `sm2 -start MY_SERVICE_2.12` would result in scalaVersion being populated with 2.12
 func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, scalaVersion string) (MavenMetadata, error) {
 
-	if scalaSuffix.MatchString(s.Artifact) {
-		// Tries all Scala versions in descending order to find the latest version (assuming Scala 3 builds
-		// are always more recent than 2.13 etc.) unless an explicit `scalaVersion` is provided
-		versions := []string{"_3", "_2.13", "_2.12", "_2.11"}
-		if scalaVersion != "" {
-			versions = []string{"_" + scalaVersion}
+	if scalaSuffix.MatchString(s.Artifact) && scalaVersion != "" {
+		// explicit scalaVersion has been requested
+		artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, "_"+scalaVersion)
+		metadata, err := sm.getLatestVersion(s.GroupId, artifact)
+		if err == nil {
+			return metadata, nil
 		}
 
-		for _, v := range versions {
-			artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, v)
-			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
-			if err == nil {
-				return metadata, nil
-			}
-		}
 		return MavenMetadata{}, fmt.Errorf("failed to find maven-metadata.xml for %s", s.Artifact)
 	} else {
-		// non scala service
+		// use values defined in config
 		return sm.getLatestVersion(s.GroupId, s.Artifact)
 	}
 }
