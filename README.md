@@ -74,7 +74,7 @@ sm2 : /usr/local/bin/sm2
 From your terminal type:
 ```shell
 $ sm2 -start SERVICE_NAME
-Starting 1 services on 2 workers
+Starting 1 service
  SERVICE_NAME         [====================][100%] Done
 ```
 This will download the latest release of that service, configure it and start it up.
