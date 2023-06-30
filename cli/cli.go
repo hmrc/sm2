@@ -22,6 +22,7 @@ type UserOption struct {
 	ExtraServices []string            // ids of services to start
 	FromSource    bool                // used with --start to run from source rather than bin
 	FormatPlain   bool                // flag for setting enabling machine friendly/undecorated output
+	Latest        bool                // used in conjunction with --restart to check for latest version of service(s) being restarted
 	List          bool                // lists all the services
 	Logs          string              // prints the logs of a service, running or otherwise
 	NoProgress    bool                // hides the animated download progress meter
@@ -163,6 +164,7 @@ func buildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Diagnostic, "diagnostic", false, "a suite of checks to debug issues with service manager")
 	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
 	flagset.BoolVar(&opts.FormatPlain, "format-plain", false, "list services without formatting")
+	flagset.BoolVar(&opts.Latest, "latest", false, "used in conjunction with -restart to check for latest version of service(s) being restarted")
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
 	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
