@@ -65,6 +65,15 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.StopAll {
 		// stops all managed services
 		sm.StopAll()
+	} else if sm.Commands.Restart && sm.Commands.Latest {
+		// restarts service(s) or profile(s) by doing an explicit stop and start to pick up latest versions
+		services := sm.requestedServicesAndProfiles()
+
+		for _, s := range services {
+			sm.StopService(s.service)
+		}
+
+		sm.asyncStart(services)
 	} else if sm.Commands.Restart {
 		// restarts service(s) or profile(s)
 		services := sm.requestedServicesAndProfiles()

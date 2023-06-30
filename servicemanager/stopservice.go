@@ -8,9 +8,9 @@ import (
 func (sm *ServiceManager) StopService(serviceName string) error {
 
 	// @improve just load the state file instead and kill the listed pid?
-	statues := sm.findStatuses()
+	statuses := sm.findStatuses()
 
-	for _, status := range statues {
+	for _, status := range statuses {
 		if status.service == serviceName {
 			sm.stop(status)
 			return nil
@@ -31,9 +31,9 @@ func (sm *ServiceManager) StopAll() {
 
 	fmt.Printf("Stopping ALL services!\n")
 
-	statues := sm.findStatuses()
+	statuses := sm.findStatuses()
 
-	for _, status := range statues {
+	for _, status := range statuses {
 		sm.stop(status)
 	}
 
