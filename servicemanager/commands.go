@@ -122,6 +122,8 @@ func (sm *ServiceManager) Run() {
 		if !ok {
 			os.Exit(13)
 		}
+	} else if sm.Commands.Update {
+		err = update(sm.Config.TmpDir)
 	} else if sm.Commands.AutoComplete {
 		cli.GenerateAutoCompletions()
 	} else {
