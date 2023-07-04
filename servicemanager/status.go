@@ -48,8 +48,10 @@ func (sm *ServiceManager) PrintStatus() {
 		printHelpIfRequired(statuses)
 
 		if len(unmanaged) > 0 {
-			fmt.Print("\n\033[34mAlso, it looks like the following services are running outside of sm2:\n\n")
-			fmt.Print("These might include services running from inside your IDE or by other means.\n")
+			fmt.Print("\n\033[34mAlso, the following processes are running which occupy ports of services\n")
+			fmt.Print("that are defined in service manager config:\n\n")
+			fmt.Print("These might include entirely separate processes running on your machine,\n")
+			fmt.Print("or they could be services running from inside your IDE or by other means.\n")
 			fmt.Print("Please note: You will not be able to manage these services using sm2.\n")
 			printUnmanagedTable(unmanaged, termWidth, longestServiceName, os.Stdout)
 			fmt.Print("\033[0m\n")
