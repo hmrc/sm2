@@ -11,49 +11,51 @@ import (
 )
 
 type UserOption struct {
-	appendArgs    string              // not exported, content decoded into ExtraArgs
-	AutoComplete  bool                // generates an autocomplete script
-	CheckPorts    bool                // finds duplicate ports
-	Clean         bool                // used with --start to force re-downloading
-	Config        string              // uses a different service-manager-config folder
-	Debug         string              // debug info about a service, used to determine why it failed to start
-	Diagnostic    bool                // runs tests to determine if there are problems with the install
-	ExtraArgs     map[string][]string // parsed from content of AppendArgs
-	ExtraServices []string            // ids of services to start
-	FromSource    bool                // used with --start to run from source rather than bin
-	FormatPlain   bool                // flag for setting enabling machine friendly/undecorated output
-	Latest        bool                // used in conjunction with --restart to check for latest version of service(s) being restarted
-	List          bool                // lists all the services
-	Logs          string              // prints the logs of a service, running or otherwise
-	NoProgress    bool                // hides the animated download progress meter
-	NoVpnCheck    bool                // skips checking if vpn is connected before starting a service
-	Offline       bool                // prints downloaded services, used with --start bypasses download and uses local copy
-	Port          int                 // overrides service port, only works with the first service when starting multiple
-	Ports         bool                // prints all the ports
-	Prune         bool                // deletes .state files of services with a status of FAIL
-	Release       string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
-	Restart       bool                // restarts a service or profile
-	ReverseProxy  bool                // starts a reverse-proxy on 3000 (override with --port)
-	Search        string              // searches for services/profiles
-	Start         bool                // starts a service, multiple services or a profile(s)
-	Status        bool                // shows status of everything that's running
-	StatusShort   bool                // same as --status but is the -s short version of the cmd
-	StopAll       bool                // stops all the services that are running
-	Stop          bool                // stops a service, multiple services or profile(s)
-	Update        bool                // update sm2 if a newer version is available
-	UpdateConfig  bool                // pulls the latest copy of service-manager-config
-	Verbose       bool                // shows extra logging
-	Version       bool                // prints sm2 version number
-	Verify        bool                // checks if a given service or profile is running
-	Wait          int                 // waits given number of secs after starting services for then to respond to pings
-	Workers       int                 // sets the number of concurrent downloads/service starts
-	DelaySeconds  int                 // sets the pause in seconds between starting services
+	appendArgs           string              // not exported, content decoded into ExtraArgs
+	AutoComplete         bool                // generates an autocomplete response
+	CheckPorts           bool                // finds duplicate ports
+	Clean                bool                // used with --start to force re-downloading
+	CompWordCount        int                 // used with --autocomplete number of words in completion
+	Config               string              // uses a different service-manager-config folder
+	Debug                string              // debug info about a service, used to determine why it failed to start
+	Diagnostic           bool                // runs tests to determine if there are problems with the install
+	ExtraArgs            map[string][]string // parsed from content of AppendArgs
+	ExtraServices        []string            // ids of services to start
+	FromSource           bool                // used with --start to run from source rather than bin
+	FormatPlain          bool                // flag for setting enabling machine friendly/undecorated output
+	GenerateAutoComplete bool                // generates an autocomplete script
+	Latest               bool                // used in conjunction with --restart to check for latest version of service(s) being restarted
+	List                 bool                // lists all the services
+	Logs                 string              // prints the logs of a service, running or otherwise
+	NoProgress           bool                // hides the animated download progress meter
+	NoVpnCheck           bool                // skips checking if vpn is connected before starting a service
+	Offline              bool                // prints downloaded services, used with --start bypasses download and uses local copy
+	Port                 int                 // overrides service port, only works with the first service when starting multiple
+	Ports                bool                // prints all the ports
+	Prune                bool                // deletes .state files of services with a status of FAIL
+	Release              string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
+	Restart              bool                // restarts a service or profile
+	ReverseProxy         bool                // starts a reverse-proxy on 3000 (override with --port)
+	Search               string              // searches for services/profiles
+	Start                bool                // starts a service, multiple services or a profile(s)
+	Status               bool                // shows status of everything that's running
+	StatusShort          bool                // same as --status but is the -s short version of the cmd
+	StopAll              bool                // stops all the services that are running
+	Stop                 bool                // stops a service, multiple services or profile(s)
+	Update               bool                // update sm2 if a newer version is available
+	UpdateConfig         bool                // pulls the latest copy of service-manager-config
+	Verbose              bool                // shows extra logging
+	Version              bool                // prints sm2 version number
+	Verify               bool                // checks if a given service or profile is running
+	Wait                 int                 // waits given number of secs after starting services for then to respond to pings
+	Workers              int                 // sets the number of concurrent downloads/service starts
+	DelaySeconds         int                 // sets the pause in seconds between starting services
 }
 
 func Parse(args []string) (*UserOption, error) {
 
 	opts := new(UserOption)
-	flagset := buildFlagSet(opts)
+	flagset := BuildFlagSet(opts)
 	flagset.Parse(fixupInvalidFlags(args))
 
 	if opts.Workers <= 0 {
@@ -153,18 +155,20 @@ func releaseIsValid(release string) bool {
 	return rx.MatchString(release)
 }
 
-func buildFlagSet(opts *UserOption) *flag.FlagSet {
+func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
 
 	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
-	flagset.BoolVar(&opts.AutoComplete, "generate-autocomplete", false, "generates bash completions script")
+	flagset.BoolVar(&opts.AutoComplete, "autocomplete", false, "generates bash completions response (used by bash-completions)")
 	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
 	flagset.BoolVar(&opts.Clean, "clean", false, "forces reinstall of service (use with --start)")
+	flagset.IntVar(&opts.CompWordCount, "comp-cword", 1, "used with --autocomplete by script generated using --generate-autocomplete")
 	flagset.StringVar(&opts.Config, "config", "", "sets an alternate directory for service-manager-config")
 	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given `service` may not have started")
 	flagset.BoolVar(&opts.Diagnostic, "diagnostic", false, "a suite of checks to debug issues with service manager")
 	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
 	flagset.BoolVar(&opts.FormatPlain, "format-plain", false, "list services without formatting")
+	flagset.BoolVar(&opts.GenerateAutoComplete, "generate-autocomplete", false, "generates bash completions script")
 	flagset.BoolVar(&opts.Latest, "latest", false, "used in conjunction with -restart to check for latest version of service(s) being restarted")
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
