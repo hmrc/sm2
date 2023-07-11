@@ -27,6 +27,10 @@ echo "Successfully installed!"
 
 sm2 --version
 
+echo "Running sm2 --update..."
+
+sm2 --update
+
 if [[ -z "${WORKSPACE}" ]]; then
     # shellcheck disable=SC2016
     echo 'Note: Your $WORKSPACE environment variable is not set. Instructions can be found in the user guide:'

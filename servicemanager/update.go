@@ -22,7 +22,7 @@ func update(workspaceInstallPath string) error {
 
 	if currentVersion == latestVersion {
 		// already on latest, short-circuit
-		fmt.Printf("Already up to date.")
+		fmt.Printf("Already up to date.\n")
 		return nil
 	}
 
