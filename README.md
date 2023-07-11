@@ -5,27 +5,34 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 ## Installing Service Manager
 
 ### Installing From Binary
+The simplest way to install sm2 is by utilising the `install.sh` script. Run the following in your terminal:
+```shell
+bash <(curl -fksSL https://raw.githubusercontent.com/hmrc/sm2/main/install.sh)
+```
+
+If you'd prefer to carry out these steps manually, then follow these steps:
+
 1. Run the following command in your terminal for your operating system/cpu:
 
 **Linux Intel**
-```base
+```shell
 curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.9/sm2-1.0.9-linux-intel.zip && unzip sm2-1.0.9-linux-intel.zip && rm sm2-1.0.9-linux-intel.zip && chmod +x sm2
 ```
 
 **Linux Arm64**
-```base
+```shell
 curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.9/sm2-1.0.9-linux-arm64.zip && unzip sm2-1.0.9-linux-arm64.zip && rm sm2-1.0.9-linux-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
-```base
+```shell
 curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.9/sm2-1.0.9-apple-arm64.zip && unzip sm2-1.0.9-apple-arm64.zip && rm sm2-1.0.9-apple-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (older Intel cpus)**
 
-```base
+```shell
 curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.9/sm2-1.0.9-apple-intel.zip && unzip sm2-1.0.9-apple-intel.zip && rm sm2-1.0.9-apple-intel.zip && chmod +x sm2
 ```
 

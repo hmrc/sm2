@@ -23,6 +23,12 @@ echo "Moving sm2 to /usr/local/bin..."
 
 sudo mv ~/sm2 /usr/local/bin/sm2
 
-echo "Successfully installed"
+echo "Successfully installed!"
 
 sm2 --version
+
+if [[ -z "${WORKSPACE}" ]]; then
+    # shellcheck disable=SC2016
+    echo 'Note: Your $WORKSPACE environment variable is not set. Instructions can be found in the user guide:'
+    echo 'https://github.com/hmrc/sm2/blob/main/USERGUIDE.md#setup'
+fi
