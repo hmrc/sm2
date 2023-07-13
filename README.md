@@ -324,7 +324,7 @@ Service-manager-config is expected to have the following structure:
 
 
 ## Building/Developing Service-Manager-2
-SM2 has no external dependencies other than go 1.16+. You can build it locally via:
+SM2 has no external dependencies other than go 1.20+. You can build it locally via:
 
 ```bash
 go build
