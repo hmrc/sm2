@@ -16,6 +16,7 @@ type UserOption struct {
 	CheckPorts           bool                // finds duplicate ports
 	Clean                bool                // used with --start to force re-downloading
 	CompWordCount        int                 // used with --autocomplete number of words in completion
+	CompPreviousWord     string              // used with --autocomplete previous of word in completion
 	Config               string              // uses a different service-manager-config folder
 	Debug                string              // debug info about a service, used to determine why it failed to start
 	Diagnostic           bool                // runs tests to determine if there are problems with the install
@@ -162,6 +163,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.AutoComplete, "autocomplete", false, "generates bash completions response (used by bash-completions)")
 	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
 	flagset.BoolVar(&opts.Clean, "clean", false, "forces reinstall of service (use with --start)")
+	flagset.StringVar(&opts.CompPreviousWord, "comp-pword", "", "used with --autocomplete by script generated using --generate-autocomplete")
 	flagset.IntVar(&opts.CompWordCount, "comp-cword", 1, "used with --autocomplete by script generated using --generate-autocomplete")
 	flagset.StringVar(&opts.Config, "config", "", "sets an alternate directory for service-manager-config")
 	flagset.StringVar(&opts.Debug, "debug", "", "infomation on why a given `service` may not have started")

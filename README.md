@@ -65,6 +65,21 @@ You can check everything is setup correctly by running:
 sm2 --diagnostic
 ```
 
+### Enabling tab completion
+Run the commands below which will copy a completion script into a file called `sm2.bash` in the directory 
+`~/.local/share/bash-completion/completions`, if the directory doesn't exist then it will create it.
+```shell
+mkdir -p ~/.local/share/bash-completion/completions
+sm2 --generate-autocomplete > ~/.local/share/bash-completion/completions/sm2.bash
+```
+If you are using zsh as your shell and not using Oh-My-Zsh then you may need to enable bash-completion support by adding the following to your `~/.zshrc` file
+```shell
+# Load bash completion functions
+autoload -Uz +X compinit && compinit
+autoload -Uz +X bashcompinit && bashcompinit
+```
+
+
 ### Upgrading Service Manager 2
 As of v1.0.9 `sm2` can update itself - simply run `sm2 -update`. You will need to ensure `sm2` is available on your `$PATH`.
 
