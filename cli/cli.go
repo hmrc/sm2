@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -158,7 +159,7 @@ func releaseIsValid(release string) bool {
 
 func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset := flag.NewFlagSet("servicemanager", flag.ExitOnError)
-
+	setUsage(flagset)
 	flagset.StringVar(&opts.appendArgs, "appendArgs", "", "A map of args to append for services you are starting. i.e. '{\"SERVICE_NAME\":[\"-DFoo=Bar\",\"SOMETHING\"],\"SERVICE_TWO\":[\"APPEND_THIS\"]}'")
 	flagset.BoolVar(&opts.AutoComplete, "autocomplete", false, "generates bash completions response (used by bash-completions)")
 	flagset.BoolVar(&opts.CheckPorts, "checkports", false, "finds services using the same port number")
@@ -199,4 +200,41 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.IntVar(&opts.DelaySeconds, "delay-seconds", 0, "how long to pause, in seconds, after starting a service before starting another")
 
 	return flagset
+}
+
+// Based on flag.DefaultUsage to use -- for long arguments
+func setUsage(f *flag.FlagSet) {
+	f.Usage = func() {
+		f.VisitAll(func(flag *flag.Flag) {
+			var s string
+			if len(flag.Name) == 1 {
+				s = fmt.Sprintf("  -%s", flag.Name)
+			} else {
+				s = fmt.Sprintf(" --%s", flag.Name)
+			}
+			usage := flag.Usage
+			flagType := strings.TrimSuffix(
+				strings.TrimPrefix(
+					reflect.TypeOf(flag.Value).String(),
+					"*flag."),
+				"Value")
+			if flagType == "bool" {
+				flagType = ""
+			}
+			if len(flagType) > 0 {
+				s += " " + flagType
+			}
+			// Boolean flags of one ASCII letter are so common we
+			// treat them specially, putting their usage on the same line.
+			if len(s) <= 4 { // space, space, '-', 'x'.
+				s += "\t"
+			} else {
+				// Four spaces before the tab triggers good alignment
+				// for both 4- and 8-space tab stops.
+				s += "\n    \t"
+			}
+			s += strings.ReplaceAll(usage, "\n", "\n    \t")
+			fmt.Fprint(f.Output(), s, "\n")
+		})
+	}
 }
