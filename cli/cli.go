@@ -172,7 +172,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.FormatPlain, "format-plain", false, "list services without formatting")
 	flagset.BoolVar(&opts.GenerateAutoComplete, "generate-autocomplete", false, "generates bash completions script")
 	flagset.BoolVar(&opts.Latest, "latest", false, "used in conjunction with -restart to check for latest version of service(s) being restarted")
-	flagset.BoolVar(&opts.List, "list", false, "lists all available services")
+	flagset.BoolVar(&opts.List, "list", false, "lists all available services and profiles")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
 	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
 	flagset.BoolVar(&opts.NoVpnCheck, "no-vpn-check", defaultVpnCheck(), "disables checking if the vpn is connected")
