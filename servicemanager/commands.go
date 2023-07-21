@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"sm2/cli"
 	"sm2/version"
 )
 
@@ -124,8 +123,10 @@ func (sm *ServiceManager) Run() {
 		}
 	} else if sm.Commands.Update {
 		err = update(sm.Config.TmpDir)
+	} else if sm.Commands.GenerateAutoComplete {
+		GenerateAutoCompletionScript()
 	} else if sm.Commands.AutoComplete {
-		cli.GenerateAutoCompletions()
+		fmt.Println(sm.GenerateAutocompleteResponse())
 	} else {
 		// show help if they're not using --update-config with another command
 		if !sm.Commands.UpdateConfig {
