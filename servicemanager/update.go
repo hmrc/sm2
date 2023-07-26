@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sm2/version"
 	"strings"
@@ -73,14 +75,13 @@ func getLatestVersion() (string, error) {
 }
 
 func getInstallLocation() (string, error) {
-	cmd := exec.Command("which", "sm2")
+	output, err := os.Executable()
 
-	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println("Unable to determine the location of the sm2 binary currently installed using `which sm2`. Please ensure sm2 is available on your $PATH.")
+		fmt.Println("Unable to determine the location of the sm2 binary currently installed.")
+		return "", err
 	}
-
-	return strings.TrimSpace(string(output)), err
+	return filepath.EvalSymlinks(output)
 }
 
 func downloadAndInstall(versionToInstall string, workspaceInstallPath string, installLocation string) error {
