@@ -25,14 +25,20 @@ sudo mv ~/sm2 /usr/local/bin/sm2
 
 echo "Successfully installed!"
 
+if [ -z "$WORKSPACE" ]; then
+  echo "Creating default workspace ~/.sm2"
+  cd && mkdir -p .sm2
+  if [ -z "$1" ]; then
+      CONFIG_REPO="git@github.com:hmrc/service-manager-config.git"
+  else
+      CONFIG_REPO="$1"
+  fi
+  echo "Cloning $CONFIG_REPO into ~/.sm2"
+  git clone "$CONFIG_REPO" ~/.sm2/service-manager-config
+fi
+
 sm2 --version
 
 echo "Running sm2 --update..."
 
 sm2 --update
-
-if [[ -z "${WORKSPACE}" ]]; then
-    # shellcheck disable=SC2016
-    echo 'Note: Your $WORKSPACE environment variable is not set. Instructions can be found in the user guide:'
-    echo 'https://github.com/hmrc/sm2/blob/main/USERGUIDE.md#setup'
-fi
