@@ -77,6 +77,7 @@ If you are using zsh as your shell and not using Oh-My-Zsh then you may need to 
 # Load bash completion functions
 autoload -Uz +X compinit && compinit
 autoload -Uz +X bashcompinit && bashcompinit
+source ~/.local/share/bash-completion/completions/sm2.bash
 ```
 
 
