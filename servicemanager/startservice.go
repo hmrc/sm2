@@ -331,12 +331,22 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 	taskQueue := make(chan ServiceAndVersion, len(services))
 
 	if len(services) == 1 {
-		sm.Commands.Workers = 1 // only need 1 worker if starting single service
-		fmt.Printf("Starting %d service on %d worker\n", len(services), sm.Commands.Workers)
-	} else if sm.Commands.Workers == 1 { // set explicitly with --workers 1
-		fmt.Printf("Starting %d services on %d worker\n", len(services), sm.Commands.Workers)
+		// only need 1 worker if starting single service
+		sm.Commands.Workers = 1
+		fmt.Println("Starting 1 service")
 	} else {
-		fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)
+		workerPlural := "workers"
+		delay := ""
+
+		if sm.Commands.Workers == 1 {
+			workerPlural = "worker"
+		}
+
+		if sm.Commands.DelaySeconds != 0 {
+			delay = fmt.Sprintf(", with a delay of %d seconds", sm.Commands.DelaySeconds)
+		}
+
+		fmt.Printf("Starting %d services on %d %s%s\n", len(services), sm.Commands.Workers, workerPlural, delay)
 	}
 
 	// start up a number of workers (controlled by --workers param)
