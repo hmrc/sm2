@@ -330,7 +330,14 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 	sm.progress.init(services)
 	taskQueue := make(chan ServiceAndVersion, len(services))
 
-	fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)
+	if len(services) == 1 {
+		sm.Commands.Workers = 1 // only need 1 worker if starting single service
+		fmt.Printf("Starting %d service on %d worker\n", len(services), sm.Commands.Workers)
+	} else if sm.Commands.Workers == 1 { // set explicitly with --workers 1
+		fmt.Printf("Starting %d services on %d worker\n", len(services), sm.Commands.Workers)
+	} else {
+		fmt.Printf("Starting %d services on %d workers\n", len(services), sm.Commands.Workers)
+	}
 
 	// start up a number of workers (controlled by --workers param)
 	wg := sync.WaitGroup{}
