@@ -153,12 +153,17 @@ func downloadAndInstall(versionToInstall string, workspaceInstallPath string, in
 		}
 	}
 
-	fmt.Printf("Moving new sm2 binary from %s to %s (you may be prompted for your password)...\n", downloadLocation, installLocation)
+	fmt.Printf("Moving new sm2 binary from %s to %s...\n", downloadLocation, installLocation)
 
-	cmd := exec.Command("sudo", "mv", downloadLocation, installLocation)
-	err = cmd.Run()
+	// attempt to move without sudo first
+	err = exec.Command("mv", downloadLocation, installLocation).Run()
 	if err != nil {
-		return err
+		fmt.Printf("Moving the new sm2 binary to %s requires `sudo` - you may be prompted for your password...\n", installLocation)
+		// failed so attempting with sudo
+		err = exec.Command("sudo", "mv", downloadLocation, installLocation).Run()
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Printf("Successfully installed v%s!\n", versionToInstall)
