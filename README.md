@@ -5,7 +5,12 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 ## Installing Service Manager
 
 ### Installing From Binary
-The simplest way to install sm2 is by utilising the `install.sh` script. Run the following in your terminal:
+The simplest way to install sm2 is by utilising the `install.sh` script.
+
+First, make sure you have configured your workspace by following the [setup](USERGUIDE.md#setup) guidance.
+
+Then, run the following command in your terminal:
+
 ```shell
 bash <(curl -fksSL https://raw.githubusercontent.com/hmrc/sm2/main/install.sh)
 ```

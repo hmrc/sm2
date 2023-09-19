@@ -5,16 +5,18 @@ It is intended to make local development and testing easier.
 
 ## Setup
 
-1. Create the workspace
+#### Create the workspace
 Create a workspace directory. Service manager will use this for storing its copy of service-manager-config as well as the services it will run.
+
 Once created, set the WORKSPACE environment variable to point to this folder:
 ```
 export WORKSPACE=/path/to/workspace
 ```
-Once working you should add this to your .bashrc and/or .profile so that it is always set.
+Once working you should add this to your shell configuration file (.bashrc or equivalent) so that it is always set.
 
-2. Get the config
+#### Get the config
 Service manager expects a copy of service-manager-config to be present in the WORKSPACE folder.
+
 Install it via git:
 ```
 git clone git@github.com:hmrc/service-manager-config.git $WORKSPACE/service-manager-config
