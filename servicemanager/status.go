@@ -33,7 +33,7 @@ type serviceStatus struct {
 func (sm *ServiceManager) PrintStatus() {
 	statuses := []serviceStatus{sm.CheckMongo()}
 	statuses = append(statuses, sm.findStatuses()...)
-	unmanaged := sm.findUnmanagedServices(statuses)
+	unmanaged := []serviceStatus{}
 	proxyState := sm.Ledger.LoadProxyState(sm.Config.TmpDir)
 
 	termWidth, _ := sm.Platform.GetTerminalSize()
@@ -43,6 +43,10 @@ func (sm *ServiceManager) PrintStatus() {
 			printProxyPlainText(proxyState, os.Stdout)
 		}
 	} else {
+		if !sm.Commands.NoPortCheck {
+			unmanaged = sm.findUnmanagedServices(statuses)
+		}
+
 		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
 		printTable(statuses, termWidth, longestServiceName, os.Stdout)
 		printHelpIfRequired(statuses, sm.Commands.DelaySeconds)
