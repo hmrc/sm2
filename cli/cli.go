@@ -29,6 +29,7 @@ type UserOption struct {
 	Latest               bool                // used in conjunction with --restart to check for latest version of service(s) being restarted
 	List                 bool                // lists all the services
 	Logs                 string              // prints the logs of a service, running or otherwise
+	NoPortCheck          bool                // stops the `lsof` port check
 	NoProgress           bool                // hides the animated download progress meter
 	NoVpnCheck           bool                // skips checking if vpn is connected before starting a service
 	Offline              bool                // prints downloaded services, used with --start bypasses download and uses local copy
@@ -175,6 +176,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Latest, "latest", false, "used in conjunction with -restart to check for latest version of service(s) being restarted")
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services and profiles")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")
+	flagset.BoolVar(&opts.NoPortCheck, "no-port-check", false, "prevents port collision detection (use with --status)")
 	flagset.BoolVar(&opts.NoProgress, "noprogress", false, "prevents download progress being shown (use with --start)")
 	flagset.BoolVar(&opts.NoVpnCheck, "no-vpn-check", defaultVpnCheck(), "disables checking if the vpn is connected")
 	flagset.BoolVar(&opts.Offline, "offline", false, "starts a service in offline mode (use with --start or standalone to list available services)")
