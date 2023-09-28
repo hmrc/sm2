@@ -336,7 +336,23 @@ Service-manager-config is expected to have the following structure:
 | services.json | Defines all the available services                         |
 | profiles.json | Defines groups of services that should be started together |
 
+### Setting Scala Version
+For Scala artifacts, the artifact name will include the Scala version:
 
+```json
+    "binary": {
+      "artifact": "example-service_2.12"
+    }
+```
+
+However, you may represent the Scala version with `_%%` instead. Then service-manager will use the latest artifact version it finds, regardless of Scala version. This should make it simpler to maintain:
+
+
+```json
+    "binary": {
+      "artifact": "example-service_%%"
+	}
+```
 
 
 ## Building/Developing Service-Manager-2
