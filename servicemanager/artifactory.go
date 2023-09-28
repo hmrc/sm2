@@ -26,9 +26,9 @@ type MavenMetadata struct {
 	Release  string `xml:"versioning>release"`
 }
 
-var scalaSuffix *regexp.Regexp = regexp.MustCompile(`_(2\.\d{2}|3)$`)
+var scalaSuffix *regexp.Regexp = regexp.MustCompile(`_(2\.\d{2}|3|%%)$`)
 
-var latestBuildsScalaVersion *regexp.Regexp = regexp.MustCompile(`_%%$`)
+var latestVersionScalaVersionSuffix *regexp.Regexp = regexp.MustCompile(`_%%$`)
 
 var userAgent = fmt.Sprintf("sm2/%s (%s %s)", version.Version, runtime.GOOS, runtime.GOARCH)
 
@@ -39,11 +39,11 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func convertVersionToComparableInt(v string) (int, error) {
-	parts := strings.Split(v, ".")
+func convertVersionToComparableInt(version string) (int, error) {
+	parts := strings.Split(version, ".")
 
 	if len(parts) != 3 {
-		return 0, fmt.Errorf("Invalid version format: %s", v)
+		return 0, fmt.Errorf("Invalid version format: %s", version)
 	}
 
 	part1, err := strconv.Atoi(parts[0])
@@ -70,22 +70,28 @@ const (
 	ScalaVersion_2_13 = "_2.13"
 	ScalaVersion_2_12 = "_2.12"
 	ScalaVersion_2_11 = "_2.11"
+	ScalaVersion_     = "_%%"
 )
 
-func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, scalaVersion string) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersion string) (MavenMetadata, error) {
+	scalaVersions := []string{ScalaVersion_3, ScalaVersion_2_13, ScalaVersion_2_12, ScalaVersion_2_11}
 
-	var result MavenMetadata
+	// honours supplied Scala version
+	if suppliedScalaVersion != "" {
+		artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, "_"+suppliedScalaVersion)
+		metadata, err := sm.getLatestVersion(s.GroupId, artifact)
 
-	versions := []string{ScalaVersion_3, ScalaVersion_2_13, ScalaVersion_2_12, ScalaVersion_2_11}
-	if scalaVersion != "" {
-		versions = []string{"_" + scalaVersion}
+		return metadata, err
 	}
 
-	if latestBuildsScalaVersion.MatchString(s.Artifact) {
-		var latestBuild int
+	// looks for _%% to always use latest version
+	if latestVersionScalaVersionSuffix.MatchString(s.Artifact) {
+		var result MavenMetadata
+		var latestVersion int
 
-		for _, v := range versions {
-			artifact := strings.Replace(s.Artifact, "_%%", v, 1)
+		for _, v := range scalaVersions {
+			// tries all Scala versions in descending order to find which artifact contains the latest version (assuming Scala 3 builds are always more recent than 2.13 etc.)
+			artifact := strings.Replace(s.Artifact, ScalaVersion_, v, 1)
 			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
 
 			if err != nil {
@@ -98,29 +104,22 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, scalaVersion string
 				return MavenMetadata{}, fmt.Errorf("invalid latest version number: %s", metadata.Latest)
 			}
 
-			if comparableVersion > latestBuild {
-				latestBuild = comparableVersion
+			if comparableVersion > latestVersion {
+				latestVersion = comparableVersion
 				result = metadata
 			}
+		}
 
-		}
-		if result.Latest != "" {
-			return result, nil
-		}
-	} else if scalaSuffix.MatchString(s.Artifact) {
-		for _, v := range versions {
-			artifact := scalaSuffix.ReplaceAllLiteralString(s.Artifact, v)
-			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
-
-			if err == nil {
-				return metadata, nil
-			}
-		}
-	} else {
-		return sm.getLatestVersion(s.GroupId, s.Artifact)
+		return result, nil
 	}
 
-	return MavenMetadata{}, fmt.Errorf("failed to find maven-metadata.xml for %s", s.Artifact)
+	// uses Scala version set in config and for non Scala services
+	metadata, err := sm.getLatestVersion(s.GroupId, s.Artifact)
+	if err != nil {
+		return metadata, fmt.Errorf("failed to find maven-metadata.xml for %s", s.Artifact)
+	}
+
+	return metadata, err
 }
 
 // Connects to artifactory and parses maven metadata to get the latest release
