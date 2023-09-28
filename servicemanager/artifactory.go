@@ -70,7 +70,7 @@ const (
 	ScalaVersion_2_13 = "_2.13"
 	ScalaVersion_2_12 = "_2.12"
 	ScalaVersion_2_11 = "_2.11"
-	ScalaVersion_     = "_%%"
+	ScalaVersion_Any  = "_%%"
 )
 
 func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersion string) (MavenMetadata, error) {
@@ -90,8 +90,8 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersio
 		var latestVersion int
 
 		for _, v := range scalaVersions {
-			// tries all Scala versions in descending order to find which artifact contains the latest version (assuming Scala 3 builds are always more recent than 2.13 etc.)
-			artifact := strings.Replace(s.Artifact, ScalaVersion_, v, 1)
+			// tries all Scala versions to find which artifact contains the latest version
+			artifact := strings.Replace(s.Artifact, ScalaVersion_Any, v, 1)
 			metadata, err := sm.getLatestVersion(s.GroupId, artifact)
 
 			if err != nil {
