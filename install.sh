@@ -36,8 +36,16 @@ download_sm2() {
     rm "${TEMPORARY_DIRECTORY}/sm2-${TARGET_VERSION}-${TARGET_OS}-${TARGET_ARCH}.zip" && \
     chmod +x "${TEMPORARY_DIRECTORY}/sm2"
 
-  echo "Moving sm2 to /usr/local/bin..."
-  sudo mv "${TEMPORARY_DIRECTORY}/sm2" /usr/local/bin/sm2
+  # If the user already has sm2 on their path, even in a non-standard location, then use this location.
+  if which sm2 >/dev/null 2>&1; then
+      SM2_BINARY_LOCATION="$(which sm2)"
+      echo "Found existing sm2 binary at ${SM2_BINARY_LOCATION}. Using existing location."
+  else
+      SM2_BINARY_LOCATION="/usr/local/bin/sm2"
+  fi
+
+  echo "Installing sm2 binary to ${SM2_BINARY_LOCATION}"
+  sudo mv "${TEMPORARY_DIRECTORY}/sm2" "${SM2_BINARY_LOCATION}"
   echo "Successfully installed!"
 
   rm -fr "${TEMPORARY_DIRECTORY}"
