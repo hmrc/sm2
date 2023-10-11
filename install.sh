@@ -4,7 +4,7 @@ IFS=$'\n\t'
 
 TARGET_OS="linux"
 TARGET_ARCH="intel"
-TARGET_VERSION="1.0.9"
+TARGET_VERSION="1.0.11"
 
 if [[ "$(uname)" == "Darwin" ]]; then
     TARGET_OS="apple"
@@ -103,6 +103,6 @@ download_sm2
 create_workspace_folder
 clone_service_manager_config "${@}"
 
-echo "Running sm2 --update..."
+echo "Running sm2 --diagnostic"
 
-sm2 --update
+sm2 --diagnostic
