@@ -12,6 +12,15 @@ if [[ "$(uname -p)" == "arm" ]]; then
     TARGET_ARCH="arm64"
 fi
 
+validate_args() {
+  if [[ -z "${1}" ]]; then
+      echo "Error: sm2-configuration-repository-specification parameter not provided."
+      echo
+      usage
+      exit 1
+  fi
+}
+
 download_sm2() {
   # https://unix.stackexchange.com/a/84980
   TEMPORARY_DIRECTORY=$(mktemp -d 2>/dev/null || mktemp -d -t 'sm2')
@@ -42,11 +51,7 @@ create_workspace_folder() {
 }
 
 clone_service_manager_config() {
-  if [[ -z "$1" ]]; then
-      CONFIG_REPO="git@github.com:hmrc/service-manager-config.git"
-  else
-      CONFIG_REPO="$1"
-  fi
+  CONFIG_REPO="${1}"
 
   CONFIG_FOLDER="${WORKSPACE_FOLDER}/service-manager-config"
   if [[ ! -d "${CONFIG_FOLDER}" ]]; then
@@ -61,7 +66,26 @@ clone_service_manager_config() {
   fi
 }
 
+usage() {
+  cat << EOF
+  NAME
+    sm2 installer
+
+  USAGE
+    install.sh [sm2-configuration-repository-specification]
+
+    Example:
+    install.sh "git@github.com:myorg/sm2-config.git"
+
+  PURPOSE
+    Installs Service Manager 2 (sm2).
+    Obtains the necessary SM2 configuration as indicated by [sm2-configuration-repository-specification].
+    Runs SM2 diagnostic utility, to verify correctness of sm2 installation.
+EOF
+}
+
 # Main
+validate_args "${@}"
 download_sm2
 create_workspace_folder
 clone_service_manager_config "${@}"
