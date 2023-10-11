@@ -1,4 +1,6 @@
 #!/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
 
 TARGET_OS="linux"
 TARGET_ARCH="intel"
