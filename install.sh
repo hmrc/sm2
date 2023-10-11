@@ -17,7 +17,10 @@ download_sm2() {
   TEMPORARY_DIRECTORY=$(mktemp -d 2>/dev/null || mktemp -d -t 'sm2')
   echo "Downloading sm2 v${TARGET_VERSION}..."
 
-  curl -s -L -O "https://github.com/hmrc/sm2/releases/download/v${TARGET_VERSION}/sm2-${TARGET_VERSION}-${TARGET_OS}-${TARGET_ARCH}.zip" --output-dir "${TEMPORARY_DIRECTORY}" && \
+  # shellcheck disable=SC2164
+  cd "${TEMPORARY_DIRECTORY}" && \
+    curl -s -L -O "https://github.com/hmrc/sm2/releases/download/v${TARGET_VERSION}/sm2-${TARGET_VERSION}-${TARGET_OS}-${TARGET_ARCH}.zip" && \
+    cd - && \
     unzip "${TEMPORARY_DIRECTORY}/sm2-${TARGET_VERSION}-${TARGET_OS}-${TARGET_ARCH}.zip" -d "${TEMPORARY_DIRECTORY}" && \
     rm "${TEMPORARY_DIRECTORY}/sm2-${TARGET_VERSION}-${TARGET_OS}-${TARGET_ARCH}.zip" && \
     chmod +x "${TEMPORARY_DIRECTORY}/sm2"
