@@ -307,7 +307,9 @@ func (sm *ServiceManager) startServiceWorker(tasks chan ServiceAndVersion, wg *s
 		}
 
 		if err != nil {
-			sm.progress.update(task.service, 100, "Failed")
+			if err.Error() != "Already running" {
+				sm.progress.update(task.service, 100, "Failed")
+			}
 			sm.progress.error(task.service, err)
 		} else {
 			sm.progress.update(task.service, 100, "Done")
