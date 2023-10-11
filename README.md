@@ -4,11 +4,23 @@ It's based on the the original [service-manager](https://github.com/hmrc/service
 
 ## Installing Service Manager
 
-### Installing From Binary
-The simplest way to install sm2 is by utilising the `install.sh` script. Run the following in your terminal:
+### Pre-requisites
+
+`sm2` expects a folder called `service-manager-config` to be present in the workspace (default `$HOME/.sm2/`).
+
+You can find out more [here](example/service-manager-config)
+
+### Installing using `install.sh`
+
+`install.sh` expects an argument that points to the git repository for your `service-manager-config`
+
+Replacing the placeholder git repository with your actual one, run the following in your terminal:
+
 ```shell
-bash <(curl -fksSL https://raw.githubusercontent.com/hmrc/sm2/main/install.sh)
+curl -fksSL https://raw.githubusercontent.com/hmrc/sm2/main/install.sh | bash -s -- "git@github.com:placeholderOrg/placeholderRepo.git"
 ```
+
+### Installing From Binary
 
 If you'd prefer to carry out these steps manually, then follow these steps:
 
