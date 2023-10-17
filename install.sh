@@ -42,6 +42,9 @@ download_sm2() {
       echo "Found existing sm2 binary at ${SM2_BINARY_LOCATION}. Using existing location."
   else
       SM2_BINARY_LOCATION="/usr/local/bin/sm2"
+      if [ ! -d "/usr/local/bin" ]; then
+          sudo mkdir -p /usr/local/bin
+      fi
   fi
 
   echo "Installing sm2 binary to ${SM2_BINARY_LOCATION}"
