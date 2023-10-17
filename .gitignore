@@ -31,3 +31,4 @@ auto-save-list
 .\#*
 result
 .vscode/
+.DS_Store

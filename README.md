@@ -28,24 +28,24 @@ If you'd prefer to carry out these steps manually, then follow these steps:
 
 **Linux Intel**
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.11/sm2-1.0.11-linux-intel.zip && unzip sm2-1.0.11-linux-intel.zip && rm sm2-1.0.11-linux-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.12/sm2-1.0.12-linux-intel.zip && unzip sm2-1.0.12-linux-intel.zip && rm sm2-1.0.12-linux-intel.zip && chmod +x sm2
 ```
 
 **Linux Arm64**
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.11/sm2-1.0.11-linux-arm64.zip && unzip sm2-1.0.11-linux-arm64.zip && rm sm2-1.0.11-linux-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.12/sm2-1.0.12-linux-arm64.zip && unzip sm2-1.0.12-linux-arm64.zip && rm sm2-1.0.12-linux-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.11/sm2-1.0.11-apple-arm64.zip && unzip sm2-1.0.11-apple-arm64.zip && rm sm2-1.0.11-apple-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.12/sm2-1.0.12-apple-arm64.zip && unzip sm2-1.0.12-apple-arm64.zip && rm sm2-1.0.12-apple-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (older Intel cpus)**
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.11/sm2-1.0.11-apple-intel.zip && unzip sm2-1.0.11-apple-intel.zip && rm sm2-1.0.11-apple-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v1.0.12/sm2-1.0.12-apple-intel.zip && unzip sm2-1.0.12-apple-intel.zip && rm sm2-1.0.12-apple-intel.zip && chmod +x sm2
 ```
 
 If everything has worked you should have an executable called `sm2`.
@@ -94,7 +94,7 @@ source ~/.local/share/bash-completion/completions/sm2.bash
 
 
 ### Upgrading Service Manager 2
-As of v1.0.11 `sm2` can update itself - simply run `sm2 -update`. You will need to ensure `sm2` is available on your `$PATH`.
+As of v1.0.9 `sm2` can update itself - simply run `sm2 -update`. You will need to ensure `sm2` is available on your `$PATH`.
 
 Alternatively, upgrades are a simple matter of downloading the latest version of sm2 and overwriting the `sm2` binary with the new one.
 
@@ -238,7 +238,7 @@ Sometimes a service will fail to start up. To help determine why, service manage
 Before doing anything else, it’s worth running service-manager’s self-checks to ensure it is installed correctly.
 ```shell
 $ sm2 -diagnostic
-version: 1.0.11
+version: 1.0.12
   build: ef49b60
 OS:		 OK (linux, amd64)
 JAVA:		 OK (11.0.17)
