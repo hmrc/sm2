@@ -227,18 +227,27 @@ func findHealthcheckUrl(service Service, port int) string {
 	return defaultHealthcheckUrl(port)
 }
 
-func whatVersionToRun(service Service, serviceAndVersion ServiceAndVersion, offline bool, getLatest func(ServiceBinary, string) (MavenMetadata, error)) (string, string, string, error) {
+func whatVersionToRun(service Service, serviceAndVersion ServiceAndVersion, offline bool, getLatest func(ServiceBinary, string, string) (MavenMetadata, error)) (string, string, string, error) {
 	versionToInstall := serviceAndVersion.version
 	group := service.Binary.GroupId
 	artifact := service.Binary.Artifact
 
-	// override scala version if required
+	// override scala version if provided e.g. sm2 --start MY_SERVICE_2.13
 	if serviceAndVersion.scalaVersion != "" {
 		artifact = scalaSuffix.ReplaceAllLiteralString(artifact, "_"+serviceAndVersion.scalaVersion)
 	}
 
+	// find the scala version if reliant on _%% but requesting specific service version e.g. sm2 --start MY_SERVICE -r 1.0.0 OR sm2 --start MY_SERVICE:1.0.0
+	if serviceAndVersion.version != "" && strings.HasSuffix(artifact, "_%%") && !offline {
+		metadata, err := getLatest(service.Binary, serviceAndVersion.scalaVersion, versionToInstall)
+		if err != nil {
+			return "", "", "", err
+		}
+		artifact = metadata.Artifact
+	}
+
 	if versionToInstall == "" && !offline {
-		metadata, err := getLatest(service.Binary, serviceAndVersion.scalaVersion)
+		metadata, err := getLatest(service.Binary, serviceAndVersion.scalaVersion, versionToInstall)
 		if err != nil {
 			return "", "", "", err
 		}

@@ -20,10 +20,21 @@ import (
 )
 
 type MavenMetadata struct {
-	Artifact string `xml:"artifactId"`
-	Group    string `xml:"groupId"`
-	Latest   string `xml:"versioning>latest"`
-	Release  string `xml:"versioning>release"`
+	Artifact string   `xml:"artifactId"`
+	Group    string   `xml:"groupId"`
+	Latest   string   `xml:"versioning>latest"`
+	Release  string   `xml:"versioning>release"`
+	Versions []string `xml:"versioning>versions>version"`
+}
+
+// checks if a given version is in the MavenMetadata versions.
+func (m MavenMetadata) ContainsVersion(version string) bool {
+	for _, v := range m.Versions {
+		if v == version {
+			return true
+		}
+	}
+	return false
 }
 
 var scalaSuffix *regexp.Regexp = regexp.MustCompile(`_(2\.\d{2}|3|%%)$`)
@@ -73,7 +84,7 @@ const (
 	ScalaVersion_Any  = "_%%"
 )
 
-func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersion string) (MavenMetadata, error) {
+func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersion string, suppliedServiceVersion string) (MavenMetadata, error) {
 	scalaVersions := []string{ScalaVersion_3, ScalaVersion_2_13, ScalaVersion_2_12, ScalaVersion_2_11}
 
 	// honours supplied Scala version
@@ -96,6 +107,10 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersio
 
 			if err != nil {
 				continue
+			}
+
+			if suppliedServiceVersion != "" && metadata.ContainsVersion(suppliedServiceVersion) {
+				return metadata, nil
 			}
 
 			comparableVersion, err := convertVersionToComparableInt(metadata.Latest)

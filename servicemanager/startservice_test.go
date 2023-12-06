@@ -141,7 +141,7 @@ func TestWhatVersionToRun(t *testing.T) {
 		Latest:   "2.0.0",
 		Release:  "2.0.0",
 	}
-	latestFunc := func(b ServiceBinary, s string) (MavenMetadata, error) {
+	latestFunc := func(b ServiceBinary, s string, v string) (MavenMetadata, error) {
 		return latest, nil
 	}
 	caseServiceOnly := ServiceAndVersion{"FOO", "", ""}
