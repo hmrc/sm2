@@ -279,6 +279,19 @@ func (sm *ServiceManager) generateArgs(service Service, version string, serviceD
 	return args
 }
 
+// builds an array of arguments from service config and user supplied args
+func (sm *ServiceManager) generateArgsWithoutSmArgs(service Service, serviceArgs []string) []string {
+
+	args := serviceArgs
+
+	// add user supplied args
+	if userArgs, ok := sm.Commands.ExtraArgs[service.Id]; ok {
+		args = append(args, userArgs...)
+	}
+
+	return args
+}
+
 // killing a process doesn't cleanup the RUNNING_PID preventing it being rerun
 func removeRunningPid(serviceDir string) {
 	pidPath := path.Join(serviceDir, "RUNNING_PID")

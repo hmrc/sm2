@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"sm2/version"
+	"strings"
 )
 
 type ServiceAndVersion struct {
@@ -125,6 +126,33 @@ func (sm *ServiceManager) Run() {
 		err = update(sm.Config.TmpDir)
 	} else if sm.Commands.GenerateAutoComplete {
 		GenerateAutoCompletionScript()
+	} else if sm.Commands.GenerateSbtRunCmd {
+		output := []string{}
+		services := sm.requestedServicesAndProfiles()
+		for _, s := range services {
+			serviceName := s.service
+			if service, ok := sm.Services[serviceName]; ok {
+				port := sm.findPort(service)
+				var runCmd string
+				if sm.Commands.FromSource {
+					runCmd = fmt.Sprintf("sbt -mem 2048 run -Dhttp.port=%d %s",
+						port,
+						strings.Join(sm.generateArgsWithoutSmArgs(service, append(service.Binary.Cmd[1:], service.Source.ExtraParams...)), " "))
+				} else {
+					runCmd = fmt.Sprintf("sbt run -Dhttp.port=%d %s",
+						port,
+						strings.Join(sm.generateArgsWithoutSmArgs(service, service.Binary.Cmd[1:]), " "))
+				}
+				output = append(output, fmt.Sprintf("%s\n%s", serviceName, runCmd))
+			}
+		}
+
+		// print out just the sbt run command if there's only a single service specified
+		if len(output) == 1 {
+			fmt.Println(strings.Split(output[0], "\n")[1])
+		} else {
+			fmt.Println(strings.Join(output, "\n\n"))
+		}
 	} else if sm.Commands.AutoComplete {
 		fmt.Println(sm.GenerateAutocompleteResponse())
 	} else {

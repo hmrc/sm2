@@ -102,6 +102,37 @@ func TestGenerateArgs(t *testing.T) {
 	}
 }
 
+func TestGenerateArgsWithoutSmArgs(t *testing.T) {
+	sm := ServiceManager{}
+	sm.Commands.Port = 6666
+	sm.Commands.ExtraArgs = map[string][]string{
+		"FOO": {"-user1", "-user2"},
+	}
+
+	foo := Service{
+		Id:          "FOO",
+		DefaultPort: 9999,
+		Binary: ServiceBinary{
+			Cmd: []string{"./bin/foo", "-cmd1", "-cmd2"},
+		},
+	}
+
+	expectedArgs := []string{
+		"-cmd1",
+		"-cmd2",
+		"-user1",
+		"-user2",
+	}
+	args := sm.generateArgsWithoutSmArgs(foo, foo.Binary.Cmd[1:])
+
+	for i, arg := range args {
+		if expectedArgs[i] != arg {
+			t.Errorf("arg %s != %s", arg, expectedArgs[i])
+			return
+		}
+	}
+}
+
 func TestFindPort(t *testing.T) {
 	sm := ServiceManager{}
 	foo := Service{

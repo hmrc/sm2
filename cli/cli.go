@@ -26,6 +26,7 @@ type UserOption struct {
 	FromSource           bool                // used with --start to run from source rather than bin
 	FormatPlain          bool                // flag for setting enabling machine friendly/undecorated output
 	GenerateAutoComplete bool                // generates an autocomplete script
+	GenerateSbtRunCmd    bool                // generates a sbt run command for each specified service
 	Latest               bool                // used in conjunction with --restart to check for latest version of service(s) being restarted
 	List                 bool                // lists all the services
 	Logs                 string              // prints the logs of a service, running or otherwise
@@ -173,6 +174,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.FromSource, "src", false, "run service from source (use with --start)")
 	flagset.BoolVar(&opts.FormatPlain, "format-plain", false, "list services without formatting")
 	flagset.BoolVar(&opts.GenerateAutoComplete, "generate-autocomplete", false, "generates bash completions script")
+	flagset.BoolVar(&opts.GenerateSbtRunCmd, "generate-sbt-run-cmd", false, "generates sbt run command for each specified service")
 	flagset.BoolVar(&opts.Latest, "latest", false, "used in conjunction with -restart to check for latest version of service(s) being restarted")
 	flagset.BoolVar(&opts.List, "list", false, "lists all available services and profiles")
 	flagset.StringVar(&opts.Logs, "logs", "", "shows the stdout logs for a service")

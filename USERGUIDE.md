@@ -87,6 +87,29 @@ The `--status` command (`-s` for short) shows the status of all services that ar
 +------------------------------------+-----------+---------+-------+--------+
 ```
 
+## Generate a sbt run command
+The ```--generate-sbt-run-cmd``` command can be used to generate a `sbt run` command with the arguments used when service manager starts a service.
+
+This is useful when you're checking out branches and want to run a service the way service manager would run the service.
+
+Multiple profiles and service names can be supplied. It also supports reading in extra arguments via the `--appendArgs` flag.
+
+The `--src` argument can be specified to read additional arguments from the `sources.extra_params` config in `service-manager-config`.
+```
+sm2 --generate-sbt-run-cmd PROFILE
+SERVICE_1
+sbt run -Dconfig.resource=application.conf -Dplay.akka.http.server.request-timeout=60s -J-Xmx256m -J-Xms64m
+
+SERVICE_2
+sbt run -Dconfig.resource=application.conf -Dapplication.router=testOnlyDoNotUseInAppConf.Routes -Dmongodb.uri=mongodb://localhost:27017/SERVICE_2 -Drun.mode=Dev
+
+SERVICE_3
+sbt run -Dconfig.resource=application.conf -Drun.mode=Dev
+
+sm2 --generate-sbt-run-cmd SERVICE_4 --src
+sbt -mem 2048 run -Dhttp.port=8080
+```
+
 ## Debugging a failed service
 A more details breakdown of the state of a given service can be found using:
 ```
