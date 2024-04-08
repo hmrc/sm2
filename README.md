@@ -160,7 +160,7 @@ When starting more than one service, the `-r` flag only applies to the first ser
 | -noprogress    | Disabled the progress bars. Useful for scripting and automation.
 | -src           | Runs the service(s) from source instead of downloading the binary artifacts. Service manager will attempt to clone the repository and start the service using sbt start. Assumes the system has git configured and a working sbt installation.
 | -update-config | Updates workspace copy of service-manager from git. Will fail if there are uncommitted changes or if the config repo is not on the main branch.
-| -wait 120      | Waits a given number of seconds for the service to start before exiting.
+| -wait 120      | Waits a given number of seconds (default 30) for the service to respond to a healthcheck after startup.
 | -workers 4     | Sets the number of concurrent downloads (default 2). Can also be set via SM_WORKERS environment variable.
 
 ### Stopping services (-stop)
