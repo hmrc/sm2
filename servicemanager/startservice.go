@@ -97,10 +97,6 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 		return err
 	}
 	err = sm.pauseTillHealthy(healthcheckUrl)
-
-	if sm.Commands.DelaySeconds > 0 {
-		time.Sleep(time.Duration(sm.Commands.DelaySeconds) * time.Second)
-	}
 	return err
 }
 
@@ -113,7 +109,7 @@ func (sm *ServiceManager) pauseTillHealthy(healthcheckUrl string) error {
 		count++
 		time.Sleep(500 * time.Millisecond)
 	}
-	return fmt.Errorf("health check unsuccessful after %d seconds", sm.Commands.DelaySeconds)
+	return fmt.Errorf("health check unsuccessful after %d seconds", sm.Commands.Wait)
 }
 
 func (sm *ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {
@@ -357,17 +353,13 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 		fmt.Println("Starting 1 service")
 	} else {
 		workerPlural := "workers"
-		delay := ""
 
 		if sm.Commands.Workers == 1 {
 			workerPlural = "worker"
 		}
 
-		if sm.Commands.DelaySeconds != 0 {
-			delay = fmt.Sprintf(", with a delay of %d seconds", sm.Commands.DelaySeconds)
-		}
 
-		fmt.Printf("Starting %d services on %d %s%s\n", len(services), sm.Commands.Workers, workerPlural, delay)
+		fmt.Printf("Starting %d services on %d %s\n", len(services), sm.Commands.Workers, workerPlural)
 	}
 
 	// start up a number of workers (controlled by --workers param)

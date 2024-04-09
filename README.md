@@ -28,24 +28,24 @@ If you'd prefer to carry out these steps manually, then follow these steps:
 
 **Linux Intel**
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.2.0/sm2-1.2.0-linux-intel.zip && unzip sm2-1.2.0-linux-intel.zip && rm sm2-1.2.0-linux-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.0.0/sm2-2.0.0-linux-intel.zip && unzip sm2-2.0.0-linux-intel.zip && rm sm2-2.0.0-linux-intel.zip && chmod +x sm2
 ```
 
 **Linux Arm64**
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.2.0/sm2-1.2.0-linux-arm64.zip && unzip sm2-1.2.0-linux-arm64.zip && rm sm2-1.2.0-linux-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.0.0/sm2-2.0.0-linux-arm64.zip && unzip sm2-2.0.0-linux-arm64.zip && rm sm2-2.0.0-linux-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (latest M1/M2 cpus)**
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.2.0/sm2-1.2.0-apple-arm64.zip && unzip sm2-1.2.0-apple-arm64.zip && rm sm2-1.2.0-apple-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.0.0/sm2-2.0.0-apple-arm64.zip && unzip sm2-2.0.0-apple-arm64.zip && rm sm2-2.0.0-apple-arm64.zip && chmod +x sm2
 ```
 
 **OSX/Apple (older Intel cpus)**
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v1.2.0/sm2-1.2.0-apple-intel.zip && unzip sm2-1.2.0-apple-intel.zip && rm sm2-1.2.0-apple-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.0.0/sm2-2.0.0-apple-intel.zip && unzip sm2-2.0.0-apple-intel.zip && rm sm2-2.0.0-apple-intel.zip && chmod +x sm2
 ```
 
 If everything has worked you should have an executable called `sm2`.
@@ -129,14 +129,6 @@ Alternatively you can start more than one service at once by typing multiple ser
 ```shell
 $ sm2 -start SERVICE_ONE SERVICE_TWO
 ```
-
-#### Starting a large group of services
-Starting a large group of services can overload the cpu of a machine and lead to services failing to start.
-If this happens use the following command to start the services at a slower pace.
-```shell
-$ sm2 --start LARGE_PROFILE_NAME --workers 1 --delay-seconds 5
-```
-The workers argument starts one service at a time and the DelaySeconds argument adds a 5 second delay inbetween services.
 
 ### Starting specific versions
 If you need to run a specific version of a service you can do so by adding a colon followed by the version number to the service name, e.g.
@@ -238,7 +230,7 @@ Sometimes a service will fail to start up. To help determine why, service manage
 Before doing anything else, it’s worth running service-manager’s self-checks to ensure it is installed correctly.
 ```shell
 $ sm2 -diagnostic
-version: 1.2.0
+version: 2.0.0
   build: ef49b60
 OS:		 OK (linux, amd64)
 JAVA:		 OK (11.0.17)
