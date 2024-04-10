@@ -77,8 +77,7 @@ func dontComplete(previousWord string) bool {
 		"-ports",
 		"-search",
 		"-wait",
-		"-workers",
-		"-delay-seconds":
+		"-workers":
 		return true
 	}
 	return false

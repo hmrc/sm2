@@ -42,7 +42,7 @@ sm2 --start SERVICE_ONE SERVICE_TWO SERVICE_THREE
 | `--noprogress`    | Supresses the progress bars when downloading the service. Suitable for scripts etc.                                  |
 | `--offline`       | Starts services that are already without attempting to download the latest version                                   |
 | `--clean`         | Removes existing install, forcing a re-download                                                                      |
-| `--wait 20`       | Waits a specified number of seconds for all services to reach a healthy state                                        |
+| `--wait 20`       | Waits a specified number of seconds (default 30) for each service to reach a healthy state                                        |
 | `--appendArgs`    | A json map of extra args for services being started: `{"SERVICE_NAME":["-DFoo=Bar","SOMETHING"]}`                    |
 | `--workers 4`     | The number of services to download/start at the same time (default 2)                                                |
 | `--reverse-proxy` | Starts a reverse proxy                                                                                               |

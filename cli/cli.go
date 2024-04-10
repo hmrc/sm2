@@ -50,9 +50,8 @@ type UserOption struct {
 	Verbose              bool                // shows extra logging
 	Version              bool                // prints sm2 version number
 	Verify               bool                // checks if a given service or profile is running
-	Wait                 int                 // waits given number of secs after starting services for then to respond to pings
+	Wait                 int                 // waits a given number of secs (default 30) after starting a service for it to respond to healthcheck
 	Workers              int                 // sets the number of concurrent downloads/service starts
-	DelaySeconds         int                 // sets the pause in seconds between starting services
 }
 
 func Parse(args []string) (*UserOption, error) {
@@ -197,9 +196,8 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Verbose, "v", false, "enable verbose output")
 	flagset.BoolVar(&opts.Version, "version", false, "show the version of service-manager")
 	flagset.BoolVar(&opts.Verify, "verify", false, "for scripts, checks if a service/profile is running")
-	flagset.IntVar(&opts.Wait, "wait", 0, "used with --start, waits a specified number of seconds for the services to become available before exiting (use with --start)")
+	flagset.IntVar(&opts.Wait, "wait", 30, "used with --start, waits a specified number of seconds for each service to respond to a healthcheck, defaults to 30")
 	flagset.IntVar(&opts.Workers, "workers", defaultWorkers(), "how many services should be downloaded at the same time (use with --start)")
-	flagset.IntVar(&opts.DelaySeconds, "delay-seconds", 0, "how long to pause, in seconds, after starting a service before starting another")
 
 	return flagset
 }

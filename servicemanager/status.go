@@ -49,7 +49,7 @@ func (sm *ServiceManager) PrintStatus() {
 
 		longestServiceName := getLongestServiceName(append(statuses, unmanaged...))
 		printTable(statuses, termWidth, longestServiceName, os.Stdout)
-		printHelpIfRequired(statuses, sm.Commands.DelaySeconds)
+		printHelpIfRequired(statuses)
 
 		if len(unmanaged) > 0 {
 			fmt.Print("\n\033[34mAlso, the following processes are running which occupy ports of services\n")
@@ -332,7 +332,7 @@ func printUnmanagedTable(statuses []serviceStatus, maxWidth int, longestServiceN
 	fmt.Fprint(out, border)
 }
 
-func printHelpIfRequired(statuses []serviceStatus, delay int) {
+func printHelpIfRequired(statuses []serviceStatus) {
 	for _, status := range statuses {
 		if status.health == FAIL && status.service != "MONGO" {
 			fmt.Print("\n\033[1;31mOne or more services have failed to start.\033[0m\n")
@@ -341,14 +341,6 @@ func printHelpIfRequired(statuses []serviceStatus, delay int) {
 			fmt.Print("  sm2 -debug SERVICE_NAME\n\n")
 			fmt.Print("Alternatively, you can remove them from this list by using:\n")
 			fmt.Print("  sm2 -prune\n\n")
-
-			if delay == 0 && len(statuses) >= 10 { // not already using --delay-seconds
-				fmt.Println("Note: If you're starting a profile that contains a lot of services,")
-				fmt.Println("try using `--delay-seconds 5` to add a 5 second delay after starting")
-				fmt.Println("each service. This will help prevent your CPU getting overloaded,")
-				fmt.Println("which can cause the services to take too long to respond to the healthcheck.")
-				fmt.Println("See `sm2 --help` for more information.")
-			}
 
 			return
 		}

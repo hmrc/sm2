@@ -92,18 +92,24 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 	state.HealthcheckUrl = healthcheckUrl
 	// and finally, we record out success
 	err = sm.Ledger.SaveStateFile(installDir, state)
-	sm.pauseTillHealthy(healthcheckUrl)
+	if err != nil {
+		sm.progress.update(serviceAndVersion.service, 0, "Failed")
+		return err
+	}
+	err = sm.pauseTillHealthy(healthcheckUrl)
 	return err
 }
 
-func (sm *ServiceManager) pauseTillHealthy(healthcheckUrl string) {
-	if sm.Commands.DelaySeconds > 0 {
-		count := 0
-		for count < sm.Commands.DelaySeconds*2 && !sm.CheckHealth(healthcheckUrl) {
-			count++
-			time.Sleep(500 * time.Millisecond)
+func (sm *ServiceManager) pauseTillHealthy(healthcheckUrl string) error {
+	count := 0
+	for count < sm.Commands.Wait*2 {
+		if sm.CheckHealth(healthcheckUrl) {
+			return nil
 		}
+		count++
+		time.Sleep(500 * time.Millisecond)
 	}
+	return fmt.Errorf("health check unsuccessful after %d seconds", sm.Commands.Wait)
 }
 
 func (sm *ServiceManager) installService(installDir string, serviceId string, group string, artifact string, version string) (ledger.InstallFile, error) {
@@ -347,17 +353,13 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 		fmt.Println("Starting 1 service")
 	} else {
 		workerPlural := "workers"
-		delay := ""
 
 		if sm.Commands.Workers == 1 {
 			workerPlural = "worker"
 		}
 
-		if sm.Commands.DelaySeconds != 0 {
-			delay = fmt.Sprintf(", with a delay of %d seconds", sm.Commands.DelaySeconds)
-		}
 
-		fmt.Printf("Starting %d services on %d %s%s\n", len(services), sm.Commands.Workers, workerPlural, delay)
+		fmt.Printf("Starting %d services on %d %s\n", len(services), sm.Commands.Workers, workerPlural)
 	}
 
 	// start up a number of workers (controlled by --workers param)
@@ -376,13 +378,8 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 	// this could be way better, wait groups, or force a final paint or something??
 	time.Sleep(time.Millisecond)
 
-	if sm.Commands.Wait > 0 {
-		fmt.Printf("Waiting %d secs for all services to start.", sm.Commands.Wait)
-		sm.Await(services, sm.Commands.Wait)
-	}
-
 	// if anything has failed to start, report why
-	if len(sm.progress.errors) > 0 && !sm.progress.noProgress {
+	if len(sm.progress.errors) > 0 {
 		fmt.Println("\n\033[1;31mSome services failed to start:\033[0m")
 		for k, v := range sm.progress.errors {
 			fmt.Printf("  %s: %s\n", k, v.Error())
