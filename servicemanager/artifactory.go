@@ -50,30 +50,29 @@ func ParseMetadataXml(r io.Reader) (MavenMetadata, error) {
 	return metadata, err
 }
 
-func convertVersionToComparableInt(version string) (int, error) {
+func convertVersionToComparableInts(version string) (int, int, int, error) {
 	parts := strings.Split(version, ".")
 
 	if len(parts) != 3 {
-		return 0, fmt.Errorf("Invalid version format: %s", version)
+		return 0, 0, 0, fmt.Errorf("Invalid version format: %s", version)
 	}
 
 	part1, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	part2, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
 	part3, err := strconv.Atoi(parts[2])
 	if err != nil {
-		return 0, err
+		return 0, 0, 0, err
 	}
 
-	comparableVersion := (part1 * 1000000) + (part2 * 1000) + part3
-	return comparableVersion, nil
+	return part1, part2, part3, nil
 }
 
 const (
@@ -98,7 +97,7 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersio
 	// looks for _%% to always use latest version
 	if latestVersionScalaVersionSuffix.MatchString(s.Artifact) {
 		var result MavenMetadata
-		var latestVersion int
+		var thatMajor, thatMinor, thatPatch int
 
 		for _, v := range scalaVersions {
 			// tries all Scala versions to find which artifact contains the latest version
@@ -113,14 +112,18 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersio
 				return metadata, nil
 			}
 
-			comparableVersion, err := convertVersionToComparableInt(metadata.Latest)
+			thisMajor, thisMinor, thisPatch, err := convertVersionToComparableInts(metadata.Latest)
 
 			if err != nil {
 				return MavenMetadata{}, fmt.Errorf("invalid latest version number: %s", metadata.Latest)
 			}
 
-			if comparableVersion > latestVersion {
-				latestVersion = comparableVersion
+			if (thisMajor > thatMajor) ||
+				(thisMajor == thatMajor && thisMinor > thatMinor) ||
+				(thisMajor == thatMajor && thisMinor == thatMinor && thisPatch > thatPatch) {
+				thatMajor = thisMajor
+				thatMinor = thisMinor
+				thatPatch = thisPatch
 				result = metadata
 			}
 		}
@@ -139,7 +142,6 @@ func (sm *ServiceManager) GetLatestVersions(s ServiceBinary, suppliedScalaVersio
 
 // Connects to artifactory and parses maven metadata to get the latest release
 func (sm *ServiceManager) getLatestVersion(group string, artifact string) (MavenMetadata, error) {
-
 	// build url
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
@@ -162,6 +164,7 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 	if resp.StatusCode != 200 {
 		return MavenMetadata{}, fmt.Errorf("failed to find maven-metadata.xml at %s", url)
 	}
+
 	return ParseMetadataXml(resp.Body)
 }
 
