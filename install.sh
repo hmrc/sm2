@@ -4,7 +4,7 @@ IFS=$'\n\t'
 
 TARGET_OS="linux"
 TARGET_ARCH="intel"
-TARGET_VERSION="2.0.0"
+TARGET_VERSION="2.0.1"
 
 if [[ "$(uname)" == "Darwin" ]]; then
     TARGET_OS="apple"
