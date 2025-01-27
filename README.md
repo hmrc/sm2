@@ -131,7 +131,7 @@ $ sm2 -start SERVICE_ONE SERVICE_TWO
 ```
 
 ### Starting specific versions
-If you need to run a specific version of a service you can do so by adding a colon followed by the version number to the service name, e.g.
+By default `sm2` will use the latest version found in Artifactory. If you need to run a specific version of a service you can do so by adding a colon followed by the version number to the service name, e.g.
 ```shell
 $ sm2 -start SERVICENAME:1.2.3
 ```
