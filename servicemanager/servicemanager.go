@@ -74,13 +74,12 @@ func (sm ServiceManager) PrintVerbose(s string, args ...interface{}) {
 	}
 }
 
-func (sm *ServiceManager) NewShortContext() context.Context {
+func (sm *ServiceManager) NewShortContext() (context.Context, context.CancelFunc) {
 	ttl := sm.Config.TimeoutShort
 	if ttl == 0 {
 		ttl = DEFAULT_SHORT_TIMEOUT * time.Second
 	}
-	ctx, _ := context.WithTimeout(context.Background(), ttl)
-	return ctx
+	return context.WithTimeout(context.Background(), ttl)
 }
 
 // based on config, find the directory a service is installed into.

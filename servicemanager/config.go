@@ -45,7 +45,8 @@ func loadServicesFromFile(serviceFile string) (*Services, error) {
 }
 
 // @speed do we need to cache the whole thing? we only ever look up 1 profile
-//  maybe just load, find the profile and discard the rest?
+//
+//	maybe just load, find the profile and discard the rest?
 func loadProfilesFromFile(profileFileName string) (*Profiles, error) {
 	profiles := make(Profiles, 600)
 

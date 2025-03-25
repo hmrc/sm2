@@ -47,7 +47,7 @@ func (sm *ServiceManager) StartProxy() {
 
 		if proxyTo, ok := routes[pathPrefix]; ok {
 			if sm.Commands.Verbose {
-				log.Print(fmt.Sprintf("%s\t%s  ->  %s\n", req.Method, req.URL.Path, proxyTo))
+				log.Printf("%s\t%s  ->  %s\n", req.Method, req.URL.Path, proxyTo)
 			}
 			req.Header.Add("X-Forwarded-Host", req.Host)
 			req.Header.Add("X-Origin-Host", proxyTo)

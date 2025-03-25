@@ -146,7 +146,11 @@ func (sm *ServiceManager) getLatestVersion(group string, artifact string) (Maven
 	url := sm.Config.ArtifactoryRepoUrl + path.Join("/", group, artifact, "maven-metadata.xml")
 
 	// download metadata
-	ctx := sm.NewShortContext()
+	ctx, cancel := sm.NewShortContext()
+
+	// cleanup the context
+	defer cancel()
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return MavenMetadata{}, err

@@ -5,8 +5,10 @@ import (
 	"path"
 )
 
-/* Attempts to git pull the service-manager-config in $WORKSPACE
-   Fails if not on main, bound to the --update-config cmd
+/*
+Attempts to git pull the service-manager-config in $WORKSPACE
+
+	Fails if not on main, bound to the --update-config cmd
 */
 func updateConfig(configRepo string) error {
 

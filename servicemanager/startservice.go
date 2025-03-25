@@ -355,7 +355,6 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 			workerPlural = "worker"
 		}
 
-
 		fmt.Printf("Starting %d services on %d %s\n", len(services), sm.Commands.Workers, workerPlural)
 	}
 

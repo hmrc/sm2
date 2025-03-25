@@ -1,7 +1,6 @@
 package servicemanager
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -12,7 +11,7 @@ import (
 /*
 func TestInstallService(t *testing.T) {
 
-	installDir, err := ioutil.TempDir(os.TempDir(), "test-install*")
+	installDir, err := os.MkdirTemp(os.TempDir(), "test-install*")
 	AssertNotErr(t, err)
 
 	service := Service{
@@ -37,7 +36,7 @@ func TestInstallService(t *testing.T) {
 
 func TestRemoveExistingVersion(t *testing.T) {
 
-	baseDir, err := ioutil.TempDir(os.TempDir(), "test-removeExisting*")
+	baseDir, err := os.MkdirTemp(os.TempDir(), "test-removeExisting*")
 	AssertNotErr(t, err)
 	installDir := path.Join(baseDir, "foo")
 	serviceDir := path.Join(installDir, "foo-1.0.1")
@@ -55,7 +54,7 @@ func TestRemoveExistingVersion(t *testing.T) {
 }
 
 func TestRemoveRunningPid(t *testing.T) {
-	baseDir, err := ioutil.TempDir(os.TempDir(), "test-removeRunningPid*")
+	baseDir, err := os.MkdirTemp(os.TempDir(), "test-removeRunningPid*")
 	AssertNotErr(t, err)
 	pidPath := path.Join(baseDir, "RUNNING_PID")
 	AssertNotErr(t, os.WriteFile(pidPath, []byte{}, 0755))

@@ -2,7 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 )
 
@@ -77,7 +77,7 @@ func (sm *ServiceManager) showDebug(serviceName string) {
 	}
 	// show what logs we have
 	logDir := path.Join(installFile.Path, "logs")
-	files, err := ioutil.ReadDir(logDir)
+	files, err := os.ReadDir(logDir)
 	if err != nil {
 		fmt.Printf("unable to read log dir: %s\n%s\n", logDir, err)
 		return
@@ -85,7 +85,8 @@ func (sm *ServiceManager) showDebug(serviceName string) {
 
 	fmt.Printf("Log files in %s:\n", logDir)
 	for _, file := range files {
-		fmt.Printf("\t%20s  %d\n", file.Name(), file.Size())
+		info, _ := file.Info()
+		fmt.Printf("\t%20s  %d\n", file.Name(), info.Size())
 	}
 
 }

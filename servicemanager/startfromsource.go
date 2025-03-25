@@ -112,11 +112,3 @@ func (sm ServiceManager) sbtBuildAndRun(srcDir string, service Service) (ledger.
 	}
 	return state, nil
 }
-
-func removeSrcDir(installDir string) error {
-	srcPath := path.Join(installDir, "src")
-	if Exists(srcPath) {
-		return os.RemoveAll(srcPath)
-	}
-	return nil
-}
