@@ -11,7 +11,10 @@ import (
 // to artifactory using a http client with a short timeout.
 func checkVpn(client *http.Client, config ServiceManagerConfig) (bool, error) {
 
-	ctx, _ := context.WithTimeout(context.Background(), config.TimeoutShort)
+	ctx, cancel := context.WithTimeout(context.Background(), config.TimeoutShort)
+
+	// cleanup the context
+	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", config.ArtifactoryPingUrl, nil)
 	if err != nil {

@@ -5,10 +5,10 @@ import "testing"
 func TestPartition(t *testing.T) {
 
 	testData := map[string][]string{
-		"abcdef": []string{"ab", "cd", "ef"},
-		"abcde":  []string{"ab", "cd", "e"},
-		"ab":     []string{"ab"},
-		"":       []string{},
+		"abcdef": {"ab", "cd", "ef"},
+		"abcde":  {"ab", "cd", "e"},
+		"ab":     {"ab"},
+		"":       {},
 	}
 
 	for input, output := range testData {

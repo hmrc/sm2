@@ -3,7 +3,6 @@ package servicemanager
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -448,8 +447,7 @@ func TestParseValidMetadata(t *testing.T) {
 }
 
 func TestDownloadAndDecompress(t *testing.T) {
-
-	outdir, err := ioutil.TempDir(os.TempDir(), "test-downloader*")
+	outdir, err := os.MkdirTemp(os.TempDir(), "test-downloader*")
 	AssertNotErr(t, err)
 	defer os.RemoveAll(outdir)
 

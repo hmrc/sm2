@@ -4,7 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -90,12 +90,12 @@ func downloadAndInstall(versionToInstall string, workspaceInstallPath string, in
 	downloadLocation := workspaceInstallPath + "/sm2"
 
 	// convert `darwin` to `apple` for download url
-	var os string
+	var osForUrl string
 	switch runtime.GOOS {
 	case "darwin":
-		os = "apple"
+		osForUrl = "apple"
 	case "linux":
-		os = "linux"
+		osForUrl = "linux"
 	default:
 		log.Fatalf("unsupported OS: %s", runtime.GOOS)
 	}
@@ -111,7 +111,7 @@ func downloadAndInstall(versionToInstall string, workspaceInstallPath string, in
 		log.Fatalf("unsupported CPU architecture %s", runtime.GOARCH)
 	}
 
-	downloadUrl := fmt.Sprintf("https://github.com/hmrc/sm2/releases/download/v%s/sm2-%s-%s-%s.zip", versionToInstall, versionToInstall, os, arch)
+	downloadUrl := fmt.Sprintf("https://github.com/hmrc/sm2/releases/download/v%s/sm2-%s-%s-%s.zip", versionToInstall, versionToInstall, osForUrl, arch)
 
 	fmt.Printf("Downloading %s...\n", downloadUrl)
 
@@ -121,7 +121,7 @@ func downloadAndInstall(versionToInstall string, workspaceInstallPath string, in
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -139,14 +139,14 @@ func downloadAndInstall(versionToInstall string, workspaceInstallPath string, in
 			}
 			defer rc.Close()
 
-			fileData, err := ioutil.ReadAll(rc)
+			fileData, err := io.ReadAll(rc)
 			if err != nil {
 				return err
 			}
 
 			fmt.Printf("Unzipping into %s...\n", downloadLocation)
 
-			err = ioutil.WriteFile(downloadLocation, fileData, 0755)
+			err = os.WriteFile(downloadLocation, fileData, 0755)
 			if err != nil {
 				return err
 			}

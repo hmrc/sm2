@@ -214,15 +214,15 @@ const (
 
 func getLongestServiceName(statuses []serviceStatus) int {
 	var serviceNames []string
-	for _, s := range append(statuses) {
-		serviceNames = append(serviceNames, s.service)
+	for _, serviceStatus := range statuses {
+		serviceNames = append(serviceNames, serviceStatus.service)
 	}
 	return getLongestString(serviceNames)
 }
 
 func getLongestProxyPath(paths map[string]string) int {
 	proxyPath := make([]string, 0, len(paths))
-	for k, _ := range paths {
+	for k := range paths {
 		proxyPath = append(proxyPath, k)
 	}
 	return getLongestString(proxyPath)
@@ -295,7 +295,7 @@ func printProxyTable(status ledger.ProxyState, maxWidth int, out io.Writer) {
 	fmt.Fprint(out, border)
 
 	var sortedProxyPaths []string
-	for k, _ := range status.ProxyPaths {
+	for k := range status.ProxyPaths {
 		sortedProxyPaths = append(sortedProxyPaths, k)
 	}
 	sort.Strings(sortedProxyPaths)
@@ -349,10 +349,15 @@ func printHelpIfRequired(statuses []serviceStatus) {
 
 // returns true if the service ping endpoint responds
 func (sm *ServiceManager) CheckHealth(url string) bool {
-	ctx := sm.NewShortContext()
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	ctx, cancel := sm.NewShortContext()
+
+	// cleanup the context
+	defer cancel()
+
+	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 
 	resp, err := sm.Client.Do(req)
+
 	return err == nil && resp.StatusCode == 200
 }
 
@@ -378,12 +383,12 @@ func (sm ServiceManager) CheckMongo() serviceStatus {
 
 func (sm *ServiceManager) VerifyAllServicesAreRunning(services []ServiceAndVersion) bool {
 	statuses := sm.findStatuses()
-	return verifyIsRunning(services, statuses, os.Stdout)
+	return verifyIsRunning(services, statuses)
 }
 
 // For a given list of services check if they're running (i.e. in PASS state)
 // Print out the results and return a bool to indicate everything is ok
-func verifyIsRunning(services []ServiceAndVersion, statuses []serviceStatus, out io.Writer) bool {
+func verifyIsRunning(services []ServiceAndVersion, statuses []serviceStatus) bool {
 
 	allOk := true
 	for _, service := range services {

@@ -127,13 +127,13 @@ func TestFindStatusesSortsResultsAlphabetically(t *testing.T) {
 func TestStatusWrapsServiceNames(t *testing.T) {
 	sb := bytes.NewBufferString("")
 	statuses := []serviceStatus{
-		serviceStatus{0, 1, "SHORT_ID", "1.2.3", "PASS"},
-		serviceStatus{123, 10801, "THE_SERVICE_IS_35_CHARS_DO_NOT_WRAP", "42.999.1", "PASS"},
-		serviceStatus{2, 3, "SERVICE_IS_38_CHARS_STILL_CROP_IT_OKAY", "1.5", "PASS"},
-		serviceStatus{3, 4, "SERVICE_IS_39_CHARS_SO_WRAP_OVERFLOW_OK", "2.8", "PASS"},
-		serviceStatus{4, 5, "SERVICE_IS_54_CHARS_SO_DEFINITELY_WRAP_THE_OVERFLOW_OK", "3.1", "PASS"},
-		serviceStatus{5, 6, "SERVICE_IS_73_CHARS_SO_DEFINITELY_CROP_THE_SECOND_LINE_SO_NO_3RD_OVERFLOW", "3.2", "PASS"},
-		serviceStatus{6, 7, "SERVICE_IS_74_CHARS_SO_DEFINITELY_WRAP_THE_3RD_LINE_SO_WE_CAN_SEE_OVERFLOW", "3.3", "PASS"},
+		{0, 1, "SHORT_ID", "1.2.3", "PASS"},
+		{123, 10801, "THE_SERVICE_IS_35_CHARS_DO_NOT_WRAP", "42.999.1", "PASS"},
+		{2, 3, "SERVICE_IS_38_CHARS_STILL_CROP_IT_OKAY", "1.5", "PASS"},
+		{3, 4, "SERVICE_IS_39_CHARS_SO_WRAP_OVERFLOW_OK", "2.8", "PASS"},
+		{4, 5, "SERVICE_IS_54_CHARS_SO_DEFINITELY_WRAP_THE_OVERFLOW_OK", "3.1", "PASS"},
+		{5, 6, "SERVICE_IS_73_CHARS_SO_DEFINITELY_CROP_THE_SECOND_LINE_SO_NO_3RD_OVERFLOW", "3.2", "PASS"},
+		{6, 7, "SERVICE_IS_74_CHARS_SO_DEFINITELY_WRAP_THE_3RD_LINE_SO_WE_CAN_SEE_OVERFLOW", "3.3", "PASS"},
 	}
 	expectedOutput :=
 		`+---------------------------------------+-----------+---------+-------+--------+
@@ -177,8 +177,8 @@ func TestStatusWrapsServiceNames(t *testing.T) {
 func TestStatusExpandsServiceName(t *testing.T) {
 	sb := bytes.NewBufferString("")
 	statuses := []serviceStatus{
-		serviceStatus{0, 1, "SHORT_ID", "1.2.3", "PASS"},
-		serviceStatus{6, 7, "SERVICE_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK", "3.3", "PASS"},
+		{0, 1, "SHORT_ID", "1.2.3", "PASS"},
+		{6, 7, "SERVICE_IS_VERY_LONG_LIKE_REALLY_REALLY_LONG_BUT_WERE_OK", "3.3", "PASS"},
 	}
 	expectedOutput := `+----------------------------------------------------------+-----------+---------+-------+--------+
 | Name                                                     | Version   | PID     | Port  | Status |
@@ -386,24 +386,22 @@ func TestVerifyIsRunning(t *testing.T) {
 		{0, 0, "BAR", "1.0.0", PASS},
 	}
 
-	output := bytes.NewBufferString("")
-
 	// happy case
-	if verifyIsRunning(services, statuses, output) == false {
+	if verifyIsRunning(services, statuses) == false {
 		t.Errorf("verifyIsRunning returned false when it should be true!")
 	}
 
 	// unhappy cases
-	if verifyIsRunning(services, statuses[:1], output) {
+	if verifyIsRunning(services, statuses[:1]) {
 		t.Errorf("verifyIsRunning returned a false positive")
 	}
 
-	if verifyIsRunning(services, []serviceStatus{}, output) {
+	if verifyIsRunning(services, []serviceStatus{}) {
 		t.Errorf("verifyIsRunning returned a false positive with an empty status list")
 	}
 
 	statuses[0].health = FAIL
-	if verifyIsRunning(services, statuses, output) {
+	if verifyIsRunning(services, statuses) {
 		t.Errorf("verifyIsRunning returned true when status was FAILED")
 	}
 }

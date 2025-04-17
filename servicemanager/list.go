@@ -2,7 +2,7 @@ package servicemanager
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -119,7 +119,7 @@ func printServiceListPlain(keys []string) {
 // scrapes the install files and prints out what versions are installed and available
 func (sm *ServiceManager) ListServicesAvailableOffline() {
 
-	files, err := ioutil.ReadDir(sm.Config.TmpDir)
+	files, err := os.ReadDir(sm.Config.TmpDir)
 
 	if err != nil {
 		fmt.Printf("failed to read the workspace dir, %s\n", err)
