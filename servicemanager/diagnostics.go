@@ -9,70 +9,159 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
+	"strings"
 
 	"sm2/version"
 )
 
+// ANSI color codes
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+)
+
+// Status constants
+const (
+	StatusRunning = "RUNNING"
+	StatusOK      = "OK"
+	StatusError   = "ERROR"
+	StatusWarn    = "WARN"
+	StatusInfo    = "INFO"
+)
+
+// Component name constants
+const (
+	CompOS        = "OS"
+	CompJava      = "JAVA"
+	CompGit       = "GIT"
+	CompConfig    = "CONFIG"
+	CompWorkspace = "WORKSPACE"
+	CompVpnDns    = "VPN DNS"
+	CompVpn       = "VPN"
+)
+
+func startStatus(component string) {
+	printStatus(component, StatusRunning, "...")
+}
+
+// Helper function to print status with appropriate color
+func printStatus(component, status, details string) {
+	var colorCode string
+
+	switch status {
+	case StatusRunning:
+		colorCode = ColorYellow
+	case StatusOK:
+		colorCode = ColorGreen
+	case StatusError:
+		colorCode = ColorRed
+	case StatusWarn:
+		colorCode = ColorYellow
+	case StatusInfo:
+		colorCode = ColorReset
+	default:
+		colorCode = ColorReset
+	}
+
+	// Format component name to be exactly 15 characters
+	formattedComponent := component
+	if len(component) > 15 {
+		// Truncate if longer than 15 characters
+		formattedComponent = component[:15] + ":"
+	} else if len(component) < 15 {
+		// Pad with spaces if shorter than 15 characters
+		formattedComponent = component + ":" + strings.Repeat(" ", 14-len(component))
+	}
+
+	formattedStatus := fmt.Sprintf("%s%s%s", colorCode, status, ColorReset)
+
+	fmt.Printf("%s%s (%s)\n", formattedComponent, formattedStatus, details)
+}
+
+// Helper function to update status for a running task
+func updateStatus(component string, status string, details string) {
+	// Move cursor up one line and clear the line
+	fmt.Print("\033[1A\033[K")
+	printStatus(component, status, details)
+}
+
 func RunDiagnostics(config ServiceManagerConfig) {
-
 	version.PrintVersion()
-	checkOS()
-	checkJava()
-	checkGit()
-	checkWorkspace(config)
-	checkConfigRevision(config)
-	checkNetwork(config)
 
+	startStatus(CompOS)
+	checkOS()
+
+	startStatus(CompJava)
+	checkJava()
+
+	startStatus(CompGit)
+	checkGit()
+
+	startStatus(CompConfig)
+	checkConfigRevision(config)
+
+	startStatus(CompWorkspace)
+	checkWorkspace(config)
+
+	startStatus(CompVpn)
+	checkNetwork(config)
 }
 
 func checkWorkspace(config ServiceManagerConfig) {
 	stat, err := os.Stat(config.TmpDir)
 	if err != nil {
-		fmt.Printf("WORKSPACE:\t NOT OK (%s)\n", err)
+		updateStatus(CompWorkspace, StatusError, err.Error())
 		return
 	}
 
 	if !stat.IsDir() {
-		fmt.Printf("WORKSPACE:\t NOT OK (%s is not a directory)\n", config.TmpDir)
+		updateStatus(CompWorkspace, StatusError, fmt.Sprintf("%s is not a directory", config.TmpDir))
 		return
 	}
 
-	fmt.Printf("WORKSPACE:\t OK (%s)\n", config.TmpDir)
+	updateStatus(CompWorkspace, StatusOK, config.TmpDir)
 }
 
 func checkConfigRevision(config ServiceManagerConfig) {
 	err := gitFetch(config.ConfigDir, "origin", "main")
 	if err != nil {
-		fmt.Print("CONFIG:\t\t WARN: Unable to fetch latest remote version to compare to local\n")
-	} else {
-		localVersion, _ := gitShowShortRef(config.ConfigDir, "refs/heads/main")
-		remoteVersion, _ := gitShowShortRef(config.ConfigDir, "refs/remotes/origin/main")
+		updateStatus(CompConfig, StatusWarn, "Unable to fetch latest remote version")
+		return
+	}
 
-		if localVersion == "" || remoteVersion == "" {
-			fmt.Printf("CONFIG:\t\t NOT OK: Could not determine local (%s) or remote (%s) versions\n", localVersion, remoteVersion)
-		} else if localVersion != remoteVersion {
-			fmt.Printf("CONFIG:\t\t WARN: Local version (%s) is not up to date with remote version (%s)\n", localVersion, remoteVersion)
-		} else {
-			fmt.Printf("CONFIG:\t\t OK: Local version is up to date with remote version (%s)\n", localVersion)
-		}
+	localVersion, _ := gitShowShortRef(config.ConfigDir, "refs/heads/main")
+	remoteVersion, _ := gitShowShortRef(config.ConfigDir, "refs/remotes/origin/main")
+
+	if localVersion == "" || remoteVersion == "" {
+		updateStatus(CompConfig, StatusError, fmt.Sprintf("Could not determine local (%s) or remote (%s) versions",
+			localVersion, remoteVersion))
+	} else if localVersion != remoteVersion {
+		updateStatus(CompConfig, StatusWarn, fmt.Sprintf("Local version (%s) is not up to date with remote version (%s)",
+			localVersion, remoteVersion))
+	} else {
+		updateStatus(CompConfig, StatusOK, fmt.Sprintf("Local version is up to date with remote version (%s)",
+			localVersion))
 	}
 }
 
 func checkJava() {
 	cmd := exec.Command(javaPath(), "-version")
-
 	out, err := cmd.CombinedOutput()
+
 	if err != nil {
-		fmt.Printf("JAVA:\t\t NOT OK: %s\n", err)
+		updateStatus(CompJava, StatusError, fmt.Sprintf("%s", err))
 		return
 	}
 
 	versionRegex := regexp.MustCompile(`(\d+\.\d+\.\d+)`)
 	version := versionRegex.FindStringSubmatch(string(out))
+
 	if version != nil {
-		fmt.Printf("JAVA:\t\t OK (%s)\n", version[1])
+		updateStatus(CompJava, StatusOK, version[1])
 	} else {
-		fmt.Print("JAVA:\t\t NOT OK: unable to find java version\n")
+		updateStatus(CompJava, StatusError, "Unable to find java version")
 	}
 }
 
@@ -87,46 +176,48 @@ func javaPath() string {
 
 func checkGit() {
 	version, err := gitVersion()
+
 	if err != nil {
-		fmt.Printf("GIT:\t\t NOT OK: %s\n", err)
-		fmt.Printf("\t\t without git you can't run from source: %s\n", err)
+		updateStatus(CompGit, StatusError, fmt.Sprintf("Without git you can't run from source, err=%s", err))
 		return
 	}
-	fmt.Printf("GIT:\t\t OK (%s)\n", version)
+
+	updateStatus(CompGit, StatusOK, version)
 }
 
 func checkOS() {
 	switch runtime.GOOS {
 	case "windows":
-		fmt.Print("OS:\t\t WARN: windows is not fully supported\n")
-
+		updateStatus(CompOS, StatusWarn, "Windows is not fully supported")
 	case "linux", "darwin":
-		fmt.Printf("OS:\t\t OK (%s, %s)\n", runtime.GOOS, runtime.GOARCH)
+		updateStatus(CompOS, StatusOK, fmt.Sprintf("%s, %s", runtime.GOOS, runtime.GOARCH))
 	}
 }
 
 func checkNetwork(config ServiceManagerConfig) {
 	artifactoryUrl, err := url.Parse(config.ArtifactoryPingUrl)
 	if err != nil {
-		fmt.Print("VPN:\t\t artifactory url not valid!\n")
+		updateStatus(CompVpn, StatusError, "Artifactory URL not valid")
 		return
 	}
 
-	fmt.Printf("NET\t\t OK (VPN check timeout %v)\n", config.TimeoutShort)
+	updateStatus(CompVpn, StatusOK, fmt.Sprintf("VPN check timeout %v", config.TimeoutShort))
 
 	ip, err := net.LookupIP(artifactoryUrl.Host)
+
 	if err != nil {
-		fmt.Printf("VPN DNS\t\t NOT OK (failed to resolve IP of %s)\n", artifactoryUrl.Host)
+		updateStatus(CompVpnDns, StatusError, fmt.Sprintf("Failed to resolve IP of %s", artifactoryUrl.Host))
 	} else {
-		fmt.Printf("VPN DNS\t\t OK (IP Address of %s resolves to %v)\n", artifactoryUrl.Host, ip)
+		updateStatus(CompVpnDns, StatusOK, fmt.Sprintf("IP Address of %s resolves to %v", artifactoryUrl.Host, ip))
 	}
 
+	printStatus(CompVpn, StatusRunning, "...")
 	client := &http.Client{}
+	ok, err := checkVpn(client, config)
 
-	if ok, err := checkVpn(client, config); ok {
-		fmt.Printf("VPN:\t\t OK (%s responds to ping)\n", artifactoryUrl)
+	if ok {
+		updateStatus(CompVpn, StatusOK, fmt.Sprintf("%s responds to ping", artifactoryUrl))
 	} else {
-		fmt.Print("VPN:\t\t NOT OK\n")
-		fmt.Printf("\t\t %s resolvable but not reachable\n\t\t %v\n", artifactoryUrl, err)
+		updateStatus(CompVpn, StatusError, fmt.Sprintf("%s resolvable but not reachable - %v", artifactoryUrl, err))
 	}
 }
