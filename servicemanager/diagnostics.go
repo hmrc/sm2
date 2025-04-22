@@ -14,6 +14,9 @@ import (
 	"sm2/version"
 )
 
+// create a variable to hold no progress flag
+var noProgress = false
+
 // ANSI color codes
 const (
 	ColorReset  = "\033[0m"
@@ -43,11 +46,13 @@ const (
 )
 
 func startStatus(component string) {
-	printStatus(component, StatusRunning, "...")
+	if !noProgress {
+		printStatus(component, StatusRunning, "...")
+	}
 }
 
 // Helper function to print status with appropriate color
-func printStatus(component, status, details string) {
+func printStatus(component string, status string, details string) {
 	var colorCode string
 
 	switch status {
@@ -77,17 +82,24 @@ func printStatus(component, status, details string) {
 
 	formattedStatus := fmt.Sprintf("%s%s%s", colorCode, status, ColorReset)
 
-	fmt.Printf("%s%s (%s)\n", formattedComponent, formattedStatus, details)
+	if noProgress && status == StatusRunning {
+		// do not print message for --noprogress flag
+	} else {
+		fmt.Printf("%s%s (%s)\n", formattedComponent, formattedStatus, details)
+	}
 }
 
 // Helper function to update status for a running task
 func updateStatus(component string, status string, details string) {
-	// Move cursor up one line and clear the line
-	fmt.Print("\033[1A\033[K")
+	if !noProgress {
+		// Move cursor up one line and clear the line
+		fmt.Print("\033[1A\033[K")
+	}
 	printStatus(component, status, details)
 }
 
-func RunDiagnostics(config ServiceManagerConfig) {
+func (sm *ServiceManager) RunDiagnostics(config ServiceManagerConfig) {
+	noProgress = sm.Commands.NoProgress
 	version.PrintVersion()
 
 	startStatus(CompOS)

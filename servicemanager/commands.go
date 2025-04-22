@@ -108,7 +108,7 @@ func (sm *ServiceManager) Run() {
 		sm.ListServicesAvailableOffline()
 	} else if sm.Commands.Diagnostic {
 		// checks if system can run sm2
-		RunDiagnostics(sm.Config)
+		sm.RunDiagnostics(sm.Config)
 	} else if sm.Commands.Debug != "" {
 		// `--debug SERVICE` dumps as much info as it can find about the service
 		sm.showDebug(sm.Commands.Debug)
