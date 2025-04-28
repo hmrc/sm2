@@ -14,9 +14,6 @@ import (
 	"sm2/version"
 )
 
-// create a variable to hold no progress flag
-var noProgress = false
-
 // ANSI color codes
 const (
 	ColorReset  = "\033[0m"
@@ -45,14 +42,14 @@ const (
 	CompVpn       = "VPN"
 )
 
-func startStatus(component string) {
+func startStatus(component string, noProgress bool) {
 	if !noProgress {
-		printStatus(component, StatusRunning, "...")
+		printStatus(component, StatusRunning, "...", noProgress)
 	}
 }
 
 // Helper function to print status with appropriate color
-func printStatus(component string, status string, details string) {
+func printStatus(component string, status string, details string, noProgress bool) {
 	var colorCode string
 
 	switch status {
@@ -90,56 +87,55 @@ func printStatus(component string, status string, details string) {
 }
 
 // Helper function to update status for a running task
-func updateStatus(component string, status string, details string) {
+func updateStatus(component string, status string, details string, noProgress bool) {
 	if !noProgress {
 		// Move cursor up one line and clear the line
 		fmt.Print("\033[1A\033[K")
 	}
-	printStatus(component, status, details)
+	printStatus(component, status, details, noProgress)
 }
 
-func (sm *ServiceManager) RunDiagnostics(config ServiceManagerConfig) {
-	noProgress = sm.Commands.NoProgress
+func RunDiagnostics(config ServiceManagerConfig, noProgress bool) {
 	version.PrintVersion()
 
-	startStatus(CompOS)
-	checkOS()
+	startStatus(CompOS, noProgress)
+	checkOS(noProgress)
 
-	startStatus(CompJava)
-	checkJava()
+	startStatus(CompJava, noProgress)
+	checkJava(noProgress)
 
-	startStatus(CompGit)
-	checkGit()
+	startStatus(CompGit, noProgress)
+	checkGit(noProgress)
 
-	startStatus(CompConfig)
-	checkConfigRevision(config)
+	startStatus(CompConfig, noProgress)
+	checkConfigRevision(config, noProgress)
 
-	startStatus(CompWorkspace)
-	checkWorkspace(config)
+	startStatus(CompWorkspace, noProgress)
+	checkWorkspace(config, noProgress)
 
-	startStatus(CompVpn)
-	checkNetwork(config)
+	startStatus(CompVpn, noProgress)
+	checkNetwork(config, noProgress)
 }
 
-func checkWorkspace(config ServiceManagerConfig) {
+func checkWorkspace(config ServiceManagerConfig, noProgress bool) {
 	stat, err := os.Stat(config.TmpDir)
 	if err != nil {
-		updateStatus(CompWorkspace, StatusError, err.Error())
+		updateStatus(CompWorkspace, StatusError, err.Error(), noProgress)
 		return
 	}
 
 	if !stat.IsDir() {
-		updateStatus(CompWorkspace, StatusError, fmt.Sprintf("%s is not a directory", config.TmpDir))
+		updateStatus(CompWorkspace, StatusError, fmt.Sprintf("%s is not a directory", config.TmpDir), noProgress)
 		return
 	}
 
-	updateStatus(CompWorkspace, StatusOK, config.TmpDir)
+	updateStatus(CompWorkspace, StatusOK, config.TmpDir, noProgress)
 }
 
-func checkConfigRevision(config ServiceManagerConfig) {
+func checkConfigRevision(config ServiceManagerConfig, noProgress bool) {
 	err := gitFetch(config.ConfigDir, "origin", "main")
 	if err != nil {
-		updateStatus(CompConfig, StatusWarn, "Unable to fetch latest remote version")
+		updateStatus(CompConfig, StatusWarn, "Unable to fetch latest remote version", noProgress)
 		return
 	}
 
@@ -148,22 +144,22 @@ func checkConfigRevision(config ServiceManagerConfig) {
 
 	if localVersion == "" || remoteVersion == "" {
 		updateStatus(CompConfig, StatusError, fmt.Sprintf("Could not determine local (%s) or remote (%s) versions",
-			localVersion, remoteVersion))
+			localVersion, remoteVersion), noProgress)
 	} else if localVersion != remoteVersion {
 		updateStatus(CompConfig, StatusWarn, fmt.Sprintf("Local version (%s) is not up to date with remote version (%s)",
-			localVersion, remoteVersion))
+			localVersion, remoteVersion), noProgress)
 	} else {
 		updateStatus(CompConfig, StatusOK, fmt.Sprintf("Local version is up to date with remote version (%s)",
-			localVersion))
+			localVersion), noProgress)
 	}
 }
 
-func checkJava() {
+func checkJava(noProgress bool) {
 	cmd := exec.Command(javaPath(), "-version")
 	out, err := cmd.CombinedOutput()
 
 	if err != nil {
-		updateStatus(CompJava, StatusError, fmt.Sprintf("%s", err))
+		updateStatus(CompJava, StatusError, fmt.Sprintf("%s", err), noProgress)
 		return
 	}
 
@@ -171,9 +167,9 @@ func checkJava() {
 	version := versionRegex.FindStringSubmatch(string(out))
 
 	if version != nil {
-		updateStatus(CompJava, StatusOK, version[1])
+		updateStatus(CompJava, StatusOK, version[1], noProgress)
 	} else {
-		updateStatus(CompJava, StatusError, "Unable to find java version")
+		updateStatus(CompJava, StatusError, "Unable to find java version", noProgress)
 	}
 }
 
@@ -186,50 +182,50 @@ func javaPath() string {
 	}
 }
 
-func checkGit() {
+func checkGit(noProgress bool) {
 	version, err := gitVersion()
 
 	if err != nil {
-		updateStatus(CompGit, StatusError, fmt.Sprintf("Without git you can't run from source, err=%s", err))
+		updateStatus(CompGit, StatusError, fmt.Sprintf("Without git you can't run from source, err=%s", err), noProgress)
 		return
 	}
 
-	updateStatus(CompGit, StatusOK, version)
+	updateStatus(CompGit, StatusOK, version, noProgress)
 }
 
-func checkOS() {
+func checkOS(noProgress bool) {
 	switch runtime.GOOS {
 	case "windows":
-		updateStatus(CompOS, StatusWarn, "Windows is not fully supported")
+		updateStatus(CompOS, StatusWarn, "Windows is not fully supported", noProgress)
 	case "linux", "darwin":
-		updateStatus(CompOS, StatusOK, fmt.Sprintf("%s, %s", runtime.GOOS, runtime.GOARCH))
+		updateStatus(CompOS, StatusOK, fmt.Sprintf("%s, %s", runtime.GOOS, runtime.GOARCH), noProgress)
 	}
 }
 
-func checkNetwork(config ServiceManagerConfig) {
+func checkNetwork(config ServiceManagerConfig, noProgress bool) {
 	artifactoryUrl, err := url.Parse(config.ArtifactoryPingUrl)
 	if err != nil {
-		updateStatus(CompVpn, StatusError, "Artifactory URL not valid")
+		updateStatus(CompVpn, StatusError, "Artifactory URL not valid", noProgress)
 		return
 	}
 
-	updateStatus(CompVpn, StatusOK, fmt.Sprintf("VPN check timeout %v", config.TimeoutShort))
+	updateStatus(CompVpn, StatusOK, fmt.Sprintf("VPN check timeout %v", config.TimeoutShort), noProgress)
 
 	ip, err := net.LookupIP(artifactoryUrl.Host)
 
 	if err != nil {
-		updateStatus(CompVpnDns, StatusError, fmt.Sprintf("Failed to resolve IP of %s", artifactoryUrl.Host))
+		updateStatus(CompVpnDns, StatusError, fmt.Sprintf("Failed to resolve IP of %s", artifactoryUrl.Host), noProgress)
 	} else {
-		updateStatus(CompVpnDns, StatusOK, fmt.Sprintf("IP Address of %s resolves to %v", artifactoryUrl.Host, ip))
+		updateStatus(CompVpnDns, StatusOK, fmt.Sprintf("IP Address of %s resolves to %v", artifactoryUrl.Host, ip), noProgress)
 	}
 
-	printStatus(CompVpn, StatusRunning, "...")
+	printStatus(CompVpn, StatusRunning, "...", noProgress)
 	client := &http.Client{}
 	ok, err := checkVpn(client, config)
 
 	if ok {
-		updateStatus(CompVpn, StatusOK, fmt.Sprintf("%s responds to ping", artifactoryUrl))
+		updateStatus(CompVpn, StatusOK, fmt.Sprintf("%s responds to ping", artifactoryUrl), noProgress)
 	} else {
-		updateStatus(CompVpn, StatusError, fmt.Sprintf("%s resolvable but not reachable - %v", artifactoryUrl, err))
+		updateStatus(CompVpn, StatusError, fmt.Sprintf("%s resolvable but not reachable - %v", artifactoryUrl, err), noProgress)
 	}
 }
