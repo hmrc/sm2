@@ -134,8 +134,7 @@ func (sm *ServiceManager) LoadConfig() error {
 	}
 
 	// load repo details from config.json
-	configJsonFileName := path.Join(configPath, "config.json")
-	repoConfig, err := loadRepoConfig(configJsonFileName)
+	repoConfig, err := loadRepoConfig(configPath)
 	if err != nil {
 		repoConfig = DefaultArtifactoryUrls
 	}
@@ -156,17 +155,15 @@ func (sm *ServiceManager) LoadConfig() error {
 	}
 
 	// @speed consider lazy loading these rather than loading on startup
-	serviceFilePath := path.Join(configPath, "services.json")
-	services, err := loadServicesFromFile(serviceFilePath)
+	services, err := loadServices(configPath)
 	if err != nil {
-		return fmt.Errorf("Failed to load %s\n  %s\n", serviceFilePath, err)
+		return fmt.Errorf("Failed to load services from %s\n  %s\n", configPath, err)
 	}
 	sm.Services = *services
 
-	profileFilePath := path.Join(configPath, "profiles.json")
-	profiles, err := loadProfilesFromFile(profileFilePath)
+	profiles, err := loadProfiles(configPath)
 	if err != nil {
-		return fmt.Errorf("Failed to load %s\n %s\n", profileFilePath, err)
+		return fmt.Errorf("Failed to load profiles from %s\n %s\n", configPath, err)
 	}
 	sm.Profiles = *profiles
 
