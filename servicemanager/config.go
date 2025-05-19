@@ -2,11 +2,11 @@ package servicemanager
 
 import (
 	"encoding/json"
-	"path"
 	"fmt"
 	"os"
+	"path"
+	"path/filepath"
 	"strings"
-	"maps"
 )
 
 type ArtifactoryUrls struct {
@@ -29,7 +29,7 @@ func loadServices(configPath string) (*Services, error) {
 	// first try to load from services directory
 	servicesDir := path.Join(configPath, "services")
 	if stat, err := os.Stat(servicesDir); err == nil && stat.IsDir() {
-		// Load services from directory
+		// load services from directory
 		dirServices, err := loadServicesFromDirectory(servicesDir)
 		if err != nil {
 			return nil, fmt.Errorf("failed to load services from directory: %w", err)
@@ -57,25 +57,35 @@ func loadServices(configPath string) (*Services, error) {
 func loadServicesFromDirectory(servicesDir string) (Services, error) {
 	services := make(Services)
 	
-	files, err := os.ReadDir(servicesDir)
-	if err != nil {
-		return nil, err
-	}
-	
-	for _, file := range files {
-		// skip directories and non-json files
-		if file.IsDir() || !strings.HasSuffix(strings.ToLower(file.Name()), ".json") {
-			continue
-		}
-		
-		filePath := path.Join(servicesDir, file.Name())
-		fileServices, err := loadServicesFromFile(filePath)
+	// use filepath.Walk to recursively process all subdirectories
+	err := filepath.Walk(servicesDir, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
-			return nil, fmt.Errorf("failed to load %s: %w", filePath, err)
+			return err
 		}
 		
-		// merge into main services map
-		maps.Copy(services, fileServices)
+		// skip directories themselves, but process their contents
+		// only process .json files
+		if !info.IsDir() && strings.HasSuffix(strings.ToLower(info.Name()), ".json") {
+			fileServices, err := loadServicesFromFile(filePath)
+			if err != nil {
+				return fmt.Errorf("failed to load %s: %w", filePath, err)
+			}
+			
+			// check for key clashes
+			for key, service := range fileServices {
+				if _, exists := services[key]; exists {
+					fmt.Printf("WARN: Service '%s' from file '%s' will overwrite existing definition\n", 
+						key, filePath)
+				}
+				services[key] = service
+			}
+		}
+		
+		return nil
+	})
+	
+	if err != nil {
+		return nil, fmt.Errorf("error walking the services directory: %w", err)
 	}
 	
 	return services, nil
