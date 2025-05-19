@@ -326,7 +326,7 @@ Alternatively you can start the profile beforehand and just stop the individual 
 
 Assets Frontend is a service that only exists in service-manager responsible for serving up static assets (that would normally come from a CDN) to local services.
 
-The original assets-frontend (as defined in services.json as ASSETS_FRONTEND) will not work in service manager 2. However, a new service, ASSETS_FRONTEND_2 is available as a drop-in replacement offering
+The original assets-frontend (as defined in service-manager-config as ASSETS_FRONTEND) will not work in service manager 2. However, a new service, ASSETS_FRONTEND_2 is available as a drop-in replacement offering
 
 ### New version
 
@@ -368,11 +368,14 @@ export WORKSPACE=/home/myusername/.servicemanager
 To run service manager you will require a folder named service-manager-config to exist inside your WORKSPACE folder. It should typically be a clone of a git repository.
 Service-manager-config is expected to have the following structure:
 
-| File          | Description                                                |
-|---------------|------------------------------------------------------------|
-| config.json   | Defines the urls for artifactory                           |
-| services.json | Defines all the available services                         |
-| profiles.json | Defines groups of services that should be started together |
+| File            | Description                                                |
+|-----------------|------------------------------------------------------------|
+| config.json     | Defines the urls for artifactory                           |
+| services.json   | Defines all the available services                         |
+| services/*.json | (Optional) service definitions can be broken down into multiple files in the case that a single services.json becomes unmaintainable due to size |
+| profiles.json   | Defines groups of services that should be started together |
+
+Note, when a `services` folder exists, `services.json` will be ignored.
 
 ### Setting Scala Version
 
