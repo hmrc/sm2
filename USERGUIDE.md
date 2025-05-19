@@ -26,7 +26,7 @@ git clone git@github.com:hmrc/service-manager-config.git $WORKSPACE/service-mana
 sm2 --start SERVICE_NAME
 ```
 
-SERVICE_NAME must exist in the services.json file in service-manager-config. If valid service manager will download
+SERVICE_NAME must exist in the json files that exist in service-manager-config/services directory. If valid service manager will download
 the latest version of the service from artifactory and attempt to start it.
 
 Multiple services can be started in one go by passing in more than one service name.

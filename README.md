@@ -322,30 +322,6 @@ Generally we’d recommend the following
 
 Alternatively you can start the profile beforehand and just stop the individual service you want to work on.
 
-## ASSETS_FRONTEND
-
-Assets Frontend is a service that only exists in service-manager responsible for serving up static assets (that would normally come from a CDN) to local services.
-
-The original assets-frontend (as defined in services.json as ASSETS_FRONTEND) will not work in service manager 2. However, a new service, ASSETS_FRONTEND_2 is available as a drop-in replacement offering
-
-### New version
-
-Assets frontend 2 is a drop-in replacement for Assets Frontend.
-
-The new version of assets frontend ASSETS_FRONTEND_2 is a complete rewrite. It is a scala service, so no longer requires a specific version of python to work and will only download the assets when they are requested rather than downloading 100s of megabytes of assets on start-up or being limited to one specific version.
-
-### How to start ASSETS_FRONTEND_2
-
-It can be started the same as any other service.
-
-```shell
-sm2 -start ASSETS_FRONTEND_2
-```
-
-You do not need to specify which version of the asset you wish to use, just run your service(s) as normal and ASSETS_FRONTEND_2 will download them when requested.
-The individual asset bundles are little more than 1 meg in size and will be cached so the download time should not be noticeable.
-
-Assets frontend 2 will also work in the original service manager, so there's no reason not to update your profiles to use it.
 
 ## Configuration
 
@@ -368,11 +344,14 @@ export WORKSPACE=/home/myusername/.servicemanager
 To run service manager you will require a folder named service-manager-config to exist inside your WORKSPACE folder. It should typically be a clone of a git repository.
 Service-manager-config is expected to have the following structure:
 
-| File          | Description                                                |
-|---------------|------------------------------------------------------------|
-| config.json   | Defines the urls for artifactory                           |
-| services.json | Defines all the available services                         |
-| profiles.json | Defines groups of services that should be started together |
+| File            | Description                                                |
+|-----------------|------------------------------------------------------------|
+| config.json     | Defines the urls for artifactory                           |
+| services.json   | Defines all the available services                         |
+| services/*.json | (Optional) service definitions can be broken down into multiple files in the case that a single services.json becomes unmaintainable due to size |
+| profiles.json   | Defines groups of services that should be started together |
+
+Note, when a `services` folder exists, `services.json` will be ignored.
 
 ### Setting Scala Version
 
