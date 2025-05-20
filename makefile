@@ -8,7 +8,7 @@
 ROOT_DIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
 BINARY := sm2
-VERSION := 2.0.1
+VERSION := 2.1.0
 BUILD := `git rev-parse HEAD`
 
 # Setup linker flags option for build that interoperate with variable names in src code
