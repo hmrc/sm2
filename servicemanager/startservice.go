@@ -19,6 +19,8 @@ func (sm *ServiceManager) StartService(serviceAndVersion ServiceAndVersion) erro
 
 	offline := sm.Commands.Offline
 
+	fmt.Printf("Starting %s", serviceAndVersion.service)
+
 	// look-up the service
 	service, ok := sm.Services[serviceAndVersion.service]
 	if !ok {
@@ -363,6 +365,8 @@ func (sm *ServiceManager) asyncStart(services []ServiceAndVersion) {
 	for i := 0; i < sm.Commands.Workers; i++ {
 		go sm.startServiceWorker(taskQueue, &wg)
 	}
+
+	fmt.Printf("Created wait group and started %d workers\n", sm.Commands.Workers)
 
 	for _, sv := range services {
 		wg.Add(1)
