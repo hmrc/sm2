@@ -99,7 +99,7 @@ func (sm *ServiceManager) printServiceListFormatted(keys []string, searchTerm st
 	fmt.Printf("Searching for (%s)...\n", searchTerm)
 	for _, k := range keys {
 		if service, ok := sm.Services[k]; ok {
-			fmt.Printf("[SERVICE] %s -> %s\n", pad(service.Id, longestKey), service.Name)
+			fmt.Printf("[SERVICE] %s -> %s ::: %s \n", pad(service.Id, longestKey), service.Name, service.Source.Repo)
 		}
 		if profile, ok := sm.Profiles[k]; ok {
 			fmt.Printf("[PROFILE] %s -> (%d services)\n", pad(k, longestKey), len(profile))
@@ -112,7 +112,9 @@ func (sm *ServiceManager) printServiceListFormatted(keys []string, searchTerm st
 
 func printServiceListPlain(keys []string) {
 	for _, k := range keys {
-		fmt.Println(k)
+		if k != "" {
+			fmt.Println(k)
+		}
 	}
 }
 

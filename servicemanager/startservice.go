@@ -298,7 +298,7 @@ func removeRunningPid(serviceDir string) {
 func removeExistingVersions(installDir string) error {
 	if !path.IsAbs(installDir) {
 		// since we're removing a whole dir here, lets be careful that no-one has put ../../../ in the config etc
-		panic("removeExistingVersions was passed a non-absoulte path. This shouldn't happen!")
+		panic("removeExistingVersions was passed a non-absolute path. This shouldn't happen!")
 	}
 	if err := os.RemoveAll(installDir); err != nil {
 		return err
