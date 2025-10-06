@@ -30,25 +30,25 @@ If you'd prefer to carry out these steps manually, then follow these steps:
 #### Linux Intel
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.1.0-linux-intel.zip && unzip sm2-2.1.0-linux-intel.zip && rm sm2-2.1.0-linux-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.2.0-linux-intel.zip && unzip sm2-2.2.0-linux-intel.zip && rm sm2-2.2.0-linux-intel.zip && chmod +x sm2
 ```
 
 #### Linux Arm64
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.1.0-linux-arm64.zip && unzip sm2-2.1.0-linux-arm64.zip && rm sm2-2.1.0-linux-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.2.0-linux-arm64.zip && unzip sm2-2.2.0-linux-arm64.zip && rm sm2-2.2.0-linux-arm64.zip && chmod +x sm2
 ```
 
 #### OSX/Apple (latest M1/M2/Mx cpus)
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.1.0-apple-arm64.zip && unzip sm2-2.1.0-apple-arm64.zip && rm sm2-2.1.0-apple-arm64.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.2.0-apple-arm64.zip && unzip sm2-2.2.0-apple-arm64.zip && rm sm2-2.2.0-apple-arm64.zip && chmod +x sm2
 ```
 
 #### OSX/Apple (older Intel cpus)
 
 ```shell
-curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.1.0-apple-intel.zip && unzip sm2-2.1.0-apple-intel.zip && rm sm2-2.1.0-apple-intel.zip && chmod +x sm2
+curl -L -O https://github.com/hmrc/sm2/releases/download/v2.1.0/sm2-2.2.0-apple-intel.zip && unzip sm2-2.2.0-apple-intel.zip && rm sm2-2.2.0-apple-intel.zip && chmod +x sm2
 ```
 
 If everything has worked you should have an executable called `sm2`.

@@ -103,12 +103,12 @@ If you are unsure of the exact name of a service you can search for likely match
 A full list of services can be found using `--search .` or just `--list`.
 
 The ports command `--ports` will list all of the services and their default ports.
-If you need to run service manager without internet connectivity, running the `--offline` command by itself will list which services are currently installed and avilable for offline use.
+If you need to run service manager without internet connectivity, running the `--offline` command by itself will list which services are currently installed and available for offline use.
 Services can be started in offline mode using `--start SERVICE_NAME --offline`.
 
 ## Reverse Proxy
 A new feature in version 2 is the reverse proxy mode. Using the --reverse-proxy option starts an http server running on port 3000.
-Any service that has a valid `proxyPaths` entry in services.json will be available on port 3000 under that path. 
+Any service that has a valid `proxyPaths` entry in services.json will be available on port 3000 under that path.
 The `proxyPaths` setting consists of an array of strings, each string representing a path to be proxied to that service.
 This can be useful if a frontend service needs to pass cookies etc. to another frontend service.
 Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
