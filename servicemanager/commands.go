@@ -86,6 +86,9 @@ func (sm *ServiceManager) Run() {
 		if len(failed) > 0 {
 			sm.asyncStart(failed)
 		}
+	} else if sm.Commands.RestartOutdated {
+		// restarts services running outdated versions
+		sm.RestartOutdated()
 	} else if sm.Commands.Ports {
 		// prints all port numbers to stdout
 		sm.ListPorts()

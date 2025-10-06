@@ -191,6 +191,12 @@ When restarting a service or profile, you can specify `-latest` to check for a n
 sm2 -restart SERVICE_NAME -latest
 ```
 
+You can also ensure all running services are on the latest versions (skips services that are already):
+
+```shell
+sm2 --restart-outdated 
+```
+
 ### Checking the status of services (-s or -status)
 
 You can check what services are running using the status command

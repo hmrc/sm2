@@ -38,6 +38,7 @@ type UserOption struct {
 	Prune                bool                // deletes .state files of services with a status of FAIL
 	Release              string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
 	Restart              bool                // restarts a service or profile
+	RestartOutdated      bool                // restarts services running outdated versions
 	ReverseProxy         bool                // starts a reverse-proxy on 3000 (override with --port)
 	Search               string              // searches for services/profiles
 	Start                bool                // starts a service, multiple services or a profile(s)
@@ -184,6 +185,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.BoolVar(&opts.Prune, "prune", false, "cleans up services with a status of FAIL")
 	flagset.StringVar(&opts.Release, "r", "", "sets which `version` to run (use with --start)")
 	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
+	flagset.BoolVar(&opts.RestartOutdated, "restart-outdated", false, "restarts services running outdated versions")
 	flagset.BoolVar(&opts.ReverseProxy, "reverse-proxy", false, "starts a reverse proxy to all services on port :3000")
 	flagset.StringVar(&opts.Search, "search", "", "searches for services and profiles that match a given `regex`")
 	flagset.BoolVar(&opts.Start, "start", false, "starts one or more service, for a single service use -r to specify version")
