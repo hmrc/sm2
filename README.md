@@ -388,7 +388,7 @@ go build
 When building a new release, use the included makefile:
 
 ```bash
-make build_all package
+make all
 ```
 
 ## Running tests
