@@ -107,21 +107,23 @@ If you need to run service manager without internet connectivity, running the `-
 Services can be started in offline mode using `--start SERVICE_NAME --offline`.
 
 ## Reverse Proxy
-A new feature in version 2 is the reverse proxy mode. Using the --reverse-proxy option starts an http server running on port 3000.
-Any service that has a valid `proxyPaths` entry in services.json will be available on port 3000 under that path.
-The `proxyPaths` setting consists of an array of strings, each string representing a path to be proxied to that service.
-This can be useful if a frontend service needs to pass cookies etc. to another frontend service.
-Often browsers will prevent cookies being passed between hosts and can consider different port on the same host as being distinct hosts.
+Frontend MDTP microservices have one host per environment. Locally, however, microservices run on distinct ports. Reverse proxies allow for an environment-like behaviour as well as for cookies to be passed between frontend services (otherwise restricted by browsers that treat hosts with different ports as different hosts).
 
-By default, the reverse-proxy will forward any proxy-path it finds. e.g.
+This option is available **only for frontend services**. It starts an HTTP server on port `3000` that allows routes that start with a value in `proxyPaths` (located in the `.json` file of the service in [service-manager-config/services](https://github.com/hmrc/service-manager-config/tree/main/services)) to be accessible on this port.
+
+The `proxyPaths` is a comma-delimited array of strings, each representing a _base path_ with a single forward slash `/`. This is typically the prefix in `prod.routes` and/or /test-only in `testOnlyDoNotUseInAppConf.routes`, see this [example](https://github.com/hmrc/sm2/blob/main/example/service-manager-config/services.json#L26).
+
+By default, the reverse-proxy will forward any proxy-path it finds
 ```
 sm2 --reverse-proxy
 ```
 
-You may restrict this behaviour to only a few services or profiles by listing them. e.g.
+You can restrict it to a service or a profile
 ```
 sm2 --reverse-proxy CATALOGUE
 ```
+
+Verbose logging is available by adding ` -v` at the end of either command.
 
 ## Diagnostic Mode
 Running `sm2 --diagnostic` will perform some basic health checks for the sm2 tool. It can help diagnose connectivity and configuration issues.
