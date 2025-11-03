@@ -14,7 +14,11 @@
                 "-Dsome.setting=true",
                 "-J-Xms256m"
             ]
-        }
+        },
+        "proxyPaths": [
+            "/prodBasePath",
+            "/test-only"
+        ]
     },
     "ANOTHER_SERVICE_NAME": {
         "name": "another human readable service name",
