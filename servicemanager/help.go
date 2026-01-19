@@ -18,6 +18,9 @@ Start a specific version of a service:
 Force a service to be redownloaded:
    sm2 --start AUTH --clean
 
+Delete all cached service versions:
+   sm2 --clean-cache
+
 Show all running services:
     sm2 -s
 

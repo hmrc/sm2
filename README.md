@@ -161,6 +161,7 @@ When starting more than one service, the `-r` flag only applies to the first ser
 | -offline       | Start a service using the cached version. Fails is not in cache. `-offline` can be used by itself to list available services. |
 | -port 1234     | Overrides the service’s default port to use the supplied port instead. |
 | -noprogress    | Disabled the progress bars. Useful for scripting and automation. |
+| -clean-cache     | Deletes all cached service versions. Running services are skipped. Prompts for confirmation. |
 | -src           | Runs the service(s) from source instead of downloading the binary artifacts. Service manager will attempt to clone the repository and start the service using sbt start. Assumes the system has git configured and a working sbt installation. |
 | -update-config | Updates workspace copy of service-manager from git. Will fail if there are uncommitted changes or if the config repo is not on the main branch. |
 | -wait 120      | Waits a given number of seconds (default 30) for the service to respond to a healthcheck after startup. |
@@ -327,7 +328,6 @@ Generally we’d recommend the following
 4. Service manager should skip starting the service running in the IDE as its healthcheck should respond telling SM its already running.
 
 Alternatively you can start the profile beforehand and just stop the individual service you want to work on.
-
 
 ## Configuration
 

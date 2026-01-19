@@ -51,6 +51,9 @@ func (sm *ServiceManager) Run() {
 	} else if sm.Commands.Prune {
 		// cleans up state files for services with a status of FAIL
 		sm.cleanupFailedServices()
+	} else if sm.Commands.CleanCache {
+		// deletes all cached service versions
+		err = sm.CleanCache()
 	} else if sm.Commands.Start {
 		// starts service(s) or profile(s)
 		services := sm.requestedServicesAndProfiles()
