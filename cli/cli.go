@@ -184,7 +184,7 @@ func BuildFlagSet(opts *UserOption) *flag.FlagSet {
 	flagset.IntVar(&opts.Port, "port", -1, "overrides the default port for a service (use with --start)")
 	flagset.BoolVar(&opts.Ports, "ports", false, "shows which ports services use")
 	flagset.BoolVar(&opts.Prune, "prune", false, "cleans up services with a status of FAIL")
-	flagset.BoolVar(&opts.CleanCache, "clean-cache", false, "deletes all cached service versions")
+	flagset.BoolVar(&opts.CleanCache, "clean-cache", false, "deletes all cached services")
 	flagset.StringVar(&opts.Release, "r", "", "sets which `version` to run (use with --start)")
 	flagset.BoolVar(&opts.Restart, "restart", false, "restarts one or more services")
 	flagset.BoolVar(&opts.RestartOutdated, "restart-outdated", false, "restarts services running outdated versions")
