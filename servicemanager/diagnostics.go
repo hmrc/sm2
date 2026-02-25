@@ -9,91 +9,9 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
-	"strings"
 
 	"sm2/version"
 )
-
-// ANSI color codes
-const (
-	ColorReset  = "\033[0m"
-	ColorRed    = "\033[31m"
-	ColorGreen  = "\033[32m"
-	ColorYellow = "\033[33m"
-)
-
-// Status constants
-const (
-	StatusRunning = "RUNNING"
-	StatusOK      = "OK"
-	StatusError   = "ERROR"
-	StatusWarn    = "WARN"
-	StatusInfo    = "INFO"
-)
-
-// Component name constants
-const (
-	CompOS        = "OS"
-	CompJava      = "JAVA"
-	CompGit       = "GIT"
-	CompConfig    = "CONFIG"
-	CompWorkspace = "WORKSPACE"
-	CompVpnDns    = "VPN DNS"
-	CompVpn       = "VPN"
-)
-
-func startStatus(component string, noProgress bool) {
-	if !noProgress {
-		printStatus(component, StatusRunning, "...", noProgress)
-	}
-}
-
-// Helper function to print status with appropriate color
-func printStatus(component string, status string, details string, noProgress bool) {
-	var colorCode string
-
-	switch status {
-	case StatusRunning:
-		colorCode = ColorYellow
-	case StatusOK:
-		colorCode = ColorGreen
-	case StatusError:
-		colorCode = ColorRed
-	case StatusWarn:
-		colorCode = ColorYellow
-	case StatusInfo:
-		colorCode = ColorReset
-	default:
-		colorCode = ColorReset
-	}
-
-	// Format component name to be exactly 15 characters
-	formattedComponent := component
-	if len(component) > 15 {
-		// Truncate if longer than 15 characters
-		formattedComponent = component[:15] + ":"
-	} else if len(component) < 15 {
-		// Pad with spaces if shorter than 15 characters
-		formattedComponent = component + ":" + strings.Repeat(" ", 14-len(component))
-	}
-
-	formattedStatus := fmt.Sprintf("%s%s%s", colorCode, status, ColorReset)
-
-	if noProgress && status == StatusRunning {
-		// do not print message for --noprogress flag
-	} else {
-		fmt.Printf("%s%s (%s)\n", formattedComponent, formattedStatus, details)
-	}
-}
-
-// Helper function to update status for a running task
-func updateStatus(component string, status string, details string, noProgress bool) {
-	if !noProgress {
-		// Move cursor up one line and clear the line
-		fmt.Print("\033[1A\033[K")
-	}
-	printStatus(component, status, details, noProgress)
-}
 
 func RunDiagnostics(config ServiceManagerConfig, noProgress bool) {
 	version.PrintVersion()

@@ -14,20 +14,12 @@ import (
 // verbose mode is enabled or the user confirms the operation.
 func (sm *ServiceManager) CleanCache() error {
 
-	// Safety check: ensure we have a valid tmpDir
-	if !path.IsAbs(sm.Config.TmpDir) {
-		return fmt.Errorf("cannot clean cache: invalid installation directory path")
-	}
-
-	// Check if the directory exists
-	if _, err := os.Stat(sm.Config.TmpDir); os.IsNotExist(err) {
-		fmt.Println("No cached services found.")
-		return nil
-	}
-
 	// Scan the installation directory
 	files, err := os.ReadDir(sm.Config.TmpDir)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("installation directory does not exist: %s", sm.Config.TmpDir)
+		}
 		return fmt.Errorf("failed to read installation directory: %s", err)
 	}
 
@@ -93,25 +85,42 @@ func (sm *ServiceManager) CleanCache() error {
 		return nil
 	}
 
-	// Display what will be pruned
-	fmt.Printf("\nFound %d cached service(s):\n", len(services))
-	fmt.Println(strings.Repeat("-", 70))
-
-	runningCount := 0
-	for _, svc := range services {
-		status := "ready to prune"
-		if svc.isRunning {
-			status = "RUNNING (will skip)"
-			runningCount++
-		}
-		fmt.Printf("  %-25s %-12s %8s  [%s]\n",
-			svc.name,
-			svc.version,
-			formatSize(svc.size),
-			status)
+	// Pre-format sizes so we can measure their width
+	formattedSizes := make([]string, len(services))
+	for i, svc := range services {
+		formattedSizes[i] = formatSize(svc.size)
 	}
 
-	fmt.Println(strings.Repeat("-", 70))
+	// Build table and compute dynamic column widths
+	tbl := NewTable("  ", "   ")
+	tbl.SetMinWidth(0, 10, false)                             // name
+	tbl.SetMinWidth(1, 7, false)                              // version
+	tbl.SetMinWidth(2, 4, true)                               // size (right-aligned)
+	tbl.SetMinWidth(3, len("[RUNNING (will skip)]")+1, false) // status
+	for i, svc := range services {
+		tbl.FitRow(svc.name, svc.version, formattedSizes[i])
+	}
+
+	// Display what will be pruned
+	fmt.Printf("\nFound %d cached service(s):\n", len(services))
+	tbl.Separator()
+
+	runningCount := 0
+	for i, svc := range services {
+		status := "ready to prune"
+		color := ColorGreen
+		if svc.isRunning {
+			status = "RUNNING (will skip)"
+			color = ColorYellow
+			runningCount++
+		}
+		tbl.PrintColoredRow(
+			[]string{svc.name, svc.version, formattedSizes[i], "[" + status + "]"},
+			[]string{"", "", "", color},
+		)
+	}
+
+	tbl.Separator()
 	fmt.Printf("Total disk space: %s\n", formatSize(totalSize))
 
 	if runningCount > 0 {
