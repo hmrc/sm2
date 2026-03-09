@@ -17,9 +17,6 @@ func (sm *ServiceManager) CleanCache() error {
 	// Scan the installation directory
 	files, err := os.ReadDir(sm.Config.TmpDir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("installation directory does not exist: %s", sm.Config.TmpDir)
-		}
 		return fmt.Errorf("failed to read installation directory: %s", err)
 	}
 
@@ -125,6 +122,11 @@ func (sm *ServiceManager) CleanCache() error {
 
 	if runningCount > 0 {
 		fmt.Printf("\nNote: %d service(s) are currently running and will be skipped.\n", runningCount)
+	}
+
+	if runningCount == len(services) {
+		fmt.Println("\nAll cached services are currently running. Nothing to delete.")
+		return nil
 	}
 
 	// Ask for confirmation

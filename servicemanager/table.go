@@ -71,8 +71,8 @@ func (t *Table) FitRow(cells ...string) {
 	}
 }
 
-// Width returns the total rendered width of a table row.
-func (t *Table) Width() int {
+// width returns the total rendered width of a table row.
+func (t *Table) width() int {
 	w := len(t.indent)
 	for i, mw := range t.widths {
 		w += mw
@@ -85,13 +85,7 @@ func (t *Table) Width() int {
 
 // Separator prints a horizontal separator line spanning the full table width.
 func (t *Table) Separator() {
-	fmt.Println(strings.Repeat("-", t.Width()))
-}
-
-// PrintRow prints a single formatted row using the current column widths.
-// The last column is never padded to avoid trailing spaces.
-func (t *Table) PrintRow(cells ...string) {
-	t.PrintColoredRow(cells, nil)
+	fmt.Println(strings.Repeat("-", t.width()))
 }
 
 // PrintColoredRow prints a formatted row where each cell can optionally be

@@ -36,7 +36,7 @@ type UserOption struct {
 	Port                 int                 // overrides service port, only works with the first service when starting multiple
 	Ports                bool                // prints all the ports
 	Prune                bool                // deletes .state files of services with a status of FAIL
-	CleanCache           bool                // deletes all cached service versions
+	CleanCache           bool                // deletes all cached services
 	Release              string              // specify a version when starting one service. unlikely old sm, cannot be used without a version
 	Restart              bool                // restarts a service or profile
 	RestartOutdated      bool                // restarts services running outdated versions
