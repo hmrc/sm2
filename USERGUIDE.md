@@ -87,6 +87,35 @@ The `--status` command (`-s` for short) shows the status of all services that ar
 +------------------------------------+-----------+---------+-------+--------+
 ```
 
+## Cleaning up cached services
+
+Service Manager caches downloaded service versions in your workspace. You can clean these up in two ways:
+
+### Clean a single service
+
+When starting a service with the `--clean` flag, it will delete and re-download that specific service:
+
+```
+sm2 --start SERVICE_NAME --clean
+```
+
+### Clean all cached services
+
+To delete all cached service versions and free up disk space:
+
+```
+sm2 --clean-cache
+```
+
+This command will:
+
+- Show all cached services and their disk usage
+- Skip services that are currently running
+- Prompt for confirmation before deletion
+- Display how much disk space was freed
+
+Deleted services will be automatically re-downloaded when needed.
+
 ## Debugging a failed service
 A more details breakdown of the state of a given service can be found using:
 ```
